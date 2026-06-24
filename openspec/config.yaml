@@ -1,0 +1,41 @@
+schema: spec-driven
+
+context: |
+  Project: Pegasus IA bootstrap
+  Purpose: reusable bootstrap that configures a Cursor harness/workspace for Pegasus IA exercises and demos
+  Target workspace default path: /var/www/html/personal/<project-name>
+  Stack: not yet selected
+  Testing: not yet selected
+  Persistence mode: hybrid
+
+rules:
+  proposal:
+    - Keep scope small and reversible
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHOULD, MAY)
+  design:
+    - Document decisions with rationale
+  tasks:
+    - Keep tasks small and session-completable
+  apply:
+    - Follow existing conventions once detected
+  verify:
+    - Record commands used for validation
+  archive:
+    - Preserve lineage before closing a change
+
+testing:
+  strict_tdd: false
+  detected: "2026-06-23"
+  runner: null
+  framework: null
+  layers:
+    unit: false
+    integration: false
+    e2e: false
+  coverage: false
+  quality:
+    linter: false
+    type_checker: false
+    formatter: false

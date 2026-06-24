@@ -1,0 +1,174 @@
+#!/usr/bin/env python3
+"""Bootstrap a Pegasus/Cursor harness into a target workspace."""
+
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import re
+import sys
+from pathlib import Path
+
+
+DEFAULT_ROOT = Path("/var/www/html/personal")
+PROJECT_NAME_RE = re.compile(r"^[A-Za-z0-9._-]+$")
+
+
+def parse_args(argv: list[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        prog="pegasus-harness-bootstrap",
+        description="Configure a local Pegasus/Cursor harness in a target workspace.",
+    )
+    parser.add_argument(
+        "--project-name",
+        required=True,
+        help="Project name used for defaults and template tokens.",
+    )
+    parser.add_argument(
+        "--target-path",
+        help="Target workspace path. Defaults to /var/www/html/personal/<project-name>.",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print planned writes and conflicts without changing files.",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Replace existing known harness files.",
+    )
+    return parser.parse_args(argv)
+
+
+def fail(message: str, exit_code: int = 1) -> None:
+    print(f"Error: {message}", file=sys.stderr)
+    raise SystemExit(exit_code)
+
+
+def validate_project_name(project_name: str) -> None:
+    if project_name in {"", ".", ".."} or "/" in project_name or " " in project_name:
+        fail("project name must be non-empty and contain no spaces or slashes")
+    if not PROJECT_NAME_RE.fullmatch(project_name):
+        fail("project name may contain only letters, numbers, dot, underscore, and hyphen")
+
+
+def target_path_for(project_name: str, target_path: str | None) -> Path:
+    target = Path(target_path).expanduser() if target_path else DEFAULT_ROOT / project_name
+    if str(target) == "/":
+        fail("target path cannot be /")
+    return target
+
+
+def template_root() -> Path:
+    project_root = Path(__file__).resolve().parents[1]
+    root = project_root / "templates" / "harness"
+    if not root.is_dir():
+        fail(f"template root not found: {root}")
+    return root
+
+
+def template_files(root: Path) -> list[Path]:
+    files = sorted(path.relative_to(root) for path in root.rglob("*") if path.is_file())
+    if not files:
+        fail(f"no template files found in {root}")
+    return files
+
+
+def build_plan(target: Path, files: list[Path], force: bool) -> tuple[list[Path], list[Path], list[Path]]:
+    creates: list[Path] = []
+    overwrites: list[Path] = []
+    conflicts: list[Path] = []
+
+    for rel_path in files:
+        destination = target / rel_path
+        if destination.exists():
+            if force:
+                overwrites.append(destination)
+            else:
+                conflicts.append(destination)
+        else:
+            creates.append(destination)
+
+    return creates, overwrites, conflicts
+
+
+def print_plan(
+    project_name: str,
+    target: Path,
+    root: Path,
+    creates: list[Path],
+    overwrites: list[Path],
+    conflicts: list[Path],
+) -> None:
+    print("Pegasus harness bootstrap plan")
+    print(f"Project: {project_name}")
+    print(f"Target: {target}")
+    print(f"Template root: {root}")
+
+    if creates:
+        print("\nCreates:")
+        for path in creates:
+            print(f"  {path}")
+
+    if overwrites:
+        print("\nOverwrites (--force):")
+        for path in overwrites:
+            print(f"  {path}")
+
+    if conflicts:
+        print("\nConflicts (preserved):")
+        for path in conflicts:
+            print(f"  {path}")
+
+
+def render_template(content: str, project_name: str, target: Path) -> str:
+    today = dt.date.today().isoformat()
+    return (
+        content.replace("{{PROJECT_NAME}}", project_name)
+        .replace("{{TARGET_PATH}}", str(target))
+        .replace("{{DATE}}", today)
+    )
+
+
+def write_files(root: Path, target: Path, files: list[Path], project_name: str) -> None:
+    for rel_path in files:
+        source = root / rel_path
+        destination = target / rel_path
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        content = source.read_text(encoding="utf-8")
+        destination.write_text(render_template(content, project_name, target) + "\n", encoding="utf-8")
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(sys.argv[1:] if argv is None else argv)
+    validate_project_name(args.project_name)
+
+    target = target_path_for(args.project_name, args.target_path)
+    root = template_root()
+    files = template_files(root)
+    creates, overwrites, conflicts = build_plan(target, files, args.force)
+
+    print_plan(args.project_name, target, root, creates, overwrites, conflicts)
+
+    if conflicts:
+        if args.dry_run:
+            print("\nDry run only; no files were written.")
+            return 0
+        print("\nRun with --force to replace only known harness files.", file=sys.stderr)
+        return 2
+
+    if args.dry_run:
+        print("\nDry run only; no files were written.")
+        return 0
+
+    write_files(root, target, files, args.project_name)
+
+    print("\nCompleted Pegasus harness bootstrap.")
+    print(f"Open the target workspace in Cursor: {target}")
+    print(f"Start from: {target / 'AGENTS.md'}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

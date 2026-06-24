@@ -1,0 +1,20 @@
+---
+description: Pegasus IA workflow for this project
+alwaysApply: true
+---
+
+# Pegasus IA Workflow
+
+Before making changes, read the local project docs in this order:
+
+1. `docs/pegasus/memory/context.md`
+2. `docs/pegasus/proposal.md`
+3. `docs/pegasus/spec.md`
+4. `docs/pegasus/design.md`
+5. `docs/pegasus/tasks.md`
+
+Keep work aligned with the documented scope. If requirements are missing or contradictory, update the docs or ask for clarification before implementing.
+
+Use small slices. Each slice should have a clear goal, limited file impact, and verification evidence in `docs/pegasus/verify.md`.
+
+This harness does not authorize business/domain MVP scaffolding by itself. The user/team builds the business MVP later inside Cursor; only create product code after the proposal, spec, design, and tasks explicitly call for it.

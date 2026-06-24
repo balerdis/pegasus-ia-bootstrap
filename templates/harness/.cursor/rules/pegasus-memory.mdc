@@ -1,0 +1,18 @@
+---
+description: Project-local Markdown memory rules
+alwaysApply: true
+---
+
+# Local Memory Rules
+
+Use `docs/pegasus/memory/` as the project continuity layer.
+
+At session start or after context compaction:
+
+1. Read `context.md` for stable project facts.
+2. Read `decisions.md` for constraints and tradeoffs.
+3. Read `tasks-log.md` for current status.
+4. Read `handoff.md` for the latest recovery note.
+5. Read `learnings.md` for gotchas before repeating work.
+
+When work changes facts, decisions, task status, blockers, or gotchas, update the matching memory file immediately. Before ending a session, write a concise handoff with current state, completed work, open risks, and next steps.
