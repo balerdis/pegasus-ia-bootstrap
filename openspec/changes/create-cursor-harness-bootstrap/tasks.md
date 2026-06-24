@@ -4,10 +4,10 @@
 
 | Field | Value |
 |-------|-------|
-| Estimated changed lines | 700-950 |
+| Estimated changed lines | 900-1200 after optional global Cursor config slice |
 | 400-line budget risk | High |
 | Chained PRs recommended | Yes |
-| Suggested split | PR 1 CLI planner/writer -> PR 2 templates -> PR 3 tests/policy docs |
+| Suggested split | PR 1 CLI planner/writer -> PR 2 templates -> PR 3 tests/policy docs -> PR 4 optional global Cursor config |
 | Delivery strategy | auto-forecast |
 | Chain strategy | stacked-to-main |
 
@@ -23,6 +23,7 @@ Chain strategy: stacked-to-main
 | 1 | Create Python CLI planning, validation, dry-run, conflict, and safe-write behavior in `bin/pegasus-harness-bootstrap` | PR 1 | Base `main`; include minimal smoke tests for CLI safety. |
 | 2 | Add mirrored harness templates under `templates/harness/` | PR 2 | Depends on PR 1; public artifacts must avoid Gentle AI and Engram. |
 | 3 | Add full shell test harness and verification docs | PR 3 | Depends on PR 2; validates spec scenarios and policy constraints. |
+| 4 | Add optional global Cursor user configuration behind `--install-cursor-global` | PR 4 | Depends on prior CLI planning; use temporary HOME/XDG config in tests and preserve default no-global-touch behavior. |
 
 ## Phase 1: CLI Foundation
 
@@ -48,12 +49,23 @@ Chain strategy: stacked-to-main
 - [x] 3.4 Test policy constraints: no app-code paths, no Git/GitHub/CI/deployment side effects, and no banned public references.
 - [x] 3.5 Add a verification command note to `openspec/changes/create-cursor-harness-bootstrap/tasks.md` during apply after commands are known.
 
+## Phase 4: Optional Global Cursor Configuration
+
+- [x] 4.1 Add `--install-cursor-global` to the CLI contract; default runs must not create, read, back up, or modify global Cursor config.
+- [x] 4.2 Add Linux Cursor user rules/config path detection using `$XDG_CONFIG_HOME/Cursor/User/rules` or `~/.config/Cursor/User/rules`, with legacy existing `~/.cursor/rules` reporting/preference behavior documented in design.
+- [x] 4.3 Add a Pegasus-owned global Cursor template under `templates/cursor-global/` with marker and version/checksum metadata.
+- [x] 4.4 Build global config operations into the same plan model so `--dry-run --install-cursor-global` lists global creates/updates/backups without writing.
+- [x] 4.5 Before modifying an existing global Cursor config file, create a timestamped sibling backup and report the backup path.
+- [x] 4.6 Add tests with temporary HOME/XDG_CONFIG_HOME for default no-global-touch behavior, explicit global install/update, backup-before-change, and dry-run no writes.
+- [x] 4.7 Add or extend policy tests proving the bootstrap does not run `git init` and does not create `.git/` metadata.
+
 ## Final Verification
 
 - Command: `bash tests/smoke.sh`
 - Command: `/home/serg/tmp/opencode/openspec-cli-1.4.1-verify/node_modules/.bin/openspec validate create-cursor-harness-bootstrap --strict` if the pinned OpenSpec CLI is present.
 - Scope: isolated temporary target directories; explicit and default inputs; harness structure generation; project-name token rendering; dry-run no-write behavior; conflict preservation; `--force` overwrite reporting; no app-code, Git, GitHub, CI, deployment side effects from the product bootstrap; and banned public-reference checks.
 - Remediation note: tasks 3.1 through 3.5 were marked complete because the existing shell smoke runner and prior verification evidence already satisfy the verification scope; no new product features were added.
+- Optional global Cursor config slice verification: `bash tests/smoke.sh` and strict OpenSpec validation passed on 2026-06-24.
 
 ## Slice 1 Verification
 

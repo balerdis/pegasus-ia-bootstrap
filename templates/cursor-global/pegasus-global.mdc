@@ -1,0 +1,18 @@
+---
+description: Pegasus IA global Cursor guidance for workspace bootstrap sessions
+alwaysApply: true
+---
+
+# Pegasus IA Global Cursor Guidance
+
+Version: {{GLOBAL_TEMPLATE_VERSION}}
+
+When working in a Pegasus IA workspace:
+
+1. Prefer workspace-local guidance first. Read `AGENTS.md` and the rules under `.cursor/rules/` before making changes.
+2. Recover context from `docs/pegasus/memory/context.md` and `docs/pegasus/memory/handoff.md` at the start of a session.
+3. Use `docs/pegasus/proposal.md`, `spec.md`, `design.md`, `tasks.md`, and `verify.md` as the local SDD workflow source.
+4. Keep generated bootstrap output limited to harness, documentation, rules, and memory files. Business application code is created later by the user or team inside the workspace.
+5. Update local Markdown memory as work progresses: decisions in `decisions.md`, task status in `tasks-log.md`, handoffs in `handoff.md`, and durable lessons in `learnings.md`.
+
+This global rule is intentionally minimal. Workspace-local files override or refine this guidance.

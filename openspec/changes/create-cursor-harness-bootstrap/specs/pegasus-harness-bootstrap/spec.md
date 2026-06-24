@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define a local-first bootstrap that configures only the Cursor/Pegasus IA harness for a target workspace. The bootstrap prepares agent guidance, Cursor rules, SDD templates, and project-local Markdown memory; it MUST NOT generate business/domain MVP application code or remote resources.
+Define a local-first bootstrap that configures only the Cursor/Pegasus IA harness for a target workspace by default. The bootstrap prepares agent guidance, Cursor rules, SDD templates, and project-local Markdown memory; it MUST NOT generate business/domain MVP application code, Git metadata, or remote resources. Optional global Cursor user configuration is permitted only behind an explicit flag with backup safety.
 
 ## ADDED Requirements
 
@@ -63,6 +63,39 @@ The system MUST create Cursor-specific guidance under `.cursor/rules/` and gener
 - THEN at least one Cursor rule file exists with Pegasus IA usage guidance
 - AND the generated files contain no references to Gentle AI or Engram
 
+#### Scenario: Default run does not touch global Cursor configuration
+
+- GIVEN no global Cursor flag is provided
+- WHEN the bootstrap runs successfully
+- THEN it creates or updates only target workspace harness files
+- AND it does not create, modify, or back up global Cursor user configuration files
+
+### Requirement: Optional global Cursor configuration
+
+The system MUST install or update global Cursor user configuration only when `--install-cursor-global` is explicitly provided, and MUST protect any existing global config with a backup before changing it.
+
+#### Scenario: Explicit global Cursor install
+
+- GIVEN `--install-cursor-global` is provided
+- WHEN the bootstrap runs successfully
+- THEN it detects the Linux Cursor user config or rules path
+- AND it installs or updates the Pegasus global Cursor configuration at that detected path
+- AND it reports the global path changed
+
+#### Scenario: Existing global config is backed up
+
+- GIVEN an existing global Cursor configuration file would be changed
+- WHEN the bootstrap runs with `--install-cursor-global`
+- THEN it writes a timestamped backup before modifying the existing file
+- AND it reports the backup path
+
+#### Scenario: Dry-run includes global operations without writes
+
+- GIVEN `--install-cursor-global` and `--dry-run` are provided
+- WHEN the bootstrap plans work
+- THEN it prints planned global Cursor config creates, updates, and backups
+- AND it does not write target workspace files or global Cursor config files
+
 ### Requirement: SDD document templates
 
 The system MUST create SDD templates under `docs/pegasus` for proposal, spec, design, tasks, and verification.
@@ -110,13 +143,20 @@ The system MUST NOT overwrite existing files unless an explicit overwrite flag o
 
 ### Requirement: Local-first operation
 
-The system MUST complete without creating GitHub remotes, commits, CI, deployments, MCP servers, or requiring network services.
+The system MUST complete without running `git init`, creating GitHub remotes, commits, CI, deployments, MCP servers, or requiring network services.
 
 #### Scenario: Offline bootstrap
 
 - GIVEN local filesystem access only
 - WHEN the bootstrap runs
 - THEN it can complete the harness generation locally
+
+#### Scenario: No Git initialization
+
+- GIVEN any bootstrap invocation
+- WHEN the bootstrap completes or reports conflicts
+- THEN it has not run `git init`
+- AND no `.git/` directory or local Git metadata was created by the bootstrap
 
 
 ### Requirement: Completion output

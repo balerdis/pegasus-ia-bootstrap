@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
+import os
 import re
 import sys
 from pathlib import Path
@@ -12,6 +14,8 @@ from pathlib import Path
 
 DEFAULT_ROOT = Path("/var/www/html/personal")
 PROJECT_NAME_RE = re.compile(r"^[A-Za-z0-9._-]+$")
+GLOBAL_MARKER = "PEGASUS-CURSOR-GLOBAL"
+GLOBAL_TEMPLATE_VERSION = "1"
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -37,6 +41,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "--force",
         action="store_true",
         help="Replace existing known harness files.",
+    )
+    parser.add_argument(
+        "--install-cursor-global",
+        action="store_true",
+        help="Install or update opt-in global Cursor user rules with backups.",
     )
     return parser.parse_args(argv)
 
@@ -68,11 +77,35 @@ def template_root() -> Path:
     return root
 
 
+def cursor_global_template_root() -> Path:
+    project_root = Path(__file__).resolve().parents[1]
+    root = project_root / "templates" / "cursor-global"
+    if not root.is_dir():
+        fail(f"global Cursor template root not found: {root}")
+    return root
+
+
 def template_files(root: Path) -> list[Path]:
     files = sorted(path.relative_to(root) for path in root.rglob("*") if path.is_file())
     if not files:
         fail(f"no template files found in {root}")
     return files
+
+
+def detect_cursor_rules_dir() -> tuple[Path, str | None]:
+    home = Path.home()
+    legacy_rules = home / ".cursor" / "rules"
+    if legacy_rules.exists():
+        return legacy_rules, f"Existing legacy Cursor rules path detected and preferred: {legacy_rules}"
+
+    xdg_config_home = None
+    if "XDG_CONFIG_HOME" in os.environ:
+        xdg_config_home = Path(os.environ["XDG_CONFIG_HOME"]).expanduser()
+
+    if xdg_config_home is not None:
+        return xdg_config_home / "Cursor" / "User" / "rules", None
+
+    return home / ".config" / "Cursor" / "User" / "rules", None
 
 
 def build_plan(target: Path, files: list[Path], force: bool) -> tuple[list[Path], list[Path], list[Path]]:
@@ -93,6 +126,23 @@ def build_plan(target: Path, files: list[Path], force: bool) -> tuple[list[Path]
     return creates, overwrites, conflicts
 
 
+def build_global_plan(rules_dir: Path, files: list[Path]) -> tuple[list[Path], list[Path], list[Path]]:
+    creates: list[Path] = []
+    updates: list[Path] = []
+    backups: list[Path] = []
+
+    timestamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d%H%M%S")
+    for rel_path in files:
+        destination = rules_dir / rel_path
+        if destination.exists():
+            updates.append(destination)
+            backups.append(destination.with_name(f"{destination.name}.{timestamp}.bak"))
+        else:
+            creates.append(destination)
+
+    return creates, updates, backups
+
+
 def print_plan(
     project_name: str,
     target: Path,
@@ -100,6 +150,11 @@ def print_plan(
     creates: list[Path],
     overwrites: list[Path],
     conflicts: list[Path],
+    global_rules_dir: Path | None = None,
+    global_note: str | None = None,
+    global_creates: list[Path] | None = None,
+    global_updates: list[Path] | None = None,
+    global_backups: list[Path] | None = None,
 ) -> None:
     print("Pegasus harness bootstrap plan")
     print(f"Project: {project_name}")
@@ -121,6 +176,27 @@ def print_plan(
         for path in conflicts:
             print(f"  {path}")
 
+    if global_rules_dir is not None:
+        print("\nGlobal Cursor rules (--install-cursor-global):")
+        print(f"  Rules path: {global_rules_dir}")
+        if global_note:
+            print(f"  Note: {global_note}")
+
+        if global_creates:
+            print("  Creates:")
+            for path in global_creates:
+                print(f"    {path}")
+
+        if global_updates:
+            print("  Updates:")
+            for path in global_updates:
+                print(f"    {path}")
+
+        if global_backups:
+            print("  Backups:")
+            for path in global_backups:
+                print(f"    {path}")
+
 
 def render_template(content: str, project_name: str, target: Path) -> str:
     today = dt.date.today().isoformat()
@@ -129,6 +205,13 @@ def render_template(content: str, project_name: str, target: Path) -> str:
         .replace("{{TARGET_PATH}}", str(target))
         .replace("{{DATE}}", today)
     )
+
+
+def render_global_template(content: str) -> str:
+    body = content.replace("{{GLOBAL_TEMPLATE_VERSION}}", GLOBAL_TEMPLATE_VERSION)
+    checksum = hashlib.sha256(body.encode("utf-8")).hexdigest()[:16]
+    marker = f"<!-- {GLOBAL_MARKER}: version={GLOBAL_TEMPLATE_VERSION} checksum={checksum} -->"
+    return f"{marker}\n{body}"
 
 
 def write_files(root: Path, target: Path, files: list[Path], project_name: str) -> None:
@@ -140,6 +223,21 @@ def write_files(root: Path, target: Path, files: list[Path], project_name: str) 
         destination.write_text(render_template(content, project_name, target) + "\n", encoding="utf-8")
 
 
+def write_global_files(root: Path, rules_dir: Path, files: list[Path], backups: list[Path]) -> None:
+    existing_destinations = [rules_dir / rel_path for rel_path in files if (rules_dir / rel_path).exists()]
+    backup_by_destination = dict(zip(existing_destinations, backups))
+
+    for rel_path in files:
+        source = root / rel_path
+        destination = rules_dir / rel_path
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        if destination.exists():
+            backup_path = backup_by_destination[destination]
+            backup_path.write_text(destination.read_text(encoding="utf-8"), encoding="utf-8")
+        content = source.read_text(encoding="utf-8")
+        destination.write_text(render_global_template(content) + "\n", encoding="utf-8")
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     validate_project_name(args.project_name)
@@ -149,7 +247,33 @@ def main(argv: list[str] | None = None) -> int:
     files = template_files(root)
     creates, overwrites, conflicts = build_plan(target, files, args.force)
 
-    print_plan(args.project_name, target, root, creates, overwrites, conflicts)
+    global_root = None
+    global_files: list[Path] = []
+    global_rules_dir = None
+    global_note = None
+    global_creates: list[Path] = []
+    global_updates: list[Path] = []
+    global_backups: list[Path] = []
+
+    if args.install_cursor_global:
+        global_root = cursor_global_template_root()
+        global_files = template_files(global_root)
+        global_rules_dir, global_note = detect_cursor_rules_dir()
+        global_creates, global_updates, global_backups = build_global_plan(global_rules_dir, global_files)
+
+    print_plan(
+        args.project_name,
+        target,
+        root,
+        creates,
+        overwrites,
+        conflicts,
+        global_rules_dir,
+        global_note,
+        global_creates,
+        global_updates,
+        global_backups,
+    )
 
     if conflicts:
         if args.dry_run:
@@ -164,9 +288,18 @@ def main(argv: list[str] | None = None) -> int:
 
     write_files(root, target, files, args.project_name)
 
+    if args.install_cursor_global:
+        assert global_root is not None
+        assert global_rules_dir is not None
+        write_global_files(global_root, global_rules_dir, global_files, global_backups)
+
     print("\nCompleted Pegasus harness bootstrap.")
     print(f"Open the target workspace in Cursor: {target}")
     print(f"Start from: {target / 'AGENTS.md'}")
+    if args.install_cursor_global:
+        print(f"Updated global Cursor rules: {global_rules_dir}")
+        for backup in global_backups:
+            print(f"Backup created: {backup}")
     return 0
 
 
