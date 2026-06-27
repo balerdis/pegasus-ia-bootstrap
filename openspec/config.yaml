@@ -3,9 +3,10 @@ schema: spec-driven
 context: |
   Project: Pegasus IA bootstrap
   Purpose: reusable bootstrap that configures a Cursor harness/workspace for Pegasus IA exercises and demos
+  Architecture: local-first filesystem bootstrap that writes harness templates into a target workspace and optionally installs global Cursor user rules behind an explicit flag
+  Stack: Python 3 CLI bootstrap script plus Bash smoke verification; no package manifest or framework scaffold
+  Testing: bash tests/smoke.sh covers CLI help, dry-run, conflict, force, and optional global-rule planning/install paths
   Target workspace default path: /var/www/html/personal/<project-name>
-  Stack: not yet selected
-  Testing: not yet selected
   Persistence mode: hybrid
 
 rules:
@@ -27,7 +28,7 @@ rules:
 
 testing:
   strict_tdd: false
-  detected: "2026-06-23"
+  detected: "2026-06-24"
   runner: null
   framework: null
   layers:
