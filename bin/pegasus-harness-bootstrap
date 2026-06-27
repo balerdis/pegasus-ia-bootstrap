@@ -342,7 +342,7 @@ def main(argv: list[str] | None = None) -> int:
     print("\nCompleted Pegasus VS Code/Copilot harness bootstrap.")
     print(f"Open the target workspace in VS Code with Copilot: {target}")
     print(f"Portable agent guidance: {target / 'AGENTS.md'}")
-    print("Primary Copilot entry point: .github/agents/pegasus-orchestrator.agent.md (added in a later slice)")
+    print("Primary Copilot entry point: .github/agents/pegasus-orchestrator.agent.md")
     if args.install_copilot_global:
         print(f"Global VS Code/Copilot install requested for {args.vscode_target}; no user settings were changed in this slice.")
     if args.install_cursor_global:

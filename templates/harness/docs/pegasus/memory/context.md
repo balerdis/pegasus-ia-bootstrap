@@ -10,8 +10,10 @@ Read this file at the start of every session and after context compaction.
 
 ## Current Context
 
-- TBD
+- Primary IDE guidance: VS Code/Copilot assets under `.github/`.
+- Portable guidance: `AGENTS.md` and `docs/pegasus/`.
+- Legacy compatibility: `.cursor/rules/`.
 
 ## Write Rules
 
-Update this file when stable project facts, constraints, environments, or assumptions change. Keep entries concise and factual.
+Update this file when stable project facts, constraints, environments, IDE guidance, or assumptions change. Keep entries concise and factual.

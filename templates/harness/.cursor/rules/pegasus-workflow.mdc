@@ -1,9 +1,11 @@
 ---
-description: Pegasus IA workflow for this project
+description: Legacy Cursor compatibility for Pegasus IA workflow
 alwaysApply: true
 ---
 
 # Pegasus IA Workflow
+
+This is secondary legacy Cursor compatibility guidance. For VS Code/Copilot sessions, prefer `.github/copilot-instructions.md`, `.github/instructions/`, `.github/prompts/`, and `.github/agents/pegasus-orchestrator.agent.md`.
 
 Before making changes, read the local project docs in this order:
 
@@ -17,4 +19,4 @@ Keep work aligned with the documented scope. If requirements are missing or cont
 
 Use small slices. Each slice should have a clear goal, limited file impact, and verification evidence in `docs/pegasus/verify.md`.
 
-This harness does not authorize business/domain MVP scaffolding by itself. The user/team builds the business MVP later inside Cursor; only create product code after the proposal, spec, design, and tasks explicitly call for it.
+This harness does not authorize business/domain MVP scaffolding by itself. The user/team builds the business MVP later; only create product code after the proposal, spec, design, and tasks explicitly call for it.

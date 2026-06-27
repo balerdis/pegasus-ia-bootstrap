@@ -8,12 +8,12 @@
 
 ## Phase 2: Workspace Copilot Templates
 
-- [ ] 2.1 Create `templates/harness/.github/copilot-instructions.md` as workspace-wide Copilot entry instructions.
-- [ ] 2.2 Create `templates/harness/.github/instructions/*.instructions.md` for workflow, memory, SDD boundaries, local-first/no-app-code rules, and legacy compatibility guidance.
-- [ ] 2.3 Create `templates/harness/.github/prompts/*.prompt.md` for SDD phases, handoff, and memory workflows referencing `docs/pegasus/`.
-- [ ] 2.4 Create `templates/harness/.github/agents/*.agent.md`: visible orchestrator, hidden/secondary SDD agents, and selected OpenCode-inspired agents excluding `review-risk` and `review-readability`.
-- [ ] 2.5 Update `templates/harness/AGENTS.md`, `templates/harness/docs/pegasus/*`, and memory templates for Copilot entry points and Markdown memory.
-- [ ] 2.6 Update `templates/harness/.cursor/rules/*` as secondary legacy compatibility that points primary usage back to VS Code/Copilot assets.
+- [x] 2.1 Create `templates/harness/.github/copilot-instructions.md` as workspace-wide Copilot entry instructions.
+- [x] 2.2 Create `templates/harness/.github/instructions/*.instructions.md` for workflow, memory, SDD boundaries, local-first/no-app-code rules, and legacy compatibility guidance.
+- [x] 2.3 Create `templates/harness/.github/prompts/*.prompt.md` for SDD phases, handoff, and memory workflows referencing `docs/pegasus/`.
+- [x] 2.4 Create `templates/harness/.github/agents/*.agent.md`: visible orchestrator, hidden/secondary SDD agents, and selected OpenCode-inspired agents excluding `review-risk` and `review-readability`.
+- [x] 2.5 Update `templates/harness/AGENTS.md`, `templates/harness/docs/pegasus/*`, and memory templates for Copilot entry points and Markdown memory.
+- [x] 2.6 Update `templates/harness/.cursor/rules/*` as secondary legacy compatibility that points primary usage back to VS Code/Copilot assets.
 
 ## Phase 3: Global/User Copilot Install
 

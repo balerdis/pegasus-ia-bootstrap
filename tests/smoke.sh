@@ -18,6 +18,25 @@ assert_file_contains() {
 
 expected_files=(
   "AGENTS.md"
+  ".github/copilot-instructions.md"
+  ".github/instructions/pegasus-workflow.instructions.md"
+  ".github/instructions/pegasus-memory.instructions.md"
+  ".github/instructions/pegasus-sdd-boundaries.instructions.md"
+  ".github/instructions/pegasus-local-first.instructions.md"
+  ".github/instructions/pegasus-legacy-compatibility.instructions.md"
+  ".github/prompts/sdd-phases.prompt.md"
+  ".github/prompts/handoff.prompt.md"
+  ".github/prompts/memory-update.prompt.md"
+  ".github/agents/pegasus-orchestrator.agent.md"
+  ".github/agents/sdd-proposal.agent.md"
+  ".github/agents/sdd-spec.agent.md"
+  ".github/agents/sdd-design.agent.md"
+  ".github/agents/sdd-tasks.agent.md"
+  ".github/agents/sdd-apply.agent.md"
+  ".github/agents/sdd-verify.agent.md"
+  ".github/agents/session-handoff.agent.md"
+  ".github/agents/memory-maintainer.agent.md"
+  ".github/agents/doc-designer.agent.md"
   ".cursor/rules/pegasus-memory.mdc"
   ".cursor/rules/pegasus-workflow.mdc"
   "docs/pegasus/proposal.md"
@@ -90,8 +109,19 @@ for file in "${expected_files[@]}"; do
 done
 assert_file_contains "$target/AGENTS.md" "sample-project"
 assert_file_contains "$target/AGENTS.md" "$target"
+assert_file_contains "$target/AGENTS.md" ".github/agents/pegasus-orchestrator.agent.md"
+assert_file_contains "$target/.github/copilot-instructions.md" "Primary entry point"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "name: pegasus-orchestrator"
+assert_file_contains "$target/.github/agents/sdd-apply.agent.md" "user-invocable: false"
 assert_file_contains "$target/.cursor/rules/pegasus-memory.mdc" "context compaction"
+assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "secondary legacy Cursor compatibility guidance"
 assert_file_contains "$target/docs/pegasus/memory/context.md" "Read this file at the start"
+assert_file_contains "$target/docs/pegasus/memory/context.md" 'VS Code/Copilot assets under `.github/`'
+
+if grep -R -E 'review-risk|review-readability' "$target/.github" >/dev/null; then
+  printf 'generated Copilot assets include excluded reviewer agents\n' >&2
+  exit 1
+fi
 
 if grep -R -E 'Gentle AI|Engram' "$target" >/dev/null; then
   printf 'generated public files contain banned references\n' >&2
