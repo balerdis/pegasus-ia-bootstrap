@@ -6,6 +6,8 @@ PR 1 / Work Unit 1: CLI planning and layout foundation.
 
 PR 2 / Work Unit 2: Workspace Copilot templates and legacy Cursor compatibility.
 
+PR 3 / Work Unit 3: Opt-in global VS Code/Copilot assets and settings merge.
+
 Completed tasks:
 
 - [x] 1.1 Updated `bin/pegasus-harness-bootstrap` help, constants, plan output, and completion text for Copilot-first usage and legacy Cursor wording.
@@ -17,6 +19,11 @@ Completed tasks:
 - [x] 2.4 Created Copilot custom agent files with a visible Pegasus orchestrator, hidden/secondary SDD agents, and selected OpenCode-inspired agents while excluding `review-risk` and `review-readability`.
 - [x] 2.5 Updated `AGENTS.md`, `docs/pegasus/*`, and memory templates for VS Code/Copilot entry points and project-local Markdown memory.
 - [x] 2.6 Updated `.cursor/rules/*` as secondary legacy compatibility that points primary usage back to VS Code/Copilot assets.
+- [x] 3.1 Created `templates/copilot-global/{agents,instructions,prompts}/` with conservative user-level Copilot assets and no unsupported parity claims.
+- [x] 3.2 Added path resolution for Pegasus-managed root under the XDG config root and Stable/Insiders VS Code settings paths.
+- [x] 3.3 Implemented Copilot global dry-run reporting without workspace, managed-root, settings, or backup writes.
+- [x] 3.4 Added safe settings JSON loading, existing-settings backup, and non-destructive merge for Copilot agent, instruction, and prompt locations.
+- [x] 3.5 Preserved Cursor global install behavior as legacy secondary support and updated legacy wording.
 
 ## Corrective Update After Slice 1 Review
 
@@ -55,6 +62,30 @@ The inventory is intentionally limited to Slice 1 planning/protection behavior:
 | `openspec/changes/adapt-bootstrap-to-vscode-copilot/tasks.md` | Marked Phase 2 tasks complete only. |
 | `openspec/changes/adapt-bootstrap-to-vscode-copilot/apply-progress.md` | Merged Slice 2 progress with existing Slice 1 progress. |
 
+## Files Changed by Slice 3
+
+| File | Change |
+|---|---|
+| `bin/pegasus-harness-bootstrap` | Implemented Copilot global template discovery, XDG-aware managed root/settings paths, dry-run reporting, asset writes, invalid JSON failure, settings backup, and non-destructive settings merge. |
+| `templates/copilot-global/agents/pegasus-global-orchestrator.agent.md` | Added conservative user-level Copilot orchestrator guidance. |
+| `templates/copilot-global/instructions/pegasus-global.instructions.md` | Added conservative global Copilot instructions that defer to workspace-local assets. |
+| `templates/copilot-global/prompts/pegasus-start.prompt.md` | Added a safe start/resume prompt for Pegasus workspaces. |
+| `templates/cursor-global/pegasus-global.mdc` | Reworded Cursor global guidance as secondary legacy compatibility. |
+| `tests/smoke.sh` | Added Phase 3 smoke coverage for Copilot global dry-run, Stable/Insiders install paths, settings backup/merge, invalid JSON failure, and legacy Cursor behavior. |
+| `openspec/changes/adapt-bootstrap-to-vscode-copilot/tasks.md` | Marked Phase 3 tasks complete only. |
+| `openspec/changes/adapt-bootstrap-to-vscode-copilot/apply-progress.md` | Merged Slice 3 progress with prior Slice 1 and Slice 2 progress. |
+
+## Corrective Update After Slice 3 Review
+
+Fresh verification blocked Slice 3 because invalid VS Code `settings.json` was parsed only after workspace files and Pegasus-managed Copilot assets had already been written. The corrective update now validates and computes the Copilot settings merge plan before any non-dry-run writes when `--install-copilot-global` is active.
+
+The write-safety behavior is intentionally limited to Slice 3 global install scope:
+
+- Invalid VS Code settings JSON exits non-zero with a clear `invalid VS Code settings JSON` error before workspace writes.
+- Existing invalid settings content is preserved and no settings backup is created.
+- Existing Pegasus-managed Copilot assets are not overwritten, and missing managed asset directories are not created.
+- Dry-run remains write-free, and legacy Cursor global behavior is unchanged.
+
 ## Pre-existing / Out-of-Slice Working Tree Context
 
 | File | Status |
@@ -69,10 +100,11 @@ Phase 4.2 remains unchecked in `tasks.md`; stable spec/config alignment is still
 |---|---|
 | `bash tests/smoke.sh` | Passed after the corrective update. |
 | `bash tests/smoke.sh` | Passed after Slice 2 template and smoke updates. |
+| `bash tests/smoke.sh` | Passed after Slice 3 global install and smoke updates. |
+| `bash tests/smoke.sh` | Passed after the Slice 3 invalid-settings write-safety fix. |
 
 ## Remaining Tasks
 
-- [ ] Phase 3: Global/user Copilot install behavior and settings merge.
 - [ ] Phase 4: Docs, config alignment, and full verification coverage, including Phase 4.2 `openspec/config.yaml` alignment if still needed.
 
 ## Rollback Notes
@@ -81,9 +113,11 @@ For Slice 1 rollback, revert the Slice 1 changes to `bin/pegasus-harness-bootstr
 
 For Slice 2 rollback, remove the new `templates/harness/.github/` workspace templates, restore the prior Cursor-first wording in `templates/harness/AGENTS.md`, `templates/harness/docs/pegasus/*`, `templates/harness/docs/pegasus/memory/*`, and `.cursor/rules/*`, revert the completion text and smoke additions, and uncheck Phase 2 tasks in `tasks.md`.
 
+For Slice 3 rollback, revert Copilot global install changes in `bin/pegasus-harness-bootstrap`, remove `templates/copilot-global/`, restore the prior Cursor global wording, revert Slice 3 smoke additions, and uncheck Phase 3 tasks in `tasks.md`. For any local test/user installation already run, remove the Pegasus-managed Copilot root and restore VS Code `settings.json` from the timestamped backup if needed.
+
 ## Notes and Deviations
 
-- `--install-copilot-global` is accepted and reported as planning-only in this slice. Actual managed asset writes, VS Code settings resolution, backups, and settings merge remain intentionally deferred to Phase 3.
-- Phase 2 creates workspace Copilot templates only. Global/user Copilot assets under `templates/copilot-global/`, settings merge behavior, and global install smoke coverage remain deferred to Phase 3 and Phase 4.
+- Phase 2 created workspace Copilot templates only; Slice 3 now implements global/user Copilot assets, settings merge behavior, and focused smoke coverage for that behavior.
 - `.github/copilot-instructions.md` is included in the planned/protected workspace inventory before its template exists so existing user files are not silently ignored during Slice 1 planning.
 - Copilot custom agent files use conservative Markdown frontmatter and prose. They do not claim exact parity with OpenCode agents.
+- Slice 3 keeps settings merge conservative: existing object values are preserved, existing array values are appended without duplication, invalid JSON fails before any workspace, managed asset, settings, or backup writes, and missing settings files are created without backup.

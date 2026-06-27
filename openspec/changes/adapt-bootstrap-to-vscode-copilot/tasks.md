@@ -17,11 +17,11 @@
 
 ## Phase 3: Global/User Copilot Install
 
-- [ ] 3.1 Create `templates/copilot-global/{agents,instructions,prompts}/` with conservative assets and no unsupported parity claims.
-- [ ] 3.2 Add path resolution for Pegasus-managed root `~/.config/pegasus-ia/copilot/{agents,instructions,prompts}/` and Stable/Insiders settings paths respecting `XDG_CONFIG_HOME`.
-- [ ] 3.3 Implement Copilot global dry-run with no workspace, managed-root, settings, or backup writes.
-- [ ] 3.4 Back up settings and safely merge `chat.agentFilesLocations`, `chat.instructionsFilesLocations`, and `chat.promptFilesLocations` without removals.
-- [ ] 3.5 Preserve legacy `templates/cursor-global/` and Cursor global install behavior as secondary, with updated legacy wording.
+- [x] 3.1 Create `templates/copilot-global/{agents,instructions,prompts}/` with conservative assets and no unsupported parity claims.
+- [x] 3.2 Add path resolution for Pegasus-managed root `~/.config/pegasus-ia/copilot/{agents,instructions,prompts}/` and Stable/Insiders settings paths respecting `XDG_CONFIG_HOME`.
+- [x] 3.3 Implement Copilot global dry-run with no workspace, managed-root, settings, or backup writes.
+- [x] 3.4 Back up settings and safely merge `chat.agentFilesLocations`, `chat.instructionsFilesLocations`, and `chat.promptFilesLocations` without removals.
+- [x] 3.5 Preserve legacy `templates/cursor-global/` and Cursor global install behavior as secondary, with updated legacy wording.
 
 ## Phase 4: Docs, Config, and Verification
 
