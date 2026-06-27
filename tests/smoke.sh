@@ -41,11 +41,19 @@ case "$help_output" in
   *"--install-cursor-global"*) ;;
   *) printf 'expected help output to include --install-cursor-global\n' >&2; exit 1 ;;
 esac
+case "$help_output" in
+  *"--install-copilot-global"*"--vscode-target"*) ;;
+  *) printf 'expected help output to include Copilot global planning flags\n' >&2; exit 1 ;;
+esac
 
 default_plan="$($PYTHON_BIN "$CLI" --project-name default-project --dry-run)"
 case "$default_plan" in
   *"Target: /var/www/html/personal/default-project"*) ;;
   *) printf 'expected default target path in dry-run output\n' >&2; exit 1 ;;
+esac
+case "$default_plan" in
+  *"Primary IDE: VS Code with GitHub Copilot"*".github/copilot-instructions.md"*"AGENTS.md"*"docs/pegasus"*".cursor"*) ;;
+  *) printf 'expected dry-run output to list Copilot-first and legacy workspace surfaces\n' >&2; exit 1 ;;
 esac
 
 dry_target="$TMP/dry-run-project"
@@ -61,6 +69,19 @@ HOME="$default_home" XDG_CONFIG_HOME="$default_xdg" "$PYTHON_BIN" "$CLI" --proje
 [ ! -e "$default_xdg/Cursor" ] || { printf 'default run touched XDG Cursor config\n' >&2; exit 1; }
 [ ! -e "$default_home/.config/Cursor" ] || { printf 'default run touched HOME Cursor config\n' >&2; exit 1; }
 [ ! -e "$default_home/.cursor" ] || { printf 'default run touched legacy Cursor config\n' >&2; exit 1; }
+
+copilot_home="$TMP/copilot-home"
+copilot_xdg="$TMP/copilot-xdg"
+copilot_target="$TMP/copilot-dry-target"
+mkdir -p "$copilot_home" "$copilot_xdg"
+copilot_dry_output="$(HOME="$copilot_home" XDG_CONFIG_HOME="$copilot_xdg" "$PYTHON_BIN" "$CLI" --project-name copilot-dry --target-path "$copilot_target" --install-copilot-global --vscode-target insiders --dry-run)"
+case "$copilot_dry_output" in
+  *"Global VS Code/Copilot configuration (--install-copilot-global):"*"VS Code target: insiders"*"no user settings are changed"*) ;;
+  *) printf 'expected Copilot global dry-run planning output\n' >&2; exit 1 ;;
+esac
+[ ! -e "$copilot_target" ] || { printf 'Copilot global dry-run wrote target files\n' >&2; exit 1; }
+[ ! -e "$copilot_xdg/Code" ] || { printf 'Copilot global dry-run wrote VS Code stable config\n' >&2; exit 1; }
+[ ! -e "$copilot_xdg/Code - Insiders" ] || { printf 'Copilot global dry-run wrote VS Code insiders config\n' >&2; exit 1; }
 
 target="$TMP/sample-project"
 "$PYTHON_BIN" "$CLI" --project-name sample-project --target-path "$target" >/dev/null
@@ -79,16 +100,19 @@ fi
 
 printf 'user content\n' > "$target/AGENTS.md"
 printf 'custom decisions\n' > "$target/docs/pegasus/memory/decisions.md"
+mkdir -p "$target/.github"
+printf 'custom copilot instructions\n' > "$target/.github/copilot-instructions.md"
 if "$PYTHON_BIN" "$CLI" --project-name sample-project --target-path "$target" >/dev/null 2>&1; then
   printf 'expected conflict failure\n' >&2
   exit 1
 fi
 assert_file_contains "$target/AGENTS.md" "user content"
 assert_file_contains "$target/docs/pegasus/memory/decisions.md" "custom decisions"
+assert_file_contains "$target/.github/copilot-instructions.md" "custom copilot instructions"
 
 force_output="$($PYTHON_BIN "$CLI" --project-name sample-project --target-path "$target" --force)"
 case "$force_output" in
-  *"Overwrites (--force):"*"$target/AGENTS.md"*) ;;
+  *"Overwrites (--force):"*"$target/.github/copilot-instructions.md"*"$target/AGENTS.md"*) ;;
   *) printf 'expected force output to list overwritten harness files\n' >&2; exit 1 ;;
 esac
 assert_file_contains "$target/AGENTS.md" "sample-project"
@@ -101,7 +125,7 @@ global_dry_target="$TMP/global-dry-target"
 mkdir -p "$global_home" "$global_xdg"
 global_dry_output="$(HOME="$global_home" XDG_CONFIG_HOME="$global_xdg" "$PYTHON_BIN" "$CLI" --project-name global-dry --target-path "$global_dry_target" --install-cursor-global --dry-run)"
 case "$global_dry_output" in
-  *"Global Cursor rules (--install-cursor-global):"*"$global_xdg/Cursor/User/rules"*"pegasus-global.mdc"*) ;;
+  *"Legacy global Cursor rules (--install-cursor-global):"*"$global_xdg/Cursor/User/rules"*"pegasus-global.mdc"*) ;;
   *) printf 'expected global dry-run output to list intended global operations\n' >&2; exit 1 ;;
 esac
 [ ! -e "$global_dry_target" ] || { printf 'global dry-run wrote target files\n' >&2; exit 1; }
@@ -114,7 +138,7 @@ global_rule="$global_xdg/Cursor/User/rules/pegasus-global.mdc"
 assert_file_contains "$global_rule" "PEGASUS-CURSOR-GLOBAL"
 assert_file_contains "$global_rule" "Pegasus IA Global Cursor Guidance"
 case "$global_output" in
-  *"Updated global Cursor rules: $global_xdg/Cursor/User/rules"*) ;;
+  *"Updated legacy global Cursor rules: $global_xdg/Cursor/User/rules"*) ;;
   *) printf 'expected global install output to report updated global path\n' >&2; exit 1 ;;
 esac
 
