@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bootstrap a Pegasus/Cursor harness into a target workspace."""
+"""Bootstrap a Pegasus VS Code/Copilot harness into a target workspace."""
 
 from __future__ import annotations
 
@@ -16,12 +16,27 @@ DEFAULT_ROOT = Path("/var/www/html/personal")
 PROJECT_NAME_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 GLOBAL_MARKER = "PEGASUS-CURSOR-GLOBAL"
 GLOBAL_TEMPLATE_VERSION = "1"
+COPILOT_SURFACES = (
+    ".github/",
+    ".github/copilot-instructions.md",
+    ".github/instructions/",
+    ".github/prompts/",
+    ".github/agents/",
+)
+WORKSPACE_SURFACES = COPILOT_SURFACES + (
+    "AGENTS.md",
+    "docs/pegasus/",
+    ".cursor/",
+)
+PLANNED_WORKSPACE_FILES = (
+    Path(".github/copilot-instructions.md"),
+)
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="pegasus-harness-bootstrap",
-        description="Configure a local Pegasus/Cursor harness in a target workspace.",
+        description="Configure a local Pegasus VS Code/Copilot harness in a target workspace.",
     )
     parser.add_argument(
         "--project-name",
@@ -43,9 +58,20 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="Replace existing known harness files.",
     )
     parser.add_argument(
+        "--install-copilot-global",
+        action="store_true",
+        help="Plan opt-in global VS Code/Copilot user configuration. Install behavior is implemented in a later slice.",
+    )
+    parser.add_argument(
+        "--vscode-target",
+        choices=("stable", "insiders"),
+        default="stable",
+        help="VS Code target for Copilot global configuration planning: stable or insiders.",
+    )
+    parser.add_argument(
         "--install-cursor-global",
         action="store_true",
-        help="Install or update opt-in global Cursor user rules with backups.",
+        help="Legacy: install or update opt-in global Cursor user rules with backups.",
     )
     return parser.parse_args(argv)
 
@@ -90,6 +116,10 @@ def template_files(root: Path) -> list[Path]:
     if not files:
         fail(f"no template files found in {root}")
     return files
+
+
+def workspace_inventory_files(files: list[Path]) -> list[Path]:
+    return sorted(set(files).union(PLANNED_WORKSPACE_FILES))
 
 
 def detect_cursor_rules_dir() -> tuple[Path, str | None]:
@@ -155,11 +185,19 @@ def print_plan(
     global_creates: list[Path] | None = None,
     global_updates: list[Path] | None = None,
     global_backups: list[Path] | None = None,
+    install_copilot_global: bool = False,
+    vscode_target: str = "stable",
 ) -> None:
-    print("Pegasus harness bootstrap plan")
+    print("Pegasus VS Code/Copilot harness bootstrap plan")
     print(f"Project: {project_name}")
     print(f"Target: {target}")
     print(f"Template root: {root}")
+    print("Primary IDE: VS Code with GitHub Copilot")
+
+    print("\nManaged workspace surfaces:")
+    for surface in WORKSPACE_SURFACES:
+        label = " (legacy compatibility)" if surface == ".cursor/" else ""
+        print(f"  {target / surface.rstrip('/')}{label}")
 
     if creates:
         print("\nCreates:")
@@ -177,7 +215,7 @@ def print_plan(
             print(f"  {path}")
 
     if global_rules_dir is not None:
-        print("\nGlobal Cursor rules (--install-cursor-global):")
+        print("\nLegacy global Cursor rules (--install-cursor-global):")
         print(f"  Rules path: {global_rules_dir}")
         if global_note:
             print(f"  Note: {global_note}")
@@ -196,6 +234,11 @@ def print_plan(
             print("  Backups:")
             for path in global_backups:
                 print(f"    {path}")
+
+    if install_copilot_global:
+        print("\nGlobal VS Code/Copilot configuration (--install-copilot-global):")
+        print(f"  VS Code target: {vscode_target}")
+        print("  Status: planned for a later implementation slice; no user settings are changed by this slice.")
 
 
 def render_template(content: str, project_name: str, target: Path) -> str:
@@ -245,7 +288,8 @@ def main(argv: list[str] | None = None) -> int:
     target = target_path_for(args.project_name, args.target_path)
     root = template_root()
     files = template_files(root)
-    creates, overwrites, conflicts = build_plan(target, files, args.force)
+    workspace_files = workspace_inventory_files(files)
+    creates, overwrites, conflicts = build_plan(target, workspace_files, args.force)
 
     global_root = None
     global_files: list[Path] = []
@@ -273,6 +317,8 @@ def main(argv: list[str] | None = None) -> int:
         global_creates,
         global_updates,
         global_backups,
+        args.install_copilot_global,
+        args.vscode_target,
     )
 
     if conflicts:
@@ -293,11 +339,14 @@ def main(argv: list[str] | None = None) -> int:
         assert global_rules_dir is not None
         write_global_files(global_root, global_rules_dir, global_files, global_backups)
 
-    print("\nCompleted Pegasus harness bootstrap.")
-    print(f"Open the target workspace in Cursor: {target}")
-    print(f"Start from: {target / 'AGENTS.md'}")
+    print("\nCompleted Pegasus VS Code/Copilot harness bootstrap.")
+    print(f"Open the target workspace in VS Code with Copilot: {target}")
+    print(f"Portable agent guidance: {target / 'AGENTS.md'}")
+    print("Primary Copilot entry point: .github/agents/pegasus-orchestrator.agent.md (added in a later slice)")
+    if args.install_copilot_global:
+        print(f"Global VS Code/Copilot install requested for {args.vscode_target}; no user settings were changed in this slice.")
     if args.install_cursor_global:
-        print(f"Updated global Cursor rules: {global_rules_dir}")
+        print(f"Updated legacy global Cursor rules: {global_rules_dir}")
         for backup in global_backups:
             print(f"Backup created: {backup}")
     return 0
