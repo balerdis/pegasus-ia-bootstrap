@@ -17,19 +17,19 @@
 
 ## Phase 3: Global/User Copilot Install
 
-- [ ] 3.1 Create `templates/copilot-global/{agents,instructions,prompts}/` with conservative assets and no unsupported parity claims.
-- [ ] 3.2 Add path resolution for Pegasus-managed root `~/.config/pegasus-ia/copilot/{agents,instructions,prompts}/` and Stable/Insiders settings paths respecting `XDG_CONFIG_HOME`.
-- [ ] 3.3 Implement Copilot global dry-run with no workspace, managed-root, settings, or backup writes.
-- [ ] 3.4 Back up settings and safely merge `chat.agentFilesLocations`, `chat.instructionsFilesLocations`, and `chat.promptFilesLocations` without removals.
-- [ ] 3.5 Preserve legacy `templates/cursor-global/` and Cursor global install behavior as secondary, with updated legacy wording.
+- [x] 3.1 Create `templates/copilot-global/{agents,instructions,prompts}/` with conservative assets and no unsupported parity claims.
+- [x] 3.2 Add path resolution for Pegasus-managed root `~/.config/pegasus-ia/copilot/{agents,instructions,prompts}/` and Stable/Insiders settings paths respecting `XDG_CONFIG_HOME`.
+- [x] 3.3 Implement Copilot global dry-run with no workspace, managed-root, settings, or backup writes.
+- [x] 3.4 Back up settings and safely merge `chat.agentFilesLocations`, `chat.instructionsFilesLocations`, and `chat.promptFilesLocations` without removals.
+- [x] 3.5 Preserve legacy `templates/cursor-global/` and Cursor global install behavior as secondary, with updated legacy wording.
 
 ## Phase 4: Docs, Config, and Verification
 
-- [ ] 4.1 Update `README.md` with Copilot-first usage, layout, orchestrator, opt-in global install, dry-run, backups, Stable/Insiders, and legacy Cursor notes.
-- [ ] 4.2 Update `openspec/config.yaml` if still Cursor-first; leave stable spec sync to archive unless orchestrator requires pre-archive alignment.
-- [ ] 4.3 Extend `tests/smoke.sh` for flags, dry-run, Copilot layout, agents, excluded reviewers, banned references, conflicts/force, no `.git`, and conditional Cursor mentions.
-- [ ] 4.4 Add smoke coverage for Copilot global dry-run/install/update/backups/settings merge for Stable and Insiders using isolated `HOME` and `XDG_CONFIG_HOME`.
-- [ ] 4.5 Run `bash tests/smoke.sh` and inspect generated output for unsupported Copilot/OpenCode parity claims.
+- [x] 4.1 Update `README.md` with Copilot-first usage, layout, orchestrator, opt-in global install, dry-run, backups, Stable/Insiders, and legacy Cursor notes.
+- [x] 4.2 Update `openspec/config.yaml` if still Cursor-first; leave stable spec sync to archive unless orchestrator requires pre-archive alignment.
+- [x] 4.3 Extend `tests/smoke.sh` for flags, dry-run, Copilot layout, agents, excluded reviewers, banned references, conflicts/force, no `.git`, and conditional Cursor mentions.
+- [x] 4.4 Add smoke coverage for Copilot global dry-run/install/update/backups/settings merge for Stable and Insiders using isolated `HOME` and `XDG_CONFIG_HOME`.
+- [x] 4.5 Run `bash tests/smoke.sh` and inspect generated output for unsupported Copilot/OpenCode parity claims.
 
 ## Review Workload Forecast
 
