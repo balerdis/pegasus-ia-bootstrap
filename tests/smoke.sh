@@ -74,6 +74,10 @@ case "$default_plan" in
   *"Primary IDE: VS Code with GitHub Copilot"*".github/copilot-instructions.md"*"AGENTS.md"*"docs/pegasus"*".cursor"*) ;;
   *) printf 'expected dry-run output to list Copilot-first and legacy workspace surfaces\n' >&2; exit 1 ;;
 esac
+case "$default_plan" in
+  *"Open the target workspace in Cursor"*) printf 'default dry-run should not present Cursor as the primary next step\n' >&2; exit 1 ;;
+  *) ;;
+esac
 
 dry_target="$TMP/dry-run-project"
 "$PYTHON_BIN" "$CLI" --project-name dry-run-project --target-path "$dry_target" --dry-run >/dev/null
@@ -83,11 +87,22 @@ default_home="$TMP/default-home"
 default_xdg="$TMP/default-xdg"
 default_target="$TMP/default-no-global"
 mkdir -p "$default_home" "$default_xdg"
-HOME="$default_home" XDG_CONFIG_HOME="$default_xdg" "$PYTHON_BIN" "$CLI" --project-name default-no-global --target-path "$default_target" >/dev/null
+default_run_output="$(HOME="$default_home" XDG_CONFIG_HOME="$default_xdg" "$PYTHON_BIN" "$CLI" --project-name default-no-global --target-path "$default_target")"
 [ -f "$default_target/AGENTS.md" ] || { printf 'default run did not create target harness\n' >&2; exit 1; }
 [ ! -e "$default_xdg/Cursor" ] || { printf 'default run touched XDG Cursor config\n' >&2; exit 1; }
 [ ! -e "$default_home/.config/Cursor" ] || { printf 'default run touched HOME Cursor config\n' >&2; exit 1; }
 [ ! -e "$default_home/.cursor" ] || { printf 'default run touched legacy Cursor config\n' >&2; exit 1; }
+[ ! -e "$default_xdg/Code" ] || { printf 'default run touched VS Code Stable config\n' >&2; exit 1; }
+[ ! -e "$default_xdg/Code - Insiders" ] || { printf 'default run touched VS Code Insiders config\n' >&2; exit 1; }
+[ ! -e "$default_xdg/pegasus-ia" ] || { printf 'default run touched Pegasus-managed Copilot config\n' >&2; exit 1; }
+case "$default_run_output" in
+  *"Open the target workspace in VS Code with Copilot"*"Primary Copilot entry point: .github/agents/pegasus-orchestrator.agent.md"*) ;;
+  *) printf 'expected default completion output to point to VS Code/Copilot and the Pegasus orchestrator\n' >&2; exit 1 ;;
+esac
+case "$default_run_output" in
+  *"Open the target workspace in Cursor"*) printf 'default completion should not present Cursor as the primary next step\n' >&2; exit 1 ;;
+  *) ;;
+esac
 
 copilot_home="$TMP/copilot-home"
 copilot_xdg="$TMP/copilot-xdg"
@@ -227,6 +242,11 @@ fi
 
 if grep -R -E 'Gentle AI|Engram' "$target" >/dev/null; then
   printf 'generated public files contain banned references\n' >&2
+  exit 1
+fi
+
+if grep -R -E 'same as OpenCode|1:1 OpenCode|full OpenCode parity|exact OpenCode parity' "$target/.github" "$copilot_install_xdg/pegasus-ia/copilot" >/dev/null; then
+  printf 'generated Copilot assets contain unsupported OpenCode/Copilot parity claims\n' >&2
   exit 1
 fi
 

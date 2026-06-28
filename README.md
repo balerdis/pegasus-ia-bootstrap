@@ -1,34 +1,42 @@
 # Pegasus IA Bootstrap
 
-Local bootstrap tooling for configuring a Pegasus/Cursor harness in a target workspace.
+Local bootstrap tooling for configuring a Pegasus VS Code/Copilot-first harness in a target workspace. The generated workspace contains only guidance, SDD templates, local Markdown memory, Copilot assets, and secondary legacy Cursor compatibility files; it does not scaffold app code, Git metadata, CI, deployment, or remote resources.
 
-## Usage
-
-The product CLI is implemented in Python for readability and future growth around flags, validation, and templates. It remains executable directly:
+## Quick path
 
 ```sh
 bin/pegasus-harness-bootstrap --project-name gestor-solicitudes-mvp --dry-run
 bin/pegasus-harness-bootstrap --project-name gestor-solicitudes-mvp
-bin/pegasus-harness-bootstrap --project-name gestor-solicitudes-mvp --install-cursor-global
 ```
 
 By default, the target workspace path is `/var/www/html/personal/<project-name>`.
 Use `--target-path <path>` for an explicit target and `--force` only when replacing known harness files is intended.
 
-Global Cursor user rules are opt-in. A default run only writes the target workspace harness and does not create, read, back up, or modify global Cursor configuration. Use `--install-cursor-global` to install the Pegasus global Cursor rule. On Linux, the CLI writes to `$XDG_CONFIG_HOME/Cursor/User/rules` when `XDG_CONFIG_HOME` is set, otherwise `~/.config/Cursor/User/rules`; an existing legacy `~/.cursor/rules` directory is reported and preferred. Existing global rule files are backed up with a timestamped `.bak` sibling before update. Combine the flag with `--dry-run` to preview global creates, updates, and backups without writing anything.
+After a successful run, open the target workspace in VS Code with GitHub Copilot and start from the Pegasus orchestrator custom agent at `.github/agents/pegasus-orchestrator.agent.md`.
 
-Run slice verification with:
-
-```sh
-bash tests/smoke.sh
-```
-
-The initialized target workspace contains only harness files. Pegasus IA does not generate the business/domain MVP; the user or team builds that MVP later inside Cursor using this harness:
+## Generated workspace layout
 
 ```txt
+.github/copilot-instructions.md
+.github/instructions/pegasus-workflow.instructions.md
+.github/instructions/pegasus-memory.instructions.md
+.github/instructions/pegasus-sdd-boundaries.instructions.md
+.github/instructions/pegasus-local-first.instructions.md
+.github/instructions/pegasus-legacy-compatibility.instructions.md
+.github/prompts/sdd-phases.prompt.md
+.github/prompts/handoff.prompt.md
+.github/prompts/memory-update.prompt.md
+.github/agents/pegasus-orchestrator.agent.md
+.github/agents/sdd-proposal.agent.md
+.github/agents/sdd-spec.agent.md
+.github/agents/sdd-design.agent.md
+.github/agents/sdd-tasks.agent.md
+.github/agents/sdd-apply.agent.md
+.github/agents/sdd-verify.agent.md
+.github/agents/session-handoff.agent.md
+.github/agents/memory-maintainer.agent.md
+.github/agents/doc-designer.agent.md
 AGENTS.md
-.cursor/rules/pegasus-workflow.mdc
-.cursor/rules/pegasus-memory.mdc
 docs/pegasus/proposal.md
 docs/pegasus/spec.md
 docs/pegasus/design.md
@@ -39,7 +47,58 @@ docs/pegasus/memory/decisions.md
 docs/pegasus/memory/tasks-log.md
 docs/pegasus/memory/handoff.md
 docs/pegasus/memory/learnings.md
+.cursor/rules/pegasus-workflow.mdc
+.cursor/rules/pegasus-memory.mdc
 ```
 
-The smoke wrapper runs the Python CLI with isolated temporary targets and verifies help output, dry-run no-write behavior, full harness structure generation, safe conflict handling, force overwrite reporting, banned public references, and project-name validation.
-It also verifies optional global Cursor rule planning/install/update behavior with temporary `HOME` and `XDG_CONFIG_HOME` values so real Cursor configuration is not touched.
+The `.github/` tree is the primary Copilot-native control surface. `AGENTS.md` remains portable guidance for agents that do not read Copilot-specific files. `.cursor/` is retained only as secondary legacy compatibility and points back to the VS Code/Copilot assets.
+
+## Optional global VS Code/Copilot install
+
+Global/user-level Copilot setup is opt-in and never runs by default:
+
+```sh
+bin/pegasus-harness-bootstrap \
+  --project-name gestor-solicitudes-mvp \
+  --install-copilot-global \
+  --vscode-target stable
+```
+
+Use `--vscode-target insiders` to target VS Code Insiders instead of Stable. On Linux, the CLI respects `XDG_CONFIG_HOME`; otherwise it uses `~/.config`.
+
+| Target | Settings path |
+|---|---|
+| Stable | `$XDG_CONFIG_HOME/Code/User/settings.json` or `~/.config/Code/User/settings.json` |
+| Insiders | `$XDG_CONFIG_HOME/Code - Insiders/User/settings.json` or `~/.config/Code - Insiders/User/settings.json` |
+
+The command copies Pegasus-managed Copilot assets under `$XDG_CONFIG_HOME/pegasus-ia/copilot/{agents,instructions,prompts}/` or `~/.config/pegasus-ia/copilot/{agents,instructions,prompts}/`, then merges these locations into:
+
+- `chat.agentFilesLocations`
+- `chat.instructionsFilesLocations`
+- `chat.promptFilesLocations`
+
+Existing settings are preserved. If the selected `settings.json` exists, it is backed up first with a timestamped `.bak` sibling. Invalid settings JSON fails before workspace, managed asset, backup, or settings writes.
+
+Add `--dry-run` to preview workspace files, global assets, VS Code settings paths, and backup plans without writing anything.
+
+## Legacy Cursor support
+
+Cursor support remains available as legacy compatibility:
+
+```sh
+bin/pegasus-harness-bootstrap --project-name gestor-solicitudes-mvp --install-cursor-global
+```
+
+A default run does not create, read, back up, or modify global Cursor configuration. Use `--install-cursor-global` only when you need the legacy Cursor global rule. On Linux, the CLI writes to `$XDG_CONFIG_HOME/Cursor/User/rules` when `XDG_CONFIG_HOME` is set, otherwise `~/.config/Cursor/User/rules`; an existing legacy `~/.cursor/rules` directory is reported and preferred. Existing global rule files are backed up with a timestamped `.bak` sibling before update.
+
+## Verification
+
+Run smoke verification with:
+
+```sh
+bash tests/smoke.sh
+```
+
+The smoke wrapper runs the Python CLI with isolated temporary targets and verifies help output, dry-run no-write behavior, Copilot-first structure generation, orchestrator and secondary agents, excluded reviewer agents, safe conflict handling, force overwrite reporting, banned public references, conditional legacy Cursor wording, no `.git` creation, and project-name validation.
+
+It also verifies optional global Copilot dry-run/install/update behavior for Stable and Insiders with temporary `HOME` and `XDG_CONFIG_HOME` values, including settings backups and non-destructive settings merge. Legacy Cursor global planning/install/update behavior is covered with isolated temporary paths so real user configuration is not touched.

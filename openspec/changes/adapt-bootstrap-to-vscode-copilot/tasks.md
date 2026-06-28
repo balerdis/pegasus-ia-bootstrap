@@ -25,11 +25,11 @@
 
 ## Phase 4: Docs, Config, and Verification
 
-- [ ] 4.1 Update `README.md` with Copilot-first usage, layout, orchestrator, opt-in global install, dry-run, backups, Stable/Insiders, and legacy Cursor notes.
-- [ ] 4.2 Update `openspec/config.yaml` if still Cursor-first; leave stable spec sync to archive unless orchestrator requires pre-archive alignment.
-- [ ] 4.3 Extend `tests/smoke.sh` for flags, dry-run, Copilot layout, agents, excluded reviewers, banned references, conflicts/force, no `.git`, and conditional Cursor mentions.
-- [ ] 4.4 Add smoke coverage for Copilot global dry-run/install/update/backups/settings merge for Stable and Insiders using isolated `HOME` and `XDG_CONFIG_HOME`.
-- [ ] 4.5 Run `bash tests/smoke.sh` and inspect generated output for unsupported Copilot/OpenCode parity claims.
+- [x] 4.1 Update `README.md` with Copilot-first usage, layout, orchestrator, opt-in global install, dry-run, backups, Stable/Insiders, and legacy Cursor notes.
+- [x] 4.2 Update `openspec/config.yaml` if still Cursor-first; leave stable spec sync to archive unless orchestrator requires pre-archive alignment.
+- [x] 4.3 Extend `tests/smoke.sh` for flags, dry-run, Copilot layout, agents, excluded reviewers, banned references, conflicts/force, no `.git`, and conditional Cursor mentions.
+- [x] 4.4 Add smoke coverage for Copilot global dry-run/install/update/backups/settings merge for Stable and Insiders using isolated `HOME` and `XDG_CONFIG_HOME`.
+- [x] 4.5 Run `bash tests/smoke.sh` and inspect generated output for unsupported Copilot/OpenCode parity claims.
 
 ## Review Workload Forecast
 
