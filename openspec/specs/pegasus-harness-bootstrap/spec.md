@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define a local-first bootstrap that configures only the Cursor/Pegasus IA harness for a target workspace by default. The bootstrap prepares agent guidance, Cursor rules, SDD templates, and project-local Markdown memory; it MUST NOT generate business/domain MVP application code, Git metadata, or remote resources. Optional global Cursor user configuration is permitted only behind an explicit flag with backup safety.
+Define a local-first bootstrap that configures only the VS Code/Copilot-first Pegasus IA harness for a target workspace by default. The bootstrap prepares .github Copilot assets, AGENTS.md, docs/pegasus/, and project-local Markdown memory; it MUST NOT generate business/domain MVP application code, Git metadata, or remote resources. Optional global VS Code/Copilot user configuration is permitted only behind an explicit flag with backup safety.
 
 ## Requirements
 ### Requirement: Bootstrap inputs
@@ -24,103 +24,103 @@ The system MUST accept a target workspace path and project name, with a safe def
 
 ### Requirement: Harness-only output
 
-The system MUST initialize the exact Pegasus harness structure and MUST NOT create framework scaffolds, domain files, UI, API, database, CI, deployment, or other business/domain MVP application code.
+The system MUST initialize a VS Code/Copilot-first Pegasus harness and MUST NOT create framework scaffolds, domain files, UI, API, database, CI, deployment, or other business/domain MVP application code. The default workspace output MUST include `.github/` Copilot assets, `AGENTS.md`, and `docs/pegasus/`; Cursor assets MAY be generated only as clearly secondary legacy compatibility.
 
-#### Scenario: Structure generation
+#### Scenario: Copilot-first structure generation
 
 - GIVEN an empty target workspace directory
 - WHEN the bootstrap completes
-- THEN `AGENTS.md`, `.cursor/rules/`, and `docs/pegasus/` exist
-- AND `docs/pegasus` contains `proposal.md`, `spec.md`, `design.md`, `tasks.md`, `verify.md`, and `memory/`
+- THEN `.github/copilot-instructions.md`, `.github/instructions/`, `.github/prompts/`, `.github/agents/`, `AGENTS.md`, and `docs/pegasus/` exist
+- AND `docs/pegasus` contains proposal, spec, design, tasks, verify, and memory templates
 
 #### Scenario: No app code
 
 - GIVEN any successful bootstrap run
 - WHEN the target tree is inspected
-- THEN only harness, documentation, rule, and memory files were created
-- AND business MVP code is built later inside Cursor by the user/team using the harness
+- THEN only harness, documentation, Copilot, legacy guidance, and memory files were created
+- AND business MVP code is built later by the user/team using the harness
 
 ### Requirement: Portable agent guidance
 
-The system MUST create a portable `AGENTS.md` that explains the Pegasus IA workflow, local memory policy, and how future agents should continue work without relying on external services.
+The system MUST create a portable `AGENTS.md` that explains the Pegasus IA workflow, local memory policy, VS Code/Copilot usage, and how future agents should continue work without relying on external services. `AGENTS.md` MUST remain portable guidance rather than the primary Copilot-native control surface.
 
 #### Scenario: Agent instructions created
 
 - GIVEN a successful bootstrap run
 - WHEN `AGENTS.md` is opened
-- THEN it describes Pegasus IA workflow usage
+- THEN it describes Pegasus IA workflow usage and VS Code/Copilot entry points
 - AND it directs sessions to read and update `docs/pegasus/memory/`
 
-### Requirement: Cursor-specific rules
+### Requirement: Cursor legacy compatibility
 
-The system MUST create Cursor-specific guidance under `.cursor/rules/` and generated public artifacts MUST NOT mention Gentle AI or Engram.
+The system MUST preserve Cursor compatibility as legacy behavior and MUST make VS Code/Copilot assets the primary generated experience. Generated public artifacts MUST NOT mention Gentle AI or Engram.
 
-#### Scenario: Cursor rules created
+#### Scenario: Legacy Cursor guidance retained
 
 - GIVEN a successful bootstrap run
-- WHEN `.cursor/rules/` is inspected
-- THEN at least one Cursor rule file exists with Pegasus IA usage guidance
-- AND the generated files contain no references to Gentle AI or Engram
+- WHEN legacy Cursor compatibility artifacts are inspected
+- THEN they exist only as secondary compatibility guidance
+- AND the primary instructions point users to VS Code/Copilot assets first
 
-#### Scenario: Default run does not touch global Cursor configuration
+#### Scenario: Default run does not touch global legacy configuration
 
-- GIVEN no global Cursor flag is provided
+- GIVEN no global install flag is provided
 - WHEN the bootstrap runs successfully
 - THEN it creates or updates only target workspace harness files
-- AND it does not create, modify, or back up global Cursor user configuration files
+- AND it does not create, modify, or back up global user configuration files
 
-### Requirement: Optional global Cursor configuration
+### Requirement: Optional global VS Code/Copilot configuration
 
-The system MUST install or update global Cursor user configuration only when `--install-cursor-global` is explicitly provided, and MUST protect any existing global config with a backup before changing it.
+The system MUST support global/user-level VS Code/Copilot asset installation only behind an explicit opt-in flag. It MUST write Pegasus-managed assets under `~/.config/pegasus-ia/copilot/{agents,instructions,prompts}/`, MUST support dry-run planning, MUST back up `settings.json` before mutation, MUST merge JSON settings without removing existing entries, MUST report every created/updated/backed-up path, and MUST treat Stable and Insiders as separate targets.
 
-#### Scenario: Explicit global Cursor install
+#### Scenario: Default is repository-only
 
-- GIVEN `--install-cursor-global` is provided
+- GIVEN no global VS Code/Copilot install flag is provided
 - WHEN the bootstrap runs successfully
-- THEN it detects the Linux Cursor user config or rules path
-- AND it installs or updates the Pegasus global Cursor configuration at that detected path
-- AND it reports the global path changed
+- THEN it does not modify VS Code user settings or Pegasus-managed user directories
+- AND it reports any manual global setup as optional
 
-#### Scenario: Existing global config is backed up
+#### Scenario: Dry-run reports global plan
 
-- GIVEN an existing global Cursor configuration file would be changed
-- WHEN the bootstrap runs with `--install-cursor-global`
-- THEN it writes a timestamped backup before modifying the existing file
-- AND it reports the backup path
-
-#### Scenario: Dry-run includes global operations without writes
-
-- GIVEN `--install-cursor-global` and `--dry-run` are provided
+- GIVEN the global VS Code/Copilot install flag and `--dry-run` are provided
 - WHEN the bootstrap plans work
-- THEN it prints planned global Cursor config creates, updates, and backups
-- AND it does not write target workspace files or global Cursor config files
+- THEN it prints planned Pegasus-managed asset paths and VS Code setting changes
+- AND it writes neither workspace files nor user settings
+
+#### Scenario: Settings merge is backed up and non-destructive
+
+- GIVEN the global VS Code/Copilot install flag is provided for Stable or Insiders
+- WHEN the bootstrap changes the selected target settings
+- THEN it writes a timestamped backup of that target `settings.json`
+- AND it merges `chat.agentFilesLocations`, `chat.instructionsFilesLocations`, and `chat.promptFilesLocations` without removing existing values
 
 ### Requirement: SDD document templates
 
-The system MUST create SDD templates under `docs/pegasus` for proposal, spec, design, tasks, and verification.
+The system MUST create SDD templates under `docs/pegasus` for proposal, spec, design, tasks, and verification, and Copilot prompts/instructions SHOULD reference those templates as the workflow source of truth.
 
 #### Scenario: SDD templates available
 
 - GIVEN a successful bootstrap run
-- WHEN `docs/pegasus` is inspected
+- WHEN `docs/pegasus` and `.github/prompts/` are inspected
 - THEN each SDD template file exists with clear headings for future project work
+- AND Copilot prompt assets guide the user through those SDD phases
 
 ### Requirement: Project-local memory templates
 
-The system MUST create `context.md`, `decisions.md`, `tasks-log.md`, `handoff.md`, and `learnings.md` under `docs/pegasus/memory`, each with clear read/write rules.
+The system MUST create `context.md`, `decisions.md`, `tasks-log.md`, `handoff.md`, and `learnings.md` under `docs/pegasus/memory`, each with clear read/write rules for VS Code/Copilot sessions and portable agents.
 
 #### Scenario: Memory recovery files available
 
 - GIVEN a successful bootstrap run
 - WHEN the memory directory is inspected
 - THEN all memory templates exist
-- AND each template states when future Cursor sessions should read from and write to it
+- AND each template states when future VS Code/Copilot sessions should read from and write to it
 
 #### Scenario: Compacted session recovery
 
-- GIVEN a future Cursor session with limited prior context
+- GIVEN a future VS Code/Copilot session with limited prior context
 - WHEN the session follows generated guidance
-- THEN it can recover project context, decisions, task state, handoff notes, and learnings from Markdown memory
+- THEN it can recover context, decisions, task state, handoff notes, and learnings from Markdown memory
 
 ### Requirement: Existing file protection
 
@@ -159,11 +159,11 @@ The system MUST complete without running `git init`, creating GitHub remotes, co
 
 ### Requirement: Completion output
 
-The system MUST print clear completion output that identifies initialized harness paths and explains the next steps to open and use the target workspace in Cursor.
+The system MUST print completion output that identifies initialized VS Code/Copilot harness paths, names the Pegasus orchestrator entry point, reports global/user-level actions when requested, and explains next steps for opening the target workspace in VS Code with Copilot. Cursor MUST be mentioned only when legacy compatibility output or legacy flags are relevant.
 
 #### Scenario: Completion guidance
 
 - GIVEN a successful bootstrap run
 - WHEN output is displayed
-- THEN it summarizes created harness artifacts
-- AND tells the user to open the target workspace in Cursor and start from `AGENTS.md`
+- THEN it summarizes `.github/`, `AGENTS.md`, `docs/pegasus/`, and the Pegasus orchestrator agent
+- AND it tells the user to open the target workspace in VS Code with Copilot

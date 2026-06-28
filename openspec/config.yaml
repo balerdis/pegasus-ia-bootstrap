@@ -2,10 +2,10 @@ schema: spec-driven
 
 context: |
   Project: Pegasus IA bootstrap
-  Purpose: reusable bootstrap that configures a Cursor harness/workspace for Pegasus IA exercises and demos
-  Architecture: local-first filesystem bootstrap that writes harness templates into a target workspace and optionally installs global Cursor user rules behind an explicit flag
+  Purpose: reusable bootstrap that configures a VS Code/Copilot-first Pegasus IA harness/workspace for exercises and demos
+  Architecture: local-first filesystem bootstrap that writes harness templates into a target workspace and optionally installs global VS Code/Copilot assets or legacy Cursor user rules behind explicit flags
   Stack: Python 3 CLI bootstrap script plus Bash smoke verification; no package manifest or framework scaffold
-  Testing: bash tests/smoke.sh covers CLI help, dry-run, conflict, force, and optional global-rule planning/install paths
+  Testing: bash tests/smoke.sh covers CLI help, dry-run, Copilot-first layout, conflict, force, no Git metadata, banned generated references, optional global Copilot Stable/Insiders install paths, settings backups/merge, and legacy Cursor planning/install paths
   Target workspace default path: /var/www/html/personal/<project-name>
   Persistence mode: hybrid
 
