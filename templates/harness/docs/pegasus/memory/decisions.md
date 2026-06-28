@@ -6,7 +6,7 @@ Read this before changing architecture, dependencies, data models, or workflow.
 
 | Date | Decision | Rationale | Tradeoffs |
 |------|----------|-----------|-----------|
-| {{DATE}} | Initialized Pegasus IA harness | Establish local project docs and memory before implementation | Requires maintaining Markdown memory |
+| {{DATE}} | Initialized Pegasus IA VS Code/Copilot harness | Establish local project docs, Copilot entry points, and Markdown memory before implementation | Requires maintaining local docs and memory |
 
 ## Write Rules
 

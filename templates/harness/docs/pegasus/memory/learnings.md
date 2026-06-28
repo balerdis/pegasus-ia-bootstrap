@@ -6,7 +6,7 @@ Read this before repeating investigation or debugging work.
 
 | Date | Learning | Where It Applies |
 |------|----------|------------------|
-| {{DATE}} | Pegasus IA harness uses local Markdown docs for continuity | All sessions |
+| {{DATE}} | Pegasus IA harness uses VS Code/Copilot entry points plus local Markdown docs for continuity | All sessions |
 
 ## Write Rules
 
