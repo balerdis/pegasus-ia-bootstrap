@@ -40,7 +40,7 @@ handoffs:
     send: false
   - label: Verify current slice
     agent: sdd-verify
-    prompt: Verify the current implemented task slice, run the relevant checks, and update docs/pegasus/verification.md.
+    prompt: Verify the current implemented task slice, run the relevant checks, and update docs/pegasus/verify.md.
     send: false
   - label: Create session handoff
     agent: session-handoff
@@ -65,7 +65,7 @@ Then recover project memory from:
 - `docs/pegasus/spec.md`
 - `docs/pegasus/design.md`
 - `docs/pegasus/tasks.md`
-- `docs/pegasus/verification.md`
+- `docs/pegasus/verify.md`
 
 Keep all work bounded by the current SDD task slice.
 
