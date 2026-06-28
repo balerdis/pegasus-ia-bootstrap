@@ -10,7 +10,7 @@ Read this at session start to recover task status and blockers.
 
 | Date | Task | Status | Notes |
 |------|------|--------|-------|
-| {{DATE}} | Harness initialized | Done | Start from `AGENTS.md` and `docs/pegasus/tasks.md` |
+| {{DATE}} | Harness initialized | Done | Start from `.github/agents/pegasus-orchestrator.agent.md`, `AGENTS.md`, and `docs/pegasus/tasks.md` |
 
 ## Write Rules
 

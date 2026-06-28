@@ -1,9 +1,11 @@
 ---
-description: Project-local Markdown memory rules
+description: Legacy Cursor compatibility for project-local Markdown memory rules
 alwaysApply: true
 ---
 
 # Local Memory Rules
+
+This is secondary legacy Cursor compatibility guidance. For VS Code/Copilot sessions, prefer `.github/copilot-instructions.md` and `.github/instructions/pegasus-memory.instructions.md`.
 
 Use `docs/pegasus/memory/` as the project continuity layer.
 
