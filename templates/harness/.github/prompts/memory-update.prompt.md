@@ -1,5 +1,10 @@
 ---
+name: pegasus-memory-update
 description: Update project-local Markdown memory
+tools:
+  - read
+  - search
+  - edit
 ---
 
 # Memory update prompt

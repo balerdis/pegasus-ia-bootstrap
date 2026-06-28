@@ -1,5 +1,11 @@
 ---
+name: pegasus-sdd-phases
 description: Work through Pegasus IA SDD phases
+tools:
+  - read
+  - search
+  - edit
+  - agent
 ---
 
 # SDD phases prompt

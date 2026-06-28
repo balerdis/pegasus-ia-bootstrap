@@ -1,5 +1,10 @@
 ---
+name: pegasus-handoff
 description: Prepare a compact session handoff
+tools:
+  - read
+  - search
+  - edit
 ---
 
 # Handoff prompt
