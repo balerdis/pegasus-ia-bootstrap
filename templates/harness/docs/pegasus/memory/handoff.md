@@ -11,4 +11,4 @@ Read this first when resuming a previous or compacted session.
 
 ## Write Rules
 
-Before ending a session, replace the latest handoff with current state, completed work, open risks, next recommended step, and relevant files.
+Before ending a session, merge the current state into this handoff without deleting useful prior context. Preserve completed work, open risks, next recommended step, and relevant files unless they are clearly obsolete.

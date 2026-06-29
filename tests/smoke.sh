@@ -39,6 +39,7 @@ expected_files=(
   ".github/agents/doc-designer.agent.md"
   ".cursor/rules/pegasus-memory.mdc"
   ".cursor/rules/pegasus-workflow.mdc"
+  "docs/pegasus/prd.md"
   "docs/pegasus/proposal.md"
   "docs/pegasus/spec.md"
   "docs/pegasus/design.md"

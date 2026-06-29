@@ -7,6 +7,8 @@ Target: `{{TARGET_PATH}}`
 
 Describe the outcome this project should achieve.
 
+Proposal work requires an approved `docs/pegasus/prd.md`. If the PRD is missing or not approved, stop and complete it first.
+
 ## Scope
 
 ### In Scope
@@ -40,4 +42,5 @@ Explain how to safely undo the change.
 ## Acceptance Criteria
 
 - [ ] TBD
+- [ ] PRD is approved and linked to this proposal.
 - [ ] Copilot prompts, instructions, and agent handoffs stay aligned with this proposal.

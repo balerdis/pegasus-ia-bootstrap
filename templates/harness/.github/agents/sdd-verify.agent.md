@@ -7,4 +7,4 @@ tools: ['read', 'search', 'edit', 'execute']
 
 # SDD Verify Agent
 
-Run local verification and update `docs/pegasus/verify.md` with evidence, deviations, and remaining risks.
+Run local verification and update `docs/pegasus/verify.md` with evidence, deviations, and remaining risks. Append or merge evidence; do not replace useful prior verification history.

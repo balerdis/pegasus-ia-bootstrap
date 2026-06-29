@@ -18,9 +18,13 @@ agents:
   - memory-maintainer
   - doc-designer
 handoffs:
+  - label: Draft PRD
+    agent: doc-designer
+    prompt: Draft or refine docs/pegasus/prd.md from the user request before SDD starts.
+    send: false
   - label: Draft proposal
     agent: sdd-proposal
-    prompt: Read the Pegasus memory and draft or refine docs/pegasus/proposal.md.
+    prompt: Read the approved PRD and Pegasus memory, then draft or refine docs/pegasus/proposal.md.
     send: false
   - label: Write spec
     agent: sdd-spec
@@ -61,6 +65,7 @@ First read `.github/copilot-instructions.md`.
 Then recover project memory from:
 
 - `docs/pegasus/memory/`
+- `docs/pegasus/prd.md`
 - `docs/pegasus/proposal.md`
 - `docs/pegasus/spec.md`
 - `docs/pegasus/design.md`
@@ -73,13 +78,43 @@ Coordinate secondary agents only for their documented scope.
 
 Do not claim exact parity with other agent runtimes.
 
-Default flow:
+## Default flow
 
 1. Clarify the current user goal.
 2. Check the current Pegasus memory and SDD documents.
-3. Identify the current phase: proposal, spec, design, tasks, apply, verify, or handoff.
-4. Delegate to the matching specialized agent when useful.
-5. Ask for approval before moving from one SDD phase to the next.
-6. During implementation, modify only the approved task slice.
-7. After implementation, trigger verification.
-8. After verification, update memory and handoff notes.
+3. Choose the smallest safe path:
+   - Direct fix path: for small, punctual, low-risk changes with clear acceptance criteria, update memory and verification without forcing the full SDD flow.
+   - SDD path: for broad, ambiguous, architectural, multi-file, or higher-risk changes, use `request → PRD → proposal → spec → design → tasks → apply → verify → handoff`.
+4. Identify the current phase: PRD, proposal, spec, design, tasks, apply, verify, or handoff.
+5. Delegate to the matching specialized agent when useful.
+6. Ask for approval before moving from one phase to the next.
+7. During implementation, modify only the approved task slice.
+8. After implementation, trigger verification.
+9. After verification, update memory and handoff notes.
+
+## Phase gates
+
+Before moving to the next SDD phase, confirm the required docs exist, are current enough for the requested work, and have user approval.
+
+| Next phase | Required docs before starting | Approval gate |
+|------------|-------------------------------|---------------|
+| PRD | User request and current memory | User agrees the request should be shaped into a PRD |
+| Proposal | `docs/pegasus/prd.md` | PRD approved |
+| Spec | `docs/pegasus/prd.md`, `docs/pegasus/proposal.md` | Proposal approved |
+| Design | PRD, proposal, `docs/pegasus/spec.md` | Spec approved |
+| Tasks | PRD, proposal, spec, `docs/pegasus/design.md` | Design approved |
+| Apply | PRD, proposal, spec, design, `docs/pegasus/tasks.md` | Task slice approved |
+| Verify | PRD, proposal, spec, design, tasks, implementation diff | Implementation ready for verification |
+| Handoff | `docs/pegasus/verify.md`, relevant memory files | Verification reviewed or caveats accepted |
+
+## Review budget
+
+Before applying a large change, estimate the implementation footprint. If the change is likely to exceed about 400 changed lines or touches multiple unrelated areas, stop and ask whether to split the work into chained PRs. Record the decision in `docs/pegasus/tasks.md` or `docs/pegasus/memory/decisions.md` before implementation.
+
+## Merge discipline
+
+When updating progress, memory, verification, or handoff files, merge new facts into the existing useful history. Do not replace prior decisions, verification evidence, blockers, or task logs unless the user explicitly approves archival or removal.
+
+## Model preference
+
+Use one project-selected Copilot model for all phases in this first Pegasus release. Record the preferred model in `docs/pegasus/memory/context.md` or workspace Copilot settings when available. Do not promise per-phase model routing or hard runtime control from Pegasus docs alone.

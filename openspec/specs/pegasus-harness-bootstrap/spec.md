@@ -31,7 +31,7 @@ The system MUST initialize a VS Code/Copilot-first Pegasus harness and MUST NOT 
 - GIVEN an empty target workspace directory
 - WHEN the bootstrap completes
 - THEN `.github/copilot-instructions.md`, `.github/instructions/`, `.github/prompts/`, `.github/agents/`, `AGENTS.md`, and `docs/pegasus/` exist
-- AND `docs/pegasus` contains proposal, spec, design, tasks, verify, and memory templates
+- AND `docs/pegasus` contains PRD, proposal, spec, design, tasks, verify, and memory templates
 
 #### Scenario: No app code
 
@@ -94,9 +94,9 @@ The system MUST support global/user-level VS Code/Copilot asset installation onl
 - THEN it writes a timestamped backup of that target `settings.json`
 - AND it merges `chat.agentFilesLocations`, `chat.instructionsFilesLocations`, and `chat.promptFilesLocations` without removing existing values
 
-### Requirement: SDD document templates
+### Requirement: PRD and SDD document templates
 
-The system MUST create SDD templates under `docs/pegasus` for proposal, spec, design, tasks, and verification, and Copilot prompts/instructions SHOULD reference those templates as the workflow source of truth.
+The system MUST create a PRD template and SDD templates under `docs/pegasus` for proposal, spec, design, tasks, and verification, and Copilot prompts/instructions SHOULD reference those templates as the workflow source of truth. The guided SDD flow MUST be `request -> PRD -> proposal -> spec -> design -> tasks -> apply -> verify -> handoff`, and proposal work MUST require an approved PRD.
 
 #### Scenario: SDD templates available
 
@@ -104,6 +104,45 @@ The system MUST create SDD templates under `docs/pegasus` for proposal, spec, de
 - WHEN `docs/pegasus` and `.github/prompts/` are inspected
 - THEN each SDD template file exists with clear headings for future project work
 - AND Copilot prompt assets guide the user through those SDD phases
+
+#### Scenario: PRD gates proposal
+
+- GIVEN a future Copilot-guided project session
+- WHEN the user requests SDD proposal work
+- THEN the generated guidance requires `docs/pegasus/prd.md` to exist and be approved first
+
+### Requirement: Lightweight orchestration guardrails
+
+The generated Pegasus guidance MUST support a direct-fix path for small, punctual, low-risk changes, MUST require required-doc checks and user approval before phase transitions, MUST require review-budget confirmation before large implementation, and MUST preserve useful progress, memory, and verification history by merging updates instead of overwriting content.
+
+#### Scenario: Direct fix avoids unnecessary SDD
+
+- GIVEN a small, punctual, low-risk change with clear acceptance criteria
+- WHEN the orchestrator selects the workflow
+- THEN it may use a direct-fix path with memory and verification updates instead of forcing all SDD phases
+
+#### Scenario: Large change triggers review budget decision
+
+- GIVEN an implementation estimate above about 400 changed lines or touching multiple unrelated areas
+- WHEN implementation is about to start
+- THEN generated guidance requires the orchestrator to stop and ask whether to split the work into chained PRs
+
+#### Scenario: Progress history is preserved
+
+- GIVEN existing useful progress, memory, handoff, or verification history
+- WHEN new status or evidence is recorded
+- THEN generated guidance requires integrating the new update without replacing prior useful content
+
+### Requirement: Model preference documentation
+
+The generated guidance MUST use a single project-selected Copilot model for all phases in the first Pegasus release and MUST document where to record that preference without promising hard runtime control or per-phase model routing.
+
+#### Scenario: Model preference recorded as project context
+
+- GIVEN a project team chooses a Copilot model preference
+- WHEN the generated guidance is followed
+- THEN the preference is recorded in project context or workspace settings
+- AND Pegasus guidance does not claim per-phase model routing control
 
 ### Requirement: Project-local memory templates
 

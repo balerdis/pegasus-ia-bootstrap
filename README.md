@@ -37,6 +37,7 @@ After a successful run, open the target workspace in VS Code with GitHub Copilot
 .github/agents/memory-maintainer.agent.md
 .github/agents/doc-designer.agent.md
 AGENTS.md
+docs/pegasus/prd.md
 docs/pegasus/proposal.md
 docs/pegasus/spec.md
 docs/pegasus/design.md
