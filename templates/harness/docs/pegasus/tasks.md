@@ -8,18 +8,56 @@ Use `.github/prompts/sdd-phases.prompt.md` to help maintain this file in VS Code
 
 Estimate before implementation starts. If estimated changes exceed about 400 changed lines or touch multiple unrelated areas, stop and ask whether to split the work into chained PRs.
 
+Decision needed before apply: Yes|No
+Chained PRs recommended: Yes|No
+400-line budget risk: Low|Medium|High
+
 | Question | Answer |
 |----------|--------|
 | Estimated changed lines | TBD |
 | Multiple areas touched | TBD |
-| 400-line budget risk | TBD |
-| Chained PRs recommended | TBD |
+| 400-line budget risk | Low / Medium / High |
+| Chained PRs recommended | Yes / No |
+| Decision needed before apply | Yes / No |
 | User decision | TBD |
 
-## Phase 1: TBD
+## Inputs
+
+| Source | Path | Status |
+|--------|------|--------|
+| Spec | `docs/pegasus/spec.md` | Approved / Pending / Blocked |
+| Design | `docs/pegasus/design.md` | Approved / Pending / Blocked |
+
+## Implementation Slices
+
+Use small slices that can be reviewed independently and rolled back safely. Tasks phase plans work only; it does not implement code.
+
+### Slice 1: TBD
+
+| Field | Value |
+|-------|-------|
+| Task IDs | 1.1, 1.2 |
+| Dependency / order | Starts after approved design |
+| Scope | TBD |
+| Verification | TBD command or manual check |
+| Risk | TBD |
+| Rollback boundary | Revert files changed by this slice |
 
 - [ ] 1.1 TBD
 - [ ] 1.2 TBD
+
+### Example Slice: Apply deduplication guard
+
+| Field | Value |
+|-------|-------|
+| Task IDs | EX-1 |
+| Dependency / order | After tasks-log and apply-progress templates exist |
+| Scope | Add duplicate-check instructions to apply guidance |
+| Verification | Confirm generated apply agent mentions duplicate-check and apply-progress |
+| Risk | Low; docs-only change |
+| Rollback boundary | Revert apply guidance/template edits |
+
+- [ ] EX-1 Add duplicate-check instructions to apply guidance.
 
 ## Verification Notes
 
@@ -32,3 +70,13 @@ Estimate before implementation starts. If estimated changes exceed about 400 cha
 - Also update `docs/pegasus/memory/tasks-log.md` when task status changes.
 - Before starting or delegating a task, check `docs/pegasus/memory/tasks-log.md` and `docs/pegasus/apply-progress.md` for matching work already in progress or completed.
 - Merge progress into existing useful history; do not replace prior task notes, apply-progress, blockers, or completed work.
+
+| Date | Slice/Task | Status | Notes |
+|------|------------|--------|-------|
+| {{DATE}} | TBD | Not started | TBD |
+
+## No Implementation in Tasks Phase
+
+- Do not edit application/source files from this phase.
+- Do not mark apply or verify complete from this phase.
+- Stop and ask before apply if any exact guard line above says a decision is needed.
