@@ -96,7 +96,7 @@ The system MUST support global/user-level VS Code/Copilot asset installation onl
 
 ### Requirement: PRD and SDD document templates
 
-The system MUST create a PRD template and SDD templates under `docs/pegasus` for proposal, spec, design, tasks, apply-progress, and verification, and Copilot prompts/instructions SHOULD reference those templates as the workflow source of truth. The guided SDD flow MUST be `request -> PRD -> proposal -> spec -> design -> tasks -> apply -> verify -> handoff`, and proposal work MUST require an approved PRD. PRD guidance MUST capture product discovery and explicit approval, while proposal guidance MUST stay proposal-only as a bridge from approved PRD to spec.
+The system MUST create a PRD template and production-ready SDD templates under `docs/pegasus` for proposal, spec, design, tasks, apply-progress, and verification, and Copilot prompts/instructions SHOULD reference those templates as the workflow source of truth. The guided SDD flow MUST be `request -> PRD -> proposal -> spec -> design -> tasks -> apply -> verify -> handoff`, and proposal work MUST require an approved PRD. PRD guidance MUST capture product discovery and explicit approval, while proposal guidance MUST stay proposal-only as a bridge from approved PRD to spec.
 
 #### Scenario: SDD templates available
 
@@ -124,6 +124,46 @@ The system MUST create a PRD template and SDD templates under `docs/pegasus` for
 - WHEN the proposal is drafted or refined
 - THEN generated guidance records PRD source/status, consulted project context, intent, scope, users, lightweight approach, assumptions, decision gaps, risks, rollback, acceptance, and handoff to spec
 - AND it excludes requirements matrices, technical design, implementation tasks, PR splitting decisions, and code changes
+
+#### Scenario: Spec captures acceptance behavior
+
+- GIVEN an approved PRD and approved proposal
+- WHEN the spec phase is run
+- THEN generated guidance requires requirements and OpenSpec-style `GIVEN` / `WHEN` / `THEN` scenarios in `docs/pegasus/spec.md`
+- AND it records PRD/proposal source status, edge cases, non-goals, and traceability
+- AND it excludes architecture, implementation details, task checklists, and code changes
+
+#### Scenario: Design captures technical approach only
+
+- GIVEN an approved proposal and approved spec
+- WHEN the design phase is run
+- THEN generated guidance records inputs, design goals/non-goals, technical approach, decisions, tradeoffs, alternatives, affected areas/files, data/control flow, testing strategy, rollout/rollback, risks, and open questions in `docs/pegasus/design.md`
+- AND it excludes implementation code and task checklist creation
+
+#### Scenario: Tasks define reviewable slices
+
+- GIVEN an approved spec and approved design
+- WHEN the tasks phase is run
+- THEN generated guidance records implementation slices with dependency/order, verification, risk, and rollback details in `docs/pegasus/tasks.md`
+- AND it includes the exact guard lines `Decision needed before apply: Yes|No`, `Chained PRs recommended: Yes|No`, and `400-line budget risk: Low|Medium|High`
+- AND it excludes implementation code
+
+#### Scenario: Apply implements only the approved slice
+
+- GIVEN an approved task slice and existing apply-progress history
+- WHEN the apply phase is run
+- THEN generated guidance requires reading spec, design, tasks, apply-progress, and task memory before editing
+- AND it checks `docs/pegasus/memory/tasks-log.md` and `docs/pegasus/apply-progress.md` to avoid duplicate work
+- AND it records approved slice source, duplicate-check result, changed files, preliminary evidence, verification status per slice, risks, blockers, and next action with merge-not-overwrite discipline
+- AND it states that preliminary apply evidence does not replace the verify phase
+
+#### Scenario: Verify checks the full SDD contract
+
+- GIVEN implementation is ready for verification
+- WHEN the verify phase is run
+- THEN generated guidance verifies against PRD, proposal, spec, design, tasks, apply-progress, changed files, and runtime evidence where possible
+- AND it records a compliance matrix, changed files reviewed, commands/results, test coverage/manual checks, deviations, risks, and final verdict in `docs/pegasus/verify.md`
+- AND it forbids unrelated implementation changes unless the user separately asks for remediation
 
 ### Requirement: Lightweight orchestration guardrails
 

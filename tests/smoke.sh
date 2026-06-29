@@ -249,6 +249,59 @@ assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "secondary leg
 assert_file_contains "$target/docs/pegasus/memory/context.md" "Read this file at the start"
 assert_file_contains "$target/docs/pegasus/memory/context.md" 'VS Code/Copilot assets under `.github/`'
 
+for agent in sdd-spec sdd-design sdd-tasks sdd-apply sdd-verify; do
+  agent_file="$target/.github/agents/$agent.agent.md"
+  assert_file_contains "$agent_file" "## Input contract"
+  assert_file_contains "$agent_file" "## Required reads"
+  assert_file_contains "$agent_file" "## Output contract"
+  assert_file_contains "$agent_file" "## Stopping point"
+  assert_file_contains "$agent_file" "## Forbidden scope"
+  assert_file_contains "$agent_file" "## Phase-specific checklist"
+done
+
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "approved PRD and approved proposal"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" 'GIVEN` / `WHEN` / `THEN'
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Do not design architecture"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Decisions, tradeoffs, and alternatives considered"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Do not implement code"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Decision needed before apply: Yes|No"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Chained PRs recommended: Yes|No"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "400-line budget risk: Low|Medium|High"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Do not implement code"
+assert_file_contains "$target/.github/agents/sdd-apply.agent.md" "approved next task slice"
+assert_file_contains "$target/.github/agents/sdd-apply.agent.md" "duplicate-check result"
+assert_file_contains "$target/.github/agents/sdd-apply.agent.md" 'preliminary apply evidence as a replacement for `sdd-verify`'
+assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "Compliance matrix against PRD, proposal, spec, design, and tasks"
+assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "No unrelated implementation changes were made"
+assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "Do not edit implementation code unless the user separately asks for remediation"
+
+assert_file_contains "$target/docs/pegasus/spec.md" "## Source Status"
+assert_file_contains "$target/docs/pegasus/spec.md" "## Acceptance Edge Cases"
+assert_file_contains "$target/docs/pegasus/spec.md" "## Non-Goals / Out of Scope"
+assert_file_contains "$target/docs/pegasus/spec.md" "## Traceability"
+assert_file_contains "$target/docs/pegasus/design.md" "## Inputs"
+assert_file_contains "$target/docs/pegasus/design.md" "## Design Goals / Non-Goals"
+assert_file_contains "$target/docs/pegasus/design.md" "## Alternatives Considered"
+assert_file_contains "$target/docs/pegasus/design.md" "## Data / Control Flow"
+assert_file_contains "$target/docs/pegasus/design.md" "## Rollout / Rollback"
+assert_file_contains "$target/docs/pegasus/tasks.md" "Decision needed before apply: Yes|No"
+assert_file_contains "$target/docs/pegasus/tasks.md" "Chained PRs recommended: Yes|No"
+assert_file_contains "$target/docs/pegasus/tasks.md" "400-line budget risk: Low|Medium|High"
+assert_file_contains "$target/docs/pegasus/tasks.md" "### Example Slice: Apply deduplication guard"
+assert_file_contains "$target/docs/pegasus/tasks.md" "## No Implementation in Tasks Phase"
+assert_file_contains "$target/docs/pegasus/apply-progress.md" "Approved task slice source"
+assert_file_contains "$target/docs/pegasus/apply-progress.md" "## Duplicate Check"
+assert_file_contains "$target/docs/pegasus/apply-progress.md" "Verification status"
+assert_file_contains "$target/docs/pegasus/apply-progress.md" "does not replace the verify phase"
+assert_file_contains "$target/docs/pegasus/verify.md" "## Compliance Matrix"
+assert_file_contains "$target/docs/pegasus/verify.md" "## Changed Files Reviewed"
+assert_file_contains "$target/docs/pegasus/verify.md" "## Test Coverage / Manual Checks"
+assert_file_contains "$target/docs/pegasus/verify.md" "## Final Verdict"
+assert_file_contains "$target/docs/pegasus/verify.md" "Merge-not-overwrite instructions"
+assert_file_contains "$target/.github/prompts/sdd-phases.prompt.md" "approved PRD and approved proposal"
+assert_file_contains "$target/.github/prompts/sdd-phases.prompt.md" "Apply may record preliminary notes/evidence, but it does not replace the verify phase"
+assert_file_contains "$target/.github/prompts/sdd-phases.prompt.md" "Do not make unrelated implementation changes during verify"
+
 if grep -R -E 'review-risk|review-readability' "$target/.github" >/dev/null; then
   printf 'generated Copilot assets include excluded reviewer agents\n' >&2
   exit 1
