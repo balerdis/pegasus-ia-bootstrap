@@ -12,8 +12,8 @@ VS Code/Copilot entry points live under `.github/`. `AGENTS.md` stays as portabl
 1. In VS Code with Copilot, start with `.github/agents/pegasus-orchestrator.agent.md`.
 2. Read `.github/copilot-instructions.md` and the scoped files under `.github/instructions/`.
 3. Read `docs/pegasus/memory/context.md` to recover current project context.
-4. Read `docs/pegasus/prd.md`, `docs/pegasus/proposal.md`, `docs/pegasus/spec.md`, `docs/pegasus/design.md`, and `docs/pegasus/tasks.md` before changing files.
-5. Use `docs/pegasus/verify.md` to record verification commands and outcomes.
+4. Read `docs/pegasus/prd.md`, `docs/pegasus/proposal.md`, `docs/pegasus/spec.md`, `docs/pegasus/design.md`, `docs/pegasus/tasks.md`, and `docs/pegasus/apply-progress.md` before changing files.
+5. Use `docs/pegasus/apply-progress.md` to track implementation slices and `docs/pegasus/verify.md` to record verification commands and outcomes.
 6. Update project-local Markdown memory as work progresses.
 
 ## Pegasus IA Workflow
@@ -24,11 +24,16 @@ VS Code/Copilot entry points live under `.github/`. `AGENTS.md` stays as portabl
 - Spec defines requirements and acceptance scenarios.
 - Design defines the technical approach and constraints.
 - Tasks define the next small, reviewable work units.
+- Apply-progress records current implementation slices, changed files, evidence, blockers, and next action.
 - Verify records evidence that the implementation matches the docs.
 
 Before moving to the next SDD phase, confirm the required docs exist and ask for user approval. The default SDD path is `request → PRD → proposal → spec → design → tasks → apply → verify → handoff`.
 
+Before delegating or starting a phase/task, check `docs/pegasus/memory/tasks-log.md` and `docs/pegasus/apply-progress.md` for the same phase/task already in progress or completed. Avoid duplicate launches.
+
 Before large implementation, estimate review workload. If work is likely to exceed about 400 changed lines or touch multiple unrelated areas, stop and ask whether to split it into chained PRs.
+
+Verification should use fresh context when possible: re-read PRD, proposal, spec, design, tasks, apply-progress, verify log, and changed files before judging completion. This is an operational rule, not a runtime guarantee.
 
 Copilot prompts under `.github/prompts/` provide starting points for SDD phases, handoff, and memory updates. They reference `docs/pegasus/` as the source of truth.
 
@@ -42,7 +47,7 @@ Use `docs/pegasus/memory/` as the continuity source for future or compacted sess
 - `handoff.md` — short recovery notes for the next session.
 - `learnings.md` — gotchas and reusable discoveries.
 
-Before ending a session, update `handoff.md` and any memory files affected by your work. Merge new progress, memory, and verification evidence into the existing useful history instead of replacing prior content.
+Before ending a session, update `handoff.md` and any memory files affected by your work. Merge new progress, apply-progress, memory, and verification evidence into the existing useful history instead of replacing prior content.
 
 ## Legacy Cursor Compatibility
 

@@ -17,4 +17,6 @@ At session start or after context compaction:
 4. Read `handoff.md` for the latest recovery note.
 5. Read `learnings.md` for gotchas before repeating work.
 
-When work changes facts, decisions, task status, blockers, or gotchas, update the matching memory file immediately. Before ending a session, write a concise handoff with current state, completed work, open risks, and next steps.
+Before applying or verifying work, also read `docs/pegasus/apply-progress.md` and compare it with `tasks-log.md` to avoid duplicate launches for the same phase/task.
+
+When work changes facts, decisions, task status, blockers, or gotchas, update the matching memory file immediately and merge implementation status into `docs/pegasus/apply-progress.md` when relevant. Before ending a session, write a concise handoff with current state, completed work, open risks, and next steps.

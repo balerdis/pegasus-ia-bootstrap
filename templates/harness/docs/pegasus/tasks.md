@@ -23,10 +23,12 @@ Estimate before implementation starts. If estimated changes exceed about 400 cha
 
 ## Verification Notes
 
+- Track implementation status, changed files, evidence, blockers, and next action in `docs/pegasus/apply-progress.md`.
 - Record commands and outcomes in `docs/pegasus/verify.md`.
 - Keep Copilot-generated changes bounded to the currently approved task slice.
 
 ## Progress Log
 
 - Also update `docs/pegasus/memory/tasks-log.md` when task status changes.
-- Merge progress into existing useful history; do not replace prior task notes, blockers, or completed work.
+- Before starting or delegating a task, check `docs/pegasus/memory/tasks-log.md` and `docs/pegasus/apply-progress.md` for matching work already in progress or completed.
+- Merge progress into existing useful history; do not replace prior task notes, apply-progress, blockers, or completed work.

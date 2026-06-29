@@ -2,6 +2,8 @@
 
 Read this at session start to recover task status and blockers.
 
+Before starting or delegating work, compare this log with `docs/pegasus/apply-progress.md` to avoid duplicate launches for the same phase/task.
+
 ## Current Status
 
 - TBD
@@ -14,4 +16,4 @@ Read this at session start to recover task status and blockers.
 
 ## Write Rules
 
-Update this file whenever tasks are started, completed, blocked, or rescoped.
+Update this file whenever tasks are started, completed, blocked, or rescoped. Merge new entries into the existing history instead of replacing useful prior task state.

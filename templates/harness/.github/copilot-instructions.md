@@ -8,9 +8,9 @@ Use `.github/agents/pegasus-orchestrator.agent.md` as the primary Copilot agent 
 
 ## Source of truth
 
-Before changing files, read `docs/pegasus/memory/context.md`, `decisions.md`, `tasks-log.md`, then `docs/pegasus/prd.md`, `proposal.md`, `spec.md`, `design.md`, and `tasks.md`.
+Before changing files, read `docs/pegasus/memory/context.md`, `decisions.md`, `tasks-log.md`, then `docs/pegasus/prd.md`, `proposal.md`, `spec.md`, `design.md`, `tasks.md`, and `apply-progress.md`.
 
-Record verification in `docs/pegasus/verify.md` and update `docs/pegasus/memory/` whenever facts, decisions, task status, handoff state, or learnings change. Merge updates into existing useful history; do not overwrite prior progress, memory, or verification evidence.
+Record implementation status in `docs/pegasus/apply-progress.md`, record verification in `docs/pegasus/verify.md`, and update `docs/pegasus/memory/` whenever facts, decisions, task status, handoff state, or learnings change. Merge updates into existing useful history; do not overwrite prior progress, apply-progress, memory, or verification evidence.
 
 Record the project-selected Copilot model preference in `docs/pegasus/memory/context.md` or workspace settings when available. Use one model for all phases in this first release; do not promise per-phase model routing or hard runtime control from Pegasus docs alone.
 
@@ -20,6 +20,8 @@ Record the project-selected Copilot model preference in `docs/pegasus/memory/con
 - Do not create app code, remotes, CI, deployment, database, framework scaffolding, MCP services, or network dependencies unless the local SDD docs explicitly request them.
 - Preserve user files unless overwrite behavior is explicitly approved.
 - Use the direct-fix path for small, punctual, low-risk changes; use SDD for broader, ambiguous, architectural, or higher-risk changes.
+- Before delegating or starting a phase/task, check `docs/pegasus/memory/tasks-log.md` and `docs/pegasus/apply-progress.md` for the same phase/task already in progress or completed, and avoid duplicate launches.
 - Before large implementation, stop and ask whether to split into chained PRs if the estimate exceeds about 400 changed lines or touches multiple unrelated areas.
+- For verification, use fresh context when possible by re-reading PRD, proposal, spec, design, tasks, apply-progress, verify log, and changed files before judging completion.
 
 Cursor files under `.cursor/rules/` are legacy compatibility guidance. Prefer the Copilot assets in `.github/` for VS Code/Copilot sessions.

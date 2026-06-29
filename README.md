@@ -42,6 +42,7 @@ docs/pegasus/proposal.md
 docs/pegasus/spec.md
 docs/pegasus/design.md
 docs/pegasus/tasks.md
+docs/pegasus/apply-progress.md
 docs/pegasus/verify.md
 docs/pegasus/memory/context.md
 docs/pegasus/memory/decisions.md

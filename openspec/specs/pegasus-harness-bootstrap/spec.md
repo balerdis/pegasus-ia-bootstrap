@@ -31,7 +31,7 @@ The system MUST initialize a VS Code/Copilot-first Pegasus harness and MUST NOT 
 - GIVEN an empty target workspace directory
 - WHEN the bootstrap completes
 - THEN `.github/copilot-instructions.md`, `.github/instructions/`, `.github/prompts/`, `.github/agents/`, `AGENTS.md`, and `docs/pegasus/` exist
-- AND `docs/pegasus` contains PRD, proposal, spec, design, tasks, verify, and memory templates
+- AND `docs/pegasus` contains PRD, proposal, spec, design, tasks, apply-progress, verify, and memory templates
 
 #### Scenario: No app code
 
@@ -96,7 +96,7 @@ The system MUST support global/user-level VS Code/Copilot asset installation onl
 
 ### Requirement: PRD and SDD document templates
 
-The system MUST create a PRD template and SDD templates under `docs/pegasus` for proposal, spec, design, tasks, and verification, and Copilot prompts/instructions SHOULD reference those templates as the workflow source of truth. The guided SDD flow MUST be `request -> PRD -> proposal -> spec -> design -> tasks -> apply -> verify -> handoff`, and proposal work MUST require an approved PRD.
+The system MUST create a PRD template and SDD templates under `docs/pegasus` for proposal, spec, design, tasks, apply-progress, and verification, and Copilot prompts/instructions SHOULD reference those templates as the workflow source of truth. The guided SDD flow MUST be `request -> PRD -> proposal -> spec -> design -> tasks -> apply -> verify -> handoff`, and proposal work MUST require an approved PRD.
 
 #### Scenario: SDD templates available
 
@@ -113,7 +113,7 @@ The system MUST create a PRD template and SDD templates under `docs/pegasus` for
 
 ### Requirement: Lightweight orchestration guardrails
 
-The generated Pegasus guidance MUST support a direct-fix path for small, punctual, low-risk changes, MUST require required-doc checks and user approval before phase transitions, MUST require review-budget confirmation before large implementation, and MUST preserve useful progress, memory, and verification history by merging updates instead of overwriting content.
+The generated Pegasus guidance MUST support a direct-fix path for small, punctual, low-risk changes, MUST require required-doc checks and user approval before phase transitions, MUST require review-budget confirmation before large implementation, MUST avoid duplicate launches for the same phase/task when progress already exists, and MUST preserve useful apply-progress, memory, and verification history by merging updates instead of overwriting content.
 
 #### Scenario: Direct fix avoids unnecessary SDD
 
@@ -132,6 +132,26 @@ The generated Pegasus guidance MUST support a direct-fix path for small, punctua
 - GIVEN existing useful progress, memory, handoff, or verification history
 - WHEN new status or evidence is recorded
 - THEN generated guidance requires integrating the new update without replacing prior useful content
+
+#### Scenario: Duplicate launch is avoided
+
+- GIVEN `docs/pegasus/memory/tasks-log.md` or `docs/pegasus/apply-progress.md` shows a phase/task is already in progress or completed
+- WHEN orchestration considers delegating that same phase/task
+- THEN generated guidance requires avoiding duplicate work and moving to recovery, verification, handoff, or the next approved task slice as appropriate
+
+#### Scenario: Apply progress is tracked
+
+- GIVEN an approved implementation slice
+- WHEN apply work starts or completes
+- THEN generated guidance records implementation slices, current in-progress work, completed work, changed files, verification evidence, unresolved risks, blockers, and next action in `docs/pegasus/apply-progress.md`
+- AND updates are merged with existing useful apply-progress history
+
+#### Scenario: Verification uses fresh context when possible
+
+- GIVEN implementation is ready for verification
+- WHEN generated verification guidance is followed
+- THEN the verifier re-reads PRD, proposal, spec, design, tasks, apply-progress, verify log, and changed files before judging completion
+- AND the guidance treats fresh-context verification as an operational rule rather than a guaranteed runtime capability
 
 ### Requirement: Model preference documentation
 

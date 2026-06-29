@@ -14,9 +14,14 @@ Before making changes, read the local project docs in this order:
 3. `docs/pegasus/spec.md`
 4. `docs/pegasus/design.md`
 5. `docs/pegasus/tasks.md`
+6. `docs/pegasus/apply-progress.md`
 
 Keep work aligned with the documented scope. If requirements are missing or contradictory, update the docs or ask for clarification before implementing.
 
-Use small slices. Each slice should have a clear goal, limited file impact, and verification evidence in `docs/pegasus/verify.md`.
+Before starting a phase or task, check `docs/pegasus/memory/tasks-log.md` and `docs/pegasus/apply-progress.md` for matching work already in progress or completed. Avoid duplicate launches.
+
+Use small slices. Each slice should have a clear goal, limited file impact, implementation status in `docs/pegasus/apply-progress.md`, and verification evidence in `docs/pegasus/verify.md`.
+
+Verify from fresh context when possible by re-reading PRD, proposal, spec, design, tasks, apply-progress, verify log, and changed files before judging completion. This is an operational rule, not a runtime guarantee.
 
 This harness does not authorize business/domain MVP scaffolding by itself. The user/team builds the business MVP later; only create product code after the proposal, spec, design, and tasks explicitly call for it.
