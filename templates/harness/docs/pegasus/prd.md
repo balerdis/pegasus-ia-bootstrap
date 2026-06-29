@@ -11,11 +11,27 @@ Describe the user-visible outcome this project or change should deliver.
 
 Explain the problem, pain, or opportunity in plain language.
 
+## Current Situation / Gap
+
+Describe what exists today, who is affected, and why the current state is insufficient.
+
 ## Users
 
 | User | Need |
 |------|------|
 | TBD | TBD |
+
+## Target Situations
+
+Describe the situations, workflows, or moments where the desired outcome should be true.
+
+| Situation | Desired Result |
+|-----------|----------------|
+| TBD | TBD |
+
+## Product / Business Rules
+
+- TBD
 
 ## Scope
 
@@ -26,6 +42,20 @@ Explain the problem, pain, or opportunity in plain language.
 ### Out of Scope
 
 - TBD
+
+## Non-Goals
+
+- TBD
+
+## Edge Cases
+
+- TBD
+
+## Open Questions
+
+| Question | Owner | Needed By | Status |
+|----------|-------|-----------|--------|
+| TBD | TBD | TBD | Open |
 
 ## Success Criteria
 
@@ -38,4 +68,8 @@ Explain the problem, pain, or opportunity in plain language.
 
 ## Approval
 
-- [ ] PRD reviewed and approved before drafting `docs/pegasus/proposal.md`.
+| Approval Owner | Approval Date | Status |
+|----------------|---------------|--------|
+| TBD | TBD | Draft |
+
+- [ ] PRD reviewed and explicitly approved before drafting `docs/pegasus/proposal.md`.

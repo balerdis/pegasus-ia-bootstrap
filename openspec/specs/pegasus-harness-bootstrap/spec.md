@@ -96,7 +96,7 @@ The system MUST support global/user-level VS Code/Copilot asset installation onl
 
 ### Requirement: PRD and SDD document templates
 
-The system MUST create a PRD template and SDD templates under `docs/pegasus` for proposal, spec, design, tasks, apply-progress, and verification, and Copilot prompts/instructions SHOULD reference those templates as the workflow source of truth. The guided SDD flow MUST be `request -> PRD -> proposal -> spec -> design -> tasks -> apply -> verify -> handoff`, and proposal work MUST require an approved PRD.
+The system MUST create a PRD template and SDD templates under `docs/pegasus` for proposal, spec, design, tasks, apply-progress, and verification, and Copilot prompts/instructions SHOULD reference those templates as the workflow source of truth. The guided SDD flow MUST be `request -> PRD -> proposal -> spec -> design -> tasks -> apply -> verify -> handoff`, and proposal work MUST require an approved PRD. PRD guidance MUST capture product discovery and explicit approval, while proposal guidance MUST stay proposal-only as a bridge from approved PRD to spec.
 
 #### Scenario: SDD templates available
 
@@ -110,6 +110,20 @@ The system MUST create a PRD template and SDD templates under `docs/pegasus` for
 - GIVEN a future Copilot-guided project session
 - WHEN the user requests SDD proposal work
 - THEN the generated guidance requires `docs/pegasus/prd.md` to exist and be approved first
+
+#### Scenario: PRD captures product discovery
+
+- GIVEN a future Copilot-guided project session
+- WHEN the PRD is drafted or refined
+- THEN generated guidance captures problem, users or situations, current gap, outcome, product or business rules, scope, non-goals, edge cases, open questions, and approval owner/date/status
+- AND it excludes technical design, implementation tasks, PR splitting, and review-budget decisions from PRD work
+
+#### Scenario: Proposal stays proposal-only
+
+- GIVEN an approved PRD
+- WHEN the proposal is drafted or refined
+- THEN generated guidance records PRD source/status, consulted project context, intent, scope, users, lightweight approach, assumptions, decision gaps, risks, rollback, acceptance, and handoff to spec
+- AND it excludes requirements matrices, technical design, implementation tasks, PR splitting decisions, and code changes
 
 ### Requirement: Lightweight orchestration guardrails
 
