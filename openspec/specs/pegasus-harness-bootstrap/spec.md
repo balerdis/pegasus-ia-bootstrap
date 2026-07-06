@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define a local-first bootstrap that configures only the VS Code/Copilot-first Pegasus IA harness for a target workspace by default. The bootstrap prepares .github Copilot assets, AGENTS.md, docs/pegasus/, and project-local Markdown memory; it MUST NOT generate business/domain MVP application code, Git metadata, or remote resources. Optional global VS Code/Copilot user configuration is permitted only behind an explicit flag with backup safety.
+Define a local-first bootstrap that configures only the VS Code/Copilot-first Pegasus IA harness for a target workspace by default. The bootstrap prepares .github Copilot assets, AGENTS.md, docs/pegasus/, and MCP-first operational memory guidance; it MUST NOT generate business/domain MVP application code, Git metadata, or remote resources. Optional global VS Code/Copilot user configuration is permitted only behind an explicit flag with backup safety.
 
 ## Requirements
 ### Requirement: Bootstrap inputs
@@ -31,25 +31,107 @@ The system MUST initialize a VS Code/Copilot-first Pegasus harness and MUST NOT 
 - GIVEN an empty target workspace directory
 - WHEN the bootstrap completes
 - THEN `.github/copilot-instructions.md`, `.github/instructions/`, `.github/prompts/`, `.github/agents/`, `AGENTS.md`, and `docs/pegasus/` exist
-- AND `docs/pegasus` contains PRD, proposal, spec, design, tasks, apply-progress, verify, and memory templates
+- AND `docs/pegasus` contains PRD, proposal, spec, design, tasks, apply-progress, and verify templates
 
 #### Scenario: No app code
 
 - GIVEN any successful bootstrap run
 - WHEN the target tree is inspected
-- THEN only harness, documentation, Copilot, legacy guidance, and memory files were created
+- THEN only harness, documentation, Copilot, and legacy guidance files were created
 - AND business MVP code is built later by the user/team using the harness
 
 ### Requirement: Portable agent guidance
 
-The system MUST create a portable `AGENTS.md` that explains the Pegasus IA workflow, local memory policy, VS Code/Copilot usage, and how future agents should continue work without relying on external services. `AGENTS.md` MUST remain portable guidance rather than the primary Copilot-native control surface.
+The system MUST create a portable `AGENTS.md` that explains the Pegasus IA workflow, MCP-first memory policy, VS Code/Copilot usage, and how future agents should continue work through the MCP tool contract when available. `AGENTS.md` MUST remain portable guidance rather than the primary Copilot-native control surface.
 
 #### Scenario: Agent instructions created
 
 - GIVEN a successful bootstrap run
 - WHEN `AGENTS.md` is opened
 - THEN it describes Pegasus IA workflow usage and VS Code/Copilot entry points
-- AND it directs sessions to read and update `docs/pegasus/memory/`
+- AND it directs sessions to use MCP-first memory with the approved unavailable-memory warning
+
+### Requirement: MCP-first operational memory
+
+The generated harness MUST use the `pegasus-memory-mcp` MCP tool contract as the operational memory interface for recovery, search, and persistence. It MUST NOT require users or agents to write operational memory to `docs/pegasus/memory/`, and it MUST NOT depend on MCP server internals, SQLite details, database paths, or source modules.
+
+#### Scenario: Session starts with memory available
+
+- GIVEN `pegasus-memory-mcp` tools are available
+- WHEN the orchestrator starts or recovers context
+- THEN it recovers project, active change context, decisions, observations, handoffs, artifact references, task progress, and learnings through MCP
+- AND it does not ask the user to inspect memory storage layout
+
+#### Scenario: Durable records are produced
+
+- GIVEN work changes project state
+- WHEN observations, decisions, handoffs, artifacts, task progress, or active change context are created or updated
+- THEN the harness guidance requires saving those records through MCP
+
+#### Scenario: MCP contract only
+
+- GIVEN MCP-backed memory is configured
+- WHEN generated guidance describes memory behavior
+- THEN it names MCP capabilities and tool outcomes only
+- AND it does not mention tables, SQLite schema, internal modules, or private implementation files
+
+### Requirement: Memory unavailable behavior
+
+The generated harness MUST detect unavailable memory before relying on persistence. If `pegasus-memory-mcp` is unavailable, the user-facing warning MUST be exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Pegasus MAY continue project/change artifact work, but it MUST NOT claim persistent memory was saved and MUST NOT fall back to Markdown memory.
+
+#### Scenario: MCP missing or unreachable
+
+- GIVEN MCP memory is missing, not executable, not on PATH, or fails health/recovery
+- WHEN Pegasus needs persistent memory
+- THEN it shows the exact approved warning
+- AND persistent memory saves are treated as unavailable
+
+#### Scenario: Work continues without memory saves
+
+- GIVEN memory is unavailable and the user continues
+- WHEN PRD, proposal, spec, design, tasks, apply-progress, or verify artifacts are edited
+- THEN file artifacts may still be updated
+- AND no Markdown memory fallback is written
+
+### Requirement: Active-context recovery stays internal
+
+The orchestrator MUST recover active project/change context through MCP when available and MUST NOT expose active-context storage organization or ambiguity resolution to the user. If MCP cannot provide a safe active context, Pegasus MUST continue without leaking internals and SHOULD record follow-up needed in the separate `pegasus-memory-mcp` project/session.
+
+#### Scenario: Active change recovered
+
+- GIVEN MCP returns one safe active change for the project
+- WHEN orchestration starts
+- THEN Pegasus uses that active context for phase and artifact decisions
+- AND the user is not asked to choose an internal memory record
+
+#### Scenario: Active context is ambiguous
+
+- GIVEN MCP recovery returns ambiguous active context
+- WHEN orchestration needs a current change
+- THEN Pegasus does not ask the user to resolve memory internals
+- AND it documents external follow-up for MCP support if better disambiguation is required
+
+### Requirement: Change-cycle artifacts remain file-based
+
+The harness MUST keep PRD, proposal, spec, design, tasks, apply-progress, and verify artifacts as files under `docs/pegasus/` or `docs/pegasus/changes/<change-id>/` when the generated workflow uses change folders. MCP memory MUST reference and summarize artifact state, not replace those artifacts as the source of truth.
+
+#### Scenario: Change artifact and memory both update
+
+- GIVEN work advances a change phase
+- WHEN an artifact under `docs/pegasus/changes/<change-id>/` is created or updated
+- THEN the artifact remains the phase source of truth
+- AND MCP memory records the active change context, artifact path, status, and next action
+
+### Requirement: No Markdown-memory migration required
+
+The harness MUST NOT provide a guided migration command for old `docs/pegasus/memory/` content because Pegasus Bootstrap has not been used operationally with that memory backend. Existing Markdown memory MAY remain as historical project files, but generated guidance MUST NOT treat it as an active backend, fallback, or co-source.
+
+#### Scenario: Old memory files exist
+
+- GIVEN a workspace contains `docs/pegasus/memory/`
+- WHEN updated Pegasus guidance is followed
+- THEN no migration command is required
+- AND operational memory reads/writes use MCP only
 
 ### Requirement: Cursor legacy compatibility
 
@@ -96,7 +178,7 @@ The system MUST support global/user-level VS Code/Copilot asset installation onl
 
 ### Requirement: PRD and SDD document templates
 
-The system MUST create a PRD template and production-ready SDD templates under `docs/pegasus` for proposal, spec, design, tasks, apply-progress, and verification, and Copilot prompts/instructions SHOULD reference those templates as the workflow source of truth. The guided SDD flow MUST be `request -> PRD -> proposal -> spec -> design -> tasks -> apply -> verify -> handoff`, and proposal work MUST require an approved PRD. PRD guidance MUST capture product discovery and explicit approval, while proposal guidance MUST stay proposal-only as a bridge from approved PRD to spec.
+The system MUST create a PRD template and production-ready SDD templates under `docs/pegasus` or change-scoped `docs/pegasus/changes/<change-id>/` locations for proposal, spec, design, tasks, apply-progress, and verification, and Copilot prompts/instructions SHOULD reference those templates as the workflow source of truth. The guided SDD flow MUST be `request -> PRD -> proposal -> spec -> design -> tasks -> apply -> verify -> handoff`, and proposal work MUST require an approved PRD. PRD guidance MUST capture product discovery and explicit approval, while proposal guidance MUST stay proposal-only as a bridge from approved PRD to spec.
 
 #### Scenario: SDD templates available
 
@@ -109,7 +191,7 @@ The system MUST create a PRD template and production-ready SDD templates under `
 
 - GIVEN a future Copilot-guided project session
 - WHEN the user requests SDD proposal work
-- THEN the generated guidance requires `docs/pegasus/prd.md` to exist and be approved first
+- THEN the generated guidance requires the PRD artifact to exist and be approved first
 
 #### Scenario: PRD captures product discovery
 
@@ -152,8 +234,8 @@ The system MUST create a PRD template and production-ready SDD templates under `
 
 - GIVEN an approved task slice and existing apply-progress history
 - WHEN the apply phase is run
-- THEN generated guidance requires reading spec, design, tasks, apply-progress, and task memory before editing
-- AND it checks `docs/pegasus/memory/tasks-log.md` and `docs/pegasus/apply-progress.md` to avoid duplicate work
+- THEN generated guidance requires reading spec, design, tasks, apply-progress, and MCP task progress before editing
+- AND it checks MCP task progress and `docs/pegasus/apply-progress.md` to avoid duplicate work
 - AND it records approved slice source, duplicate-check result, changed files, preliminary evidence, verification status per slice, risks, blockers, and next action with merge-not-overwrite discipline
 - AND it states that preliminary apply evidence does not replace the verify phase
 
@@ -167,7 +249,7 @@ The system MUST create a PRD template and production-ready SDD templates under `
 
 ### Requirement: Lightweight orchestration guardrails
 
-The generated Pegasus guidance MUST support a direct-fix path for small, punctual, low-risk changes, MUST require required-doc checks and user approval before phase transitions, MUST require review-budget confirmation before large implementation, MUST avoid duplicate launches for the same phase/task when progress already exists, and MUST preserve useful apply-progress, memory, and verification history by merging updates instead of overwriting content.
+The generated Pegasus guidance MUST support a direct-fix path for small, punctual, low-risk changes, MUST require required-doc checks and user approval before phase transitions, MUST require review-budget confirmation before large implementation, MUST avoid duplicate launches for the same phase/task when MCP task progress or apply-progress already shows work exists, and MUST preserve useful apply-progress, memory, and verification history by merging updates instead of overwriting content.
 
 #### Scenario: Direct fix avoids unnecessary SDD
 
@@ -189,7 +271,7 @@ The generated Pegasus guidance MUST support a direct-fix path for small, punctua
 
 #### Scenario: Duplicate launch is avoided
 
-- GIVEN `docs/pegasus/memory/tasks-log.md` or `docs/pegasus/apply-progress.md` shows a phase/task is already in progress or completed
+- GIVEN MCP task progress or `docs/pegasus/apply-progress.md` shows a phase/task is already in progress or completed
 - WHEN orchestration considers delegating that same phase/task
 - THEN generated guidance requires avoiding duplicate work and moving to recovery, verification, handoff, or the next approved task slice as appropriate
 
@@ -217,23 +299,6 @@ The generated guidance MUST use a single project-selected Copilot model for all 
 - WHEN the generated guidance is followed
 - THEN the preference is recorded in project context or workspace settings
 - AND Pegasus guidance does not claim per-phase model routing control
-
-### Requirement: Project-local memory templates
-
-The system MUST create `context.md`, `decisions.md`, `tasks-log.md`, `handoff.md`, and `learnings.md` under `docs/pegasus/memory`, each with clear read/write rules for VS Code/Copilot sessions and portable agents.
-
-#### Scenario: Memory recovery files available
-
-- GIVEN a successful bootstrap run
-- WHEN the memory directory is inspected
-- THEN all memory templates exist
-- AND each template states when future VS Code/Copilot sessions should read from and write to it
-
-#### Scenario: Compacted session recovery
-
-- GIVEN a future VS Code/Copilot session with limited prior context
-- WHEN the session follows generated guidance
-- THEN it can recover context, decisions, task state, handoff notes, and learnings from Markdown memory
 
 ### Requirement: Existing file protection
 
