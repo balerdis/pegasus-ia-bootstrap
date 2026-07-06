@@ -35,10 +35,10 @@ Chain strategy: stacked-to-main
 
 ## Slice 2: Manifest and Conflict Safety
 
-- [ ] 2.1 Add `pegasus_harness_bootstrap/manifest.py` for install, ownership, update, uninstall, and workspace metadata; exclude active/last change pointers.
-- [ ] 2.2 Add planning support so existing generated-path conflicts report and skip writes unless `--force` is used.
-- [ ] 2.3 Update templates or markers needed to prove Pegasus-managed ownership.
-- [ ] 2.4 Extend smoke tests for manifest JSON and no-overwrite conflict behavior.
+- [x] 2.1 Add `pegasus_harness_bootstrap/manifest.py` for install, ownership, update, uninstall, and workspace metadata; exclude active/last change pointers.
+- [x] 2.2 Add planning support so existing generated-path conflicts report and skip writes unless `--force` is used.
+- [x] 2.3 Update templates or markers needed to prove Pegasus-managed ownership.
+- [x] 2.4 Extend smoke tests for manifest JSON and no-overwrite conflict behavior.
 
 ## Slice 3: Uninstall Safety
 

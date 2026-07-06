@@ -12,6 +12,14 @@ import shutil
 import sys
 from pathlib import Path
 
+from pegasus_harness_bootstrap.manifest import (
+    MANIFEST_RELATIVE_PATH,
+    build_manifest,
+    file_record,
+    render_workspace_content,
+    write_manifest,
+)
+
 
 DEFAULT_ROOT = Path("/var/www/html/personal")
 PROJECT_NAME_RE = re.compile(r"^[A-Za-z0-9._-]+$")
@@ -257,6 +265,7 @@ def print_plan(
     print(f"Target: {target}")
     print(f"Template root: {root}")
     print("Primary IDE: VS Code with GitHub Copilot")
+    print(f"Manifest: {target / MANIFEST_RELATIVE_PATH}")
 
     print("\nManaged workspace surfaces:")
     for surface in WORKSPACE_SURFACES:
@@ -274,7 +283,7 @@ def print_plan(
             print(f"  {path}")
 
     if conflicts:
-        print("\nConflicts (preserved):")
+        print("\nConflicts (skipped unless --force):")
         for path in conflicts:
             print(f"  {path}")
 
@@ -347,13 +356,18 @@ def render_copilot_global_template(content: str) -> str:
     return f"{marker}\n{body}"
 
 
-def write_files(root: Path, target: Path, files: list[Path], project_name: str) -> None:
+def write_files(root: Path, target: Path, files: list[Path], project_name: str) -> list[dict]:
+    written: list[dict] = []
     for rel_path in files:
         source = root / rel_path
         destination = target / rel_path
         destination.parent.mkdir(parents=True, exist_ok=True)
         content = source.read_text(encoding="utf-8")
-        destination.write_text(render_template(content, project_name, target) + "\n", encoding="utf-8")
+        rendered = render_workspace_content(render_template(content, project_name, target), rel_path)
+        action = "updated" if destination.exists() else "created"
+        destination.write_text(rendered + "\n", encoding="utf-8")
+        written.append(file_record(rel_path, rendered, action))
+    return written
 
 
 def write_global_files(root: Path, rules_dir: Path, files: list[Path], backups: list[Path]) -> None:
@@ -493,18 +507,25 @@ def main(argv: list[str] | None = None) -> int:
         args.vscode_target,
     )
 
-    if conflicts:
-        if args.dry_run:
-            print("\nDry run only; no files were written.")
-            return 0
-        print("\nRun with --force to replace only known harness files.", file=sys.stderr)
-        return 2
-
     if args.dry_run:
         print("\nDry run only; no files were written.")
         return 0
 
-    write_files(root, target, files, args.project_name)
+    paths_to_write = set(workspace_files)
+    if conflicts and not args.force:
+        skipped_rel_paths = {path.relative_to(target) for path in conflicts}
+        paths_to_write = paths_to_write.difference(skipped_rel_paths)
+        print("\nExisting generated paths were preserved; skipped conflicting writes.")
+        print("Run with --force to replace known harness files.")
+    written_files = write_files(root, target, sorted(paths_to_write), args.project_name)
+    manifest = build_manifest(
+        project_name=args.project_name,
+        target=target,
+        installed_files=written_files,
+        skipped_conflicts=[path.relative_to(target) for path in conflicts] if not args.force else [],
+        forced_overwrites=[path.relative_to(target) for path in overwrites],
+    )
+    manifest_path = write_manifest(target, manifest)
 
     actual_copilot_settings_backup = None
 
@@ -528,6 +549,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Open the target workspace in VS Code with Copilot: {target}")
     print(f"Portable agent guidance: {target / 'AGENTS.md'}")
     print("Primary Copilot entry point: .github/agents/pegasus-orchestrator.agent.md")
+    print(f"Install manifest: {manifest_path}")
     if args.install_copilot_global:
         print(f"Updated global VS Code/Copilot assets: {copilot_root}")
         print(f"Updated VS Code settings ({args.vscode_target}): {copilot_settings}")

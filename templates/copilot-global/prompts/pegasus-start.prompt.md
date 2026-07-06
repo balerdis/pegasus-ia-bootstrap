@@ -10,8 +10,8 @@ Read the workspace-local Pegasus assets before editing:
 - `.github/instructions/`
 - `.github/agents/pegasus-orchestrator.agent.md`
 - `AGENTS.md`
-- `docs/pegasus/memory/context.md`
-- `docs/pegasus/memory/handoff.md`
-- Current proposal, spec, design, tasks, and verify files under `docs/pegasus/`
+- Current PRD, proposal, spec, design, tasks, apply-progress, and verify files under `docs/pegasus/` or `docs/pegasus/changes/<change-id>/`
+
+Recover operational memory through `pegasus-memory-mcp` when available. If MCP memory is unavailable, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Do not fall back to `docs/pegasus/memory/` as an active memory backend.
 
 Summarize the current task slice, the acceptance criteria, and the verification command you will run. If the workspace does not contain Pegasus IA assets, stop and ask for the intended workflow.

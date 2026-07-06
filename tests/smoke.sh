@@ -54,6 +54,7 @@ expected_files=(
   ".github/agents/doc-designer.agent.md"
   ".cursor/rules/pegasus-memory.mdc"
   ".cursor/rules/pegasus-workflow.mdc"
+  ".pegasus-bootstrap-ia/manifest.json"
   "docs/pegasus/prd.md"
   "docs/pegasus/proposal.md"
   "docs/pegasus/spec.md"
@@ -274,9 +275,28 @@ assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "secondary leg
 assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "do not fall back to Markdown memory"
 assert_file_contains "$target/AGENTS.md" 'El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente'
 assert_file_contains "$target/AGENTS.md" "MCP-first operational memory"
+assert_file_contains "$target/AGENTS.md" "pegasus-harness:start path=AGENTS.md ownership=marker-managed"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "pegasus-harness:start path=.github/agents/pegasus-orchestrator.agent.md ownership=full-file"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "# MCP-first memory"
 [ ! -e "$target/docs/pegasus/memory" ] || { printf 'generated harness should not include docs/pegasus/memory\n' >&2; exit 1; }
 assert_no_banned_markdown_memory_persistence_refs "$target"
+"$PYTHON_BIN" - "$target/.pegasus-bootstrap-ia/manifest.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+manifest = json.loads(Path(sys.argv[1]).read_text())
+manifest_text = json.dumps(manifest)
+for forbidden in ("active_change", "activeChange", "last_change", "lastChange"):
+    assert forbidden not in manifest_text
+assert manifest["workspace"]["project_name"] == "sample-project"
+assert manifest["uninstall"]["remove_only_managed"] is True
+paths = {record["path"]: record for record in manifest["install"]["files"]}
+assert "AGENTS.md" in paths
+assert paths["AGENTS.md"]["ownership"] == "marker-managed"
+assert paths[".github/agents/pegasus-orchestrator.agent.md"]["ownership"] == "full-file"
+assert manifest["install"]["skipped_conflicts"] == []
+PY
 
 for agent in sdd-spec sdd-design sdd-tasks sdd-apply sdd-verify; do
   agent_file="$target/.github/agents/$agent.agent.md"
@@ -350,13 +370,27 @@ printf 'user content\n' > "$target/AGENTS.md"
 printf 'custom apply progress\n' > "$target/docs/pegasus/apply-progress.md"
 mkdir -p "$target/.github"
 printf 'custom copilot instructions\n' > "$target/.github/copilot-instructions.md"
-if "$PYTHON_BIN" "$CLI" --project-name sample-project --target-path "$target" >/dev/null 2>&1; then
-  printf 'expected conflict failure\n' >&2
-  exit 1
-fi
+rm "$target/.github/agents/doc-designer.agent.md"
+conflict_output="$($PYTHON_BIN "$CLI" --project-name sample-project --target-path "$target")"
+case "$conflict_output" in
+  *"Conflicts (skipped unless --force):"*"$target/AGENTS.md"*"Existing generated paths were preserved; skipped conflicting writes."*) ;;
+  *) printf 'expected no-force conflicts to be reported and skipped\n' >&2; exit 1 ;;
+esac
 assert_file_contains "$target/AGENTS.md" "user content"
 assert_file_contains "$target/docs/pegasus/apply-progress.md" "custom apply progress"
 assert_file_contains "$target/.github/copilot-instructions.md" "custom copilot instructions"
+[ -f "$target/.github/agents/doc-designer.agent.md" ] || { printf 'expected no-force run to create missing non-conflicting file\n' >&2; exit 1; }
+"$PYTHON_BIN" - "$target/.pegasus-bootstrap-ia/manifest.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+manifest = json.loads(Path(sys.argv[1]).read_text())
+assert "AGENTS.md" in manifest["install"]["skipped_conflicts"]
+assert ".github/copilot-instructions.md" in manifest["install"]["skipped_conflicts"]
+paths = {record["path"] for record in manifest["install"]["files"]}
+assert ".github/agents/doc-designer.agent.md" in paths
+PY
 
 force_output="$($PYTHON_BIN "$CLI" --project-name sample-project --target-path "$target" --force)"
 case "$force_output" in
