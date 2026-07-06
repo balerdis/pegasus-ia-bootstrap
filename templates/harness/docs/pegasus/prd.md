@@ -3,6 +3,8 @@
 Created: `{{DATE}}`  
 Target: `{{TARGET_PATH}}`
 
+Use this template inside `docs/pegasus/changes/<change-id>/prd.md` for change-specific SDD work. Keep this file as the artifact source of truth for product discovery; MCP memory may store the active change, status, summary, and artifact path, but it must not replace this PRD.
+
 ## Outcome
 
 Describe the user-visible outcome this project or change should deliver.
@@ -72,4 +74,4 @@ Describe the situations, workflows, or moments where the desired outcome should 
 |----------------|---------------|--------|
 | TBD | TBD | Draft |
 
-- [ ] PRD reviewed and explicitly approved before drafting `docs/pegasus/proposal.md`.
+- [ ] PRD reviewed and explicitly approved before drafting `docs/pegasus/changes/<change-id>/proposal.md`.

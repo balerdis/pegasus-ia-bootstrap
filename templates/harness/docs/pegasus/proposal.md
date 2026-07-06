@@ -3,6 +3,8 @@
 Created: `{{DATE}}`  
 Target: `{{TARGET_PATH}}`
 
+Use this template inside `docs/pegasus/changes/<change-id>/proposal.md` for change-specific SDD work. The proposal file is the source of truth for scope and approach; MCP memory may store summaries, status, artifact references, and recovery notes only.
+
 ## Intent
 
 Describe the outcome this project should achieve.
@@ -11,19 +13,21 @@ This proposal bridges the approved PRD and the future spec. It is not a technica
 
 ## PRD Source / Status
 
-Proposal work requires an approved `docs/pegasus/prd.md`. If the PRD is missing, unresolved, or not explicitly approved, stop and complete it first.
+Proposal work requires an approved `docs/pegasus/changes/<change-id>/prd.md`. If the PRD is missing, unresolved, or not explicitly approved, stop and complete it first.
 
 | PRD Source | Approval Owner | Approval Date | Status |
 |------------|----------------|---------------|--------|
-| `docs/pegasus/prd.md` | TBD | TBD | Draft |
+| `docs/pegasus/changes/<change-id>/prd.md` | TBD | TBD | Draft |
 
 ## Project Context Consulted
 
-- [ ] `docs/pegasus/memory/context.md`
-- [ ] `docs/pegasus/memory/decisions.md`
-- [ ] `docs/pegasus/memory/tasks-log.md`
-- [ ] `docs/pegasus/memory/handoff.md`
-- [ ] `docs/pegasus/memory/learnings.md`
+- [ ] MCP active project/change context reviewed when available
+- [ ] MCP decisions and observations reviewed when available
+- [ ] MCP task progress and blockers reviewed when available
+- [ ] MCP handoff and recovery notes reviewed when available
+- [ ] File artifacts under `docs/pegasus/changes/<change-id>/` reviewed
+
+If MCP memory is unavailable, continue from file artifacts and do not claim persistent memory was recovered or saved.
 
 ## Scope
 

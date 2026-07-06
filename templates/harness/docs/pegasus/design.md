@@ -1,13 +1,15 @@
 # Design: {{PROJECT_NAME}}
 
+Use this template inside `docs/pegasus/changes/<change-id>/design.md` for change-specific SDD work. The design file is the technical source of truth; MCP memory may store decision summaries, status, and artifact references only.
+
 ## Inputs
 
 | Source | Path | Status | Notes |
 |--------|------|--------|-------|
-| PRD | `docs/pegasus/prd.md` | Approved / Pending / Blocked | TBD |
-| Proposal | `docs/pegasus/proposal.md` | Approved / Pending / Blocked | TBD |
-| Spec | `docs/pegasus/spec.md` | Approved / Pending / Blocked | TBD |
-| Memory / Decisions | `docs/pegasus/memory/` | Reviewed / Not reviewed | TBD |
+| PRD | `docs/pegasus/changes/<change-id>/prd.md` | Approved / Pending / Blocked | TBD |
+| Proposal | `docs/pegasus/changes/<change-id>/proposal.md` | Approved / Pending / Blocked | TBD |
+| Spec | `docs/pegasus/changes/<change-id>/spec.md` | Approved / Pending / Blocked | TBD |
+| MCP decisions/status | MCP summary/status memory | Reviewed / Not reviewed / Unavailable | TBD |
 
 Design work requires approved proposal and spec inputs. If the acceptance contract is unclear, stop and return to spec before designing.
 
@@ -54,17 +56,17 @@ TBD
 |------|----------------|
 | `.github/` | Primary VS Code/Copilot instructions, prompts, and custom agents |
 | `AGENTS.md` | Portable agent guidance for tools outside Copilot |
-| `docs/pegasus/` | Local SDD source of truth and verification evidence |
-| `docs/pegasus/memory/` | Markdown continuity layer for future or compacted sessions |
+| `docs/pegasus/changes/<change-id>/` | Local SDD source of truth and verification evidence for a change |
+| MCP memory | Operational summaries, active context, task status, handoffs, observations, and artifact references |
 | `.cursor/` | Secondary legacy compatibility guidance |
 
 ## Testing Strategy
 
 | Layer | What to verify | Evidence location |
 |-------|----------------|-------------------|
-| Unit | TBD | `docs/pegasus/verify.md` |
-| Integration | TBD | `docs/pegasus/verify.md` |
-| Manual / runtime | TBD | `docs/pegasus/verify.md` |
+| Unit | TBD | `docs/pegasus/changes/<change-id>/verify.md` |
+| Integration | TBD | `docs/pegasus/changes/<change-id>/verify.md` |
+| Manual / runtime | TBD | `docs/pegasus/changes/<change-id>/verify.md` |
 
 ## Rollout / Rollback
 

@@ -1,5 +1,7 @@
 # Tasks: {{PROJECT_NAME}}
 
+Use this template inside `docs/pegasus/changes/<change-id>/tasks.md` for change-specific SDD work. This task file is the source of truth for implementation slices; MCP memory may store task status, blockers, summaries, and artifact references only.
+
 Keep tasks small, reviewable, and tied to the proposal, spec, and design.
 
 Use `.github/prompts/sdd-phases.prompt.md` to help maintain this file in VS Code/Copilot. The task list remains the source of truth; prompts and agents should not expand scope on their own.
@@ -25,8 +27,8 @@ Chained PRs recommended: Yes|No
 
 | Source | Path | Status |
 |--------|------|--------|
-| Spec | `docs/pegasus/spec.md` | Approved / Pending / Blocked |
-| Design | `docs/pegasus/design.md` | Approved / Pending / Blocked |
+| Spec | `docs/pegasus/changes/<change-id>/spec.md` | Approved / Pending / Blocked |
+| Design | `docs/pegasus/changes/<change-id>/design.md` | Approved / Pending / Blocked |
 
 ## Implementation Slices
 
@@ -61,14 +63,14 @@ Use small slices that can be reviewed independently and rolled back safely. Task
 
 ## Verification Notes
 
-- Track implementation status, changed files, evidence, blockers, and next action in `docs/pegasus/apply-progress.md`.
-- Record commands and outcomes in `docs/pegasus/verify.md`.
+- Track implementation status, changed files, evidence, blockers, and next action in `docs/pegasus/changes/<change-id>/apply-progress.md`.
+- Record commands and outcomes in `docs/pegasus/changes/<change-id>/verify.md`.
 - Keep Copilot-generated changes bounded to the currently approved task slice.
 
 ## Progress Log
 
-- Also update `docs/pegasus/memory/tasks-log.md` when task status changes.
-- Before starting or delegating a task, check `docs/pegasus/memory/tasks-log.md` and `docs/pegasus/apply-progress.md` for matching work already in progress or completed.
+- Also update MCP task progress when available.
+- Before starting or delegating a task, check MCP task progress and `docs/pegasus/changes/<change-id>/apply-progress.md` for matching work already in progress or completed.
 - Merge progress into existing useful history; do not replace prior task notes, apply-progress, blockers, or completed work.
 
 | Date | Slice/Task | Status | Notes |

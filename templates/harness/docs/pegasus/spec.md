@@ -1,5 +1,7 @@
 # Specification: {{PROJECT_NAME}}
 
+Use this template inside `docs/pegasus/changes/<change-id>/spec.md` for change-specific SDD work. The spec file is the acceptance source of truth; MCP memory may summarize requirements, status, and artifact paths only.
+
 ## Purpose
 
 Define acceptance-level requirements and scenarios for approved SDD work.
@@ -10,8 +12,8 @@ Use this file as the acceptance contract for Copilot-guided work. Prompts and ag
 
 | Source | Path | Owner/Date | Status | Notes |
 |--------|------|------------|--------|-------|
-| PRD | `docs/pegasus/prd.md` | TBD | Approved / Pending / Blocked | TBD |
-| Proposal | `docs/pegasus/proposal.md` | TBD | Approved / Pending / Blocked | TBD |
+| PRD | `docs/pegasus/changes/<change-id>/prd.md` | TBD | Approved / Pending / Blocked | TBD |
+| Proposal | `docs/pegasus/changes/<change-id>/proposal.md` | TBD | Approved / Pending / Blocked | TBD |
 
 Spec work requires an approved PRD and approved proposal. If either is not approved, stop before adding requirements.
 
@@ -33,7 +35,7 @@ The system MUST reject duplicate apply work for the same approved task slice.
 
 #### Scenario: Duplicate apply slice is already complete
 
-- GIVEN `docs/pegasus/apply-progress.md` shows task `1.2` is complete
+- GIVEN `docs/pegasus/changes/<change-id>/apply-progress.md` shows task `1.2` is complete
 - WHEN apply is asked to start task `1.2` again
 - THEN apply stops before editing implementation files
 - AND it records or reports that verification or the next approved slice should happen instead
@@ -46,8 +48,8 @@ The system MUST reject duplicate apply work for the same approved task slice.
 
 ## Non-Goals / Out of Scope
 
-- Technical architecture decisions belong in `docs/pegasus/design.md`.
-- Implementation task breakdown belongs in `docs/pegasus/tasks.md`.
+- Technical architecture decisions belong in `docs/pegasus/changes/<change-id>/design.md`.
+- Implementation task breakdown belongs in `docs/pegasus/changes/<change-id>/tasks.md`.
 - Code changes are out of scope for spec work.
 - TBD project-specific non-goal.
 

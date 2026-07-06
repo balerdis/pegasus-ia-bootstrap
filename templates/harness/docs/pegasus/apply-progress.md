@@ -2,19 +2,21 @@
 
 Use this file to track implementation progress for approved SDD task slices.
 
+Use this template inside `docs/pegasus/changes/<change-id>/apply-progress.md` for change-specific SDD work. This file is the source of truth for apply evidence; MCP memory may store slice summaries, task status, blockers, and artifact references only.
+
 Merge updates into the existing useful history. Do not overwrite prior implementation slices, changed files, verification evidence, blockers, risks, or next actions unless the user explicitly approves cleanup.
 
-Before starting a slice, check this file and `docs/pegasus/memory/tasks-log.md` for the same phase/task already in progress or completed. Avoid duplicate launches.
+Before starting a slice, check this file and MCP task progress when available for the same phase/task already in progress or completed. Avoid duplicate launches.
 
 ## Current In-Progress Work
 
 | Phase/Task | Approved task slice source | Owner/Agent | Started | Status | Notes |
 |------------|----------------------------|-------------|---------|--------|-------|
-| TBD | `docs/pegasus/tasks.md` section TBD | TBD | {{DATE}} | Not started | TBD |
+| TBD | `docs/pegasus/changes/<change-id>/tasks.md` section TBD | TBD | {{DATE}} | Not started | TBD |
 
 ## Duplicate Check
 
-Check this file and `docs/pegasus/memory/tasks-log.md` before editing.
+Check this file and MCP task progress when available before editing.
 
 | Date | Slice/Task | Duplicate-check result | Action |
 |------|------------|------------------------|--------|
@@ -24,13 +26,13 @@ Check this file and `docs/pegasus/memory/tasks-log.md` before editing.
 
 | Date | Phase/Task | Summary | Verification Evidence |
 |------|------------|---------|-----------------------|
-| {{DATE}} | TBD | TBD | See `docs/pegasus/verify.md` |
+| {{DATE}} | TBD | TBD | See `docs/pegasus/changes/<change-id>/verify.md` |
 
 ## Implementation Slices
 
 | Slice | Approved source | Scope | Rollback Boundary | Status |
 |-------|-----------------|-------|-------------------|--------|
-| TBD | `docs/pegasus/tasks.md` | TBD | TBD | TBD |
+| TBD | `docs/pegasus/changes/<change-id>/tasks.md` | TBD | TBD | TBD |
 
 ## Changed Files
 
@@ -40,13 +42,13 @@ Check this file and `docs/pegasus/memory/tasks-log.md` before editing.
 
 ## Verification Evidence
 
-- Record commands and outcomes in `docs/pegasus/verify.md`.
+- Record commands and outcomes in `docs/pegasus/changes/<change-id>/verify.md`.
 - Summarize relevant evidence here only when it helps future apply or verify sessions recover context quickly.
 - Apply evidence is preliminary. It helps handoff, but it does not replace the verify phase.
 
 | Slice/Task | Verification status | Preliminary evidence | Verify log reference |
 |------------|---------------------|----------------------|----------------------|
-| TBD | Not run / Pending verify / Passed locally / Blocked | TBD | `docs/pegasus/verify.md` |
+| TBD | Not run / Pending verify / Passed locally / Blocked | TBD | `docs/pegasus/changes/<change-id>/verify.md` |
 
 ## Unresolved Risks
 

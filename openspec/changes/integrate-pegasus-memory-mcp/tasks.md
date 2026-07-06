@@ -38,8 +38,8 @@ Chain strategy: stacked-to-main
 
 ## Phase 3: Change-Cycle Artifacts and Follow-up
 
-- [ ] 3.1 Update `templates/harness/docs/pegasus/{prd,proposal,spec,design,tasks,apply-progress,verify}.md` to keep phase artifacts file-based and change-scoped under `docs/pegasus/changes/<change-id>/`. Verify MCP is described as summary/status memory, not artifact source of truth.
-- [ ] 3.2 Create or update a follow-up note for `pegasus-memory-mcp` API gaps covering `projectKey`/`projectId`, health/ping, and active-context ambiguity support. Verify it is clearly external to this bootstrap implementation.
+- [x] 3.1 Update `templates/harness/docs/pegasus/{prd,proposal,spec,design,tasks,apply-progress,verify}.md` to keep phase artifacts file-based and change-scoped under `docs/pegasus/changes/<change-id>/`. Verify MCP is described as summary/status memory, not artifact source of truth.
+- [x] 3.2 Create or update a follow-up note for `pegasus-memory-mcp` API gaps covering `projectKey`/`projectId`, health/ping, and active-context ambiguity support. Verify it is clearly external to this bootstrap implementation.
 
 ## Phase 4: Validation and Archive Prep
 
