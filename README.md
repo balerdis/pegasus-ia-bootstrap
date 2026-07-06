@@ -1,12 +1,22 @@
 # Pegasus IA Bootstrap
 
-Local bootstrap tooling for configuring a Pegasus VS Code/Copilot-first harness in a target workspace. The generated workspace contains only guidance, SDD templates, local Markdown memory, Copilot assets, and secondary legacy Cursor compatibility files; it does not scaffold app code, Git metadata, CI, deployment, or remote resources.
+Local bootstrap tooling for configuring a Pegasus VS Code/Copilot-first harness in a target workspace. The generated workspace contains guidance, SDD templates, Copilot assets, and secondary legacy Cursor compatibility files; it does not scaffold app code, Git metadata, CI, deployment, or remote resources.
 
 ## Quick path
 
 ```sh
-bin/pegasus-harness-bootstrap --project-name gestor-solicitudes-mvp --dry-run
-bin/pegasus-harness-bootstrap --project-name gestor-solicitudes-mvp
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+pegasus-harness-bootstrap --project-name gestor-solicitudes-mvp --dry-run
+pegasus-harness-bootstrap --project-name gestor-solicitudes-mvp
+```
+
+For everyday use from outside this checkout, install the CLI with `pipx`:
+
+```sh
+pipx install /path/to/pegasus-ia-bootstrap
+pegasus-harness-bootstrap --project-name gestor-solicitudes-mvp --dry-run
 ```
 
 By default, the target workspace path is `/var/www/html/personal/<project-name>`.
@@ -44,23 +54,18 @@ docs/pegasus/design.md
 docs/pegasus/tasks.md
 docs/pegasus/apply-progress.md
 docs/pegasus/verify.md
-docs/pegasus/memory/context.md
-docs/pegasus/memory/decisions.md
-docs/pegasus/memory/tasks-log.md
-docs/pegasus/memory/handoff.md
-docs/pegasus/memory/learnings.md
 .cursor/rules/pegasus-workflow.mdc
 .cursor/rules/pegasus-memory.mdc
 ```
 
-The `.github/` tree is the primary Copilot-native control surface. `AGENTS.md` remains portable guidance for agents that do not read Copilot-specific files. `.cursor/` is retained only as secondary legacy compatibility and points back to the VS Code/Copilot assets.
+The `.github/` tree is the primary Copilot-native control surface. `AGENTS.md` remains portable guidance for agents that do not read Copilot-specific files. `.cursor/` is retained only as secondary legacy compatibility and points back to the VS Code/Copilot assets. Operational memory is MCP-first; the bootstrap does not generate a Markdown memory backend.
 
 ## Optional global VS Code/Copilot install
 
 Global/user-level Copilot setup is opt-in and never runs by default:
 
 ```sh
-bin/pegasus-harness-bootstrap \
+pegasus-harness-bootstrap \
   --project-name gestor-solicitudes-mvp \
   --install-copilot-global \
   --vscode-target stable
@@ -88,7 +93,7 @@ Add `--dry-run` to preview workspace files, global assets, VS Code settings path
 Cursor support remains available as legacy compatibility:
 
 ```sh
-bin/pegasus-harness-bootstrap --project-name gestor-solicitudes-mvp --install-cursor-global
+pegasus-harness-bootstrap --project-name gestor-solicitudes-mvp --install-cursor-global
 ```
 
 A default run does not create, read, back up, or modify global Cursor configuration. Use `--install-cursor-global` only when you need the legacy Cursor global rule. On Linux, the CLI writes to `$XDG_CONFIG_HOME/Cursor/User/rules` when `XDG_CONFIG_HOME` is set, otherwise `~/.config/Cursor/User/rules`; an existing legacy `~/.cursor/rules` directory is reported and preferred. Existing global rule files are backed up with a timestamped `.bak` sibling before update.

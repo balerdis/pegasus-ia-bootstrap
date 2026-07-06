@@ -7,6 +7,11 @@ PYTHON_BIN="${PYTHON_BIN:-python3}"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
+VENV="$TMP/editable-venv"
+"$PYTHON_BIN" -m venv "$VENV"
+"$VENV/bin/python" -m pip install -e "$ROOT" >/dev/null
+ENTRYPOINT="$VENV/bin/pegasus-harness-bootstrap"
+
 assert_file_contains() {
   local file="$1"
   local text="$2"
@@ -59,6 +64,18 @@ expected_files=(
 )
 
 chmod +x "$CLI"
+
+editable_plan="$($ENTRYPOINT --project-name demo --target-path "$TMP/editable-demo" --dry-run)"
+case "$editable_plan" in
+  *"Project: demo"*"Target: $TMP/editable-demo"*"Dry run only; no files were written."*) ;;
+  *) printf 'expected editable entry point to run dry-run setup\n' >&2; exit 1 ;;
+esac
+
+wrapper_plan="$($CLI --project-name demo --target-path "$TMP/wrapper-demo" --dry-run)"
+case "$wrapper_plan" in
+  *"Project: demo"*"Target: $TMP/wrapper-demo"*"Dry run only; no files were written."*) ;;
+  *) printf 'expected bin compatibility wrapper to run dry-run setup\n' >&2; exit 1 ;;
+esac
 
 "$CLI" --help >/dev/null
 "$PYTHON_BIN" "$CLI" --help >/dev/null

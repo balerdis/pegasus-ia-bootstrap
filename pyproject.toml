@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pegasus-ia-bootstrap"
+version = "0.1.0"
+description = "Local bootstrap tooling for configuring a Pegasus VS Code/Copilot harness."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "Pegasus IA" }
+]
+
+[project.scripts]
+pegasus-harness-bootstrap = "pegasus_harness_bootstrap.cli:main"
+
+[tool.setuptools]
+packages = ["pegasus_harness_bootstrap"]
+
+[tool.setuptools.data-files]
+"share/pegasus-ia-bootstrap/templates/harness" = ["templates/harness/AGENTS.md"]
+"share/pegasus-ia-bootstrap/templates/harness/docs/pegasus" = ["templates/harness/docs/pegasus/*.md"]
+"share/pegasus-ia-bootstrap/templates/harness/.github" = ["templates/harness/.github/copilot-instructions.md"]
+"share/pegasus-ia-bootstrap/templates/harness/.github/agents" = ["templates/harness/.github/agents/*.md"]
+"share/pegasus-ia-bootstrap/templates/harness/.github/instructions" = ["templates/harness/.github/instructions/*.md"]
+"share/pegasus-ia-bootstrap/templates/harness/.github/prompts" = ["templates/harness/.github/prompts/*.md"]
+"share/pegasus-ia-bootstrap/templates/harness/.cursor/rules" = ["templates/harness/.cursor/rules/*.mdc"]
+"share/pegasus-ia-bootstrap/templates/cursor-global" = ["templates/cursor-global/*.mdc"]
+"share/pegasus-ia-bootstrap/templates/copilot-global/agents" = ["templates/copilot-global/agents/*.md"]
+"share/pegasus-ia-bootstrap/templates/copilot-global/instructions" = ["templates/copilot-global/instructions/*.md"]
+"share/pegasus-ia-bootstrap/templates/copilot-global/prompts" = ["templates/copilot-global/prompts/*.md"]
