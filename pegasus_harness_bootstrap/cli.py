@@ -14,6 +14,7 @@ from pathlib import Path
 
 from pegasus_harness_bootstrap.manifest import (
     MANIFEST_RELATIVE_PATH,
+    OWNERSHIP_MARKER,
     build_manifest,
     file_record,
     render_workspace_content,
@@ -87,6 +88,16 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "--install-cursor-global",
         action="store_true",
         help="Legacy: install or update opt-in global Cursor user rules with backups.",
+    )
+    parser.add_argument(
+        "--uninstall-workspace",
+        action="store_true",
+        help="Remove Pegasus-managed workspace files recorded in the manifest.",
+    )
+    parser.add_argument(
+        "--uninstall-copilot-global",
+        action="store_true",
+        help="Remove Pegasus-managed global VS Code/Copilot assets and settings entries with backups.",
     )
     return parser.parse_args(argv)
 
@@ -444,11 +455,325 @@ def write_copilot_settings(settings_path: Path, merged: dict, backup_path: Path 
     return backup_path
 
 
+def load_workspace_manifest(target: Path) -> dict:
+    manifest_path = target / MANIFEST_RELATIVE_PATH
+    if not manifest_path.exists():
+        fail(f"workspace manifest not found: {manifest_path}")
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        fail(f"invalid workspace manifest JSON at {manifest_path}: {exc.msg}")
+    if not isinstance(manifest, dict):
+        fail(f"workspace manifest JSON must be an object: {manifest_path}")
+    if manifest.get("managed_by") != "pegasus-harness-bootstrap":
+        fail(f"workspace manifest is not Pegasus-managed: {manifest_path}")
+    return manifest
+
+
+def workspace_uninstall_files(manifest: dict) -> list[tuple[Path, str]]:
+    install = manifest.get("install", {})
+    records = install.get("files", []) if isinstance(install, dict) else []
+    files: list[tuple[Path, str]] = []
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        rel_path = record.get("path")
+        if not isinstance(rel_path, str) or rel_path.startswith("/") or ".." in Path(rel_path).parts:
+            continue
+        ownership = record.get("ownership")
+        files.append((Path(rel_path), ownership if isinstance(ownership, str) else "full-file"))
+    return sorted(set(files), key=lambda item: item[0].as_posix())
+
+
+def marker_block_bounds(text: str, rel_path: Path) -> tuple[int, int] | None:
+    start = f"<!-- {OWNERSHIP_MARKER}:start path={rel_path.as_posix()}"
+    end = f"<!-- {OWNERSHIP_MARKER}:end path={rel_path.as_posix()} -->"
+    start_index = text.find(start)
+    if start_index == -1:
+        return None
+    end_index = text.find(end, start_index)
+    if end_index == -1:
+        return None
+    return start_index, end_index + len(end)
+
+
+def remove_marker_block(text: str, rel_path: Path) -> str | None:
+    bounds = marker_block_bounds(text, rel_path)
+    if bounds is None:
+        return None
+    start, end = bounds
+    before = text[:start].rstrip("\n")
+    after = text[end:].lstrip("\n")
+    if before and after:
+        return f"{before}\n{after}"
+    return before or after
+
+
+def plan_workspace_uninstall(target: Path, manifest: dict) -> tuple[list[Path], list[Path], list[Path], list[Path]]:
+    remove_files: list[Path] = []
+    update_files: list[Path] = []
+    preserve_files: list[Path] = []
+    cleanup_dirs: set[Path] = set()
+
+    for rel_path, ownership in workspace_uninstall_files(manifest):
+        path = target / rel_path
+        if not path.exists() or not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8")
+        stripped = remove_marker_block(text, rel_path)
+        if stripped is None:
+            preserve_files.append(path)
+            continue
+        if ownership == "marker-managed" and stripped.strip():
+            update_files.append(path)
+        else:
+            remove_files.append(path)
+        cleanup_dirs.update(path.parents)
+
+    manifest_path = target / MANIFEST_RELATIVE_PATH
+    if manifest_path.exists():
+        remove_files.append(manifest_path)
+        cleanup_dirs.update(manifest_path.parents)
+
+    cleanup = [path for path in cleanup_dirs if target in path.parents]
+    cleanup = sorted(set(cleanup), key=lambda path: len(path.parts), reverse=True)
+    return sorted(set(remove_files)), sorted(set(update_files)), sorted(set(preserve_files)), cleanup
+
+
+def print_uninstall_plan(
+    target: Path,
+    workspace_removes: list[Path],
+    workspace_updates: list[Path],
+    workspace_preserves: list[Path],
+    workspace_dirs: list[Path],
+    copilot_root: Path | None = None,
+    copilot_settings_path: Path | None = None,
+    copilot_asset_removes: list[Path] | None = None,
+    copilot_dirs: list[Path] | None = None,
+    copilot_settings_backup: Path | None = None,
+) -> None:
+    print("Pegasus uninstall plan")
+    print(f"Target: {target}")
+    if workspace_removes:
+        print("\nWorkspace file removals:")
+        for path in workspace_removes:
+            print(f"  {path}")
+    if workspace_updates:
+        print("\nWorkspace marker removals:")
+        for path in workspace_updates:
+            print(f"  {path}")
+    if workspace_preserves:
+        print("\nWorkspace files preserved (no Pegasus marker found):")
+        for path in workspace_preserves:
+            print(f"  {path}")
+    if workspace_dirs:
+        print("\nEmpty workspace directories to remove when possible:")
+        for path in workspace_dirs:
+            print(f"  {path}")
+    if copilot_root is not None:
+        print("\nGlobal VS Code/Copilot uninstall (--uninstall-copilot-global):")
+        print(f"  Pegasus-managed root: {copilot_root}")
+        if copilot_settings_path is not None:
+            print(f"  Settings path: {copilot_settings_path}")
+        if copilot_settings_backup is not None:
+            print(f"  Settings backup: {copilot_settings_backup}")
+        elif copilot_settings_path is not None:
+            print("  Settings backup: none; settings file does not exist or has no Pegasus entries")
+        if copilot_asset_removes:
+            print("  Asset removals:")
+            for path in copilot_asset_removes:
+                print(f"    {path}")
+        if copilot_dirs:
+            print("  Empty global directories to remove when possible:")
+            for path in copilot_dirs:
+                print(f"    {path}")
+
+
+def apply_workspace_uninstall(
+    target: Path,
+    remove_files: list[Path],
+    update_files: list[Path],
+    cleanup_dirs: list[Path],
+) -> tuple[list[Path], list[Path]]:
+    removed_dirs: list[Path] = []
+    preserved_dirs: list[Path] = []
+    for path in update_files:
+        rel_path = path.relative_to(target)
+        text = path.read_text(encoding="utf-8")
+        stripped = remove_marker_block(text, rel_path)
+        if stripped is not None:
+            path.write_text(stripped.rstrip("\n") + "\n", encoding="utf-8")
+    for path in remove_files:
+        if path.exists() and path.is_file():
+            path.unlink()
+    for directory in cleanup_dirs:
+        if directory == target.parent:
+            continue
+        if directory.exists() and directory.is_dir():
+            try:
+                directory.rmdir()
+                removed_dirs.append(directory)
+            except OSError:
+                preserved_dirs.append(directory)
+    return removed_dirs, preserved_dirs
+
+
+def remove_location(existing: object, location: str) -> tuple[object | None, bool]:
+    if isinstance(existing, dict):
+        if location not in existing:
+            return existing, False
+        updated = dict(existing)
+        updated.pop(location, None)
+        return (updated if updated else None), True
+    if isinstance(existing, list):
+        updated = [item for item in existing if item != location]
+        changed = len(updated) != len(existing)
+        return (updated if updated else None), changed
+    return existing, False
+
+
+def remove_copilot_settings(settings: dict, managed_root: Path) -> tuple[dict, bool]:
+    updated = dict(settings)
+    changed = False
+    for key, subdir in COPILOT_SETTINGS_KEYS:
+        if key not in updated:
+            continue
+        next_value, key_changed = remove_location(updated[key], str(managed_root / subdir))
+        if key_changed:
+            changed = True
+            if next_value is None:
+                updated.pop(key, None)
+            else:
+                updated[key] = next_value
+    return updated, changed
+
+
+def plan_copilot_global_uninstall(managed_root: Path, settings_path: Path) -> tuple[list[Path], list[Path], dict, Path | None, bool]:
+    settings = load_settings(settings_path)
+    updated_settings, settings_changed = remove_copilot_settings(settings, managed_root)
+    asset_removes = sorted(path for path in managed_root.rglob("*") if path.is_file() and is_copilot_managed_asset(path)) if managed_root.exists() else []
+    cleanup_dirs = sorted(
+        {path.parent for path in asset_removes}.union({managed_root}),
+        key=lambda path: len(path.parts),
+        reverse=True,
+    )
+    backup_path = settings_backup_path(settings_path) if settings_path.exists() and settings_changed else None
+    return asset_removes, cleanup_dirs, updated_settings, backup_path, settings_changed
+
+
+def is_copilot_managed_asset(path: Path) -> bool:
+    try:
+        return COPILOT_GLOBAL_MARKER in path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        return False
+
+
+def apply_copilot_global_uninstall(
+    asset_removes: list[Path],
+    cleanup_dirs: list[Path],
+    settings_path: Path,
+    updated_settings: dict,
+    backup_path: Path | None,
+    settings_changed: bool,
+) -> tuple[list[Path], list[Path]]:
+    if settings_changed:
+        write_copilot_settings(settings_path, updated_settings, backup_path)
+    for path in asset_removes:
+        if path.exists() and path.is_file():
+            path.unlink()
+    removed_dirs: list[Path] = []
+    preserved_dirs: list[Path] = []
+    for directory in cleanup_dirs:
+        if directory.exists() and directory.is_dir():
+            try:
+                directory.rmdir()
+                removed_dirs.append(directory)
+            except OSError:
+                preserved_dirs.append(directory)
+    return removed_dirs, preserved_dirs
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     validate_project_name(args.project_name)
 
     target = target_path_for(args.project_name, args.target_path)
+    if args.uninstall_workspace or args.uninstall_copilot_global:
+        workspace_removes: list[Path] = []
+        workspace_updates: list[Path] = []
+        workspace_preserves: list[Path] = []
+        workspace_dirs: list[Path] = []
+        if args.uninstall_workspace:
+            manifest = load_workspace_manifest(target)
+            workspace_removes, workspace_updates, workspace_preserves, workspace_dirs = plan_workspace_uninstall(target, manifest)
+
+        copilot_root = None
+        copilot_settings = None
+        copilot_asset_removes: list[Path] = []
+        copilot_dirs: list[Path] = []
+        copilot_updated_settings: dict = {}
+        copilot_settings_backup = None
+        copilot_settings_changed = False
+        if args.uninstall_copilot_global:
+            copilot_root = copilot_managed_root()
+            copilot_settings = vscode_settings_path(args.vscode_target)
+            (
+                copilot_asset_removes,
+                copilot_dirs,
+                copilot_updated_settings,
+                copilot_settings_backup,
+                copilot_settings_changed,
+            ) = plan_copilot_global_uninstall(copilot_root, copilot_settings)
+
+        print_uninstall_plan(
+            target,
+            workspace_removes,
+            workspace_updates,
+            workspace_preserves,
+            workspace_dirs,
+            copilot_root,
+            copilot_settings,
+            copilot_asset_removes,
+            copilot_dirs,
+            copilot_settings_backup,
+        )
+
+        if args.dry_run:
+            print("\nDry run only; no files were removed.")
+            return 0
+
+        if args.uninstall_workspace:
+            removed_dirs, preserved_dirs = apply_workspace_uninstall(
+                target,
+                workspace_removes,
+                workspace_updates,
+                workspace_dirs,
+            )
+            print("\nCompleted Pegasus workspace uninstall.")
+            for directory in removed_dirs:
+                print(f"Removed empty directory: {directory}")
+            for directory in preserved_dirs:
+                print(f"Preserved non-empty directory: {directory}")
+
+        if args.uninstall_copilot_global:
+            assert copilot_settings is not None
+            removed_dirs, preserved_dirs = apply_copilot_global_uninstall(
+                copilot_asset_removes,
+                copilot_dirs,
+                copilot_settings,
+                copilot_updated_settings,
+                copilot_settings_backup,
+                copilot_settings_changed,
+            )
+            print("\nCompleted Pegasus global VS Code/Copilot uninstall.")
+            if copilot_settings_backup is not None:
+                print(f"Backup created: {copilot_settings_backup}")
+            for directory in removed_dirs:
+                print(f"Removed empty global directory: {directory}")
+            for directory in preserved_dirs:
+                print(f"Preserved non-empty global directory: {directory}")
+        return 0
+
     root = template_root()
     files = template_files(root)
     workspace_files = workspace_inventory_files(files)

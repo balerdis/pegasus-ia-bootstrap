@@ -89,6 +89,10 @@ case "$help_output" in
   *"--install-copilot-global"*"--vscode-target"*) ;;
   *) printf 'expected help output to include Copilot global planning flags\n' >&2; exit 1 ;;
 esac
+case "$help_output" in
+  *"--uninstall-workspace"*"--uninstall-copilot-global"*) ;;
+  *) printf 'expected help output to include uninstall lifecycle flags\n' >&2; exit 1 ;;
+esac
 
 default_plan="$($PYTHON_BIN "$CLI" --project-name default-project --dry-run)"
 case "$default_plan" in
@@ -402,6 +406,94 @@ assert_file_contains "$target/docs/pegasus/apply-progress.md" "Current In-Progre
 [ ! -e "$target/docs/pegasus/memory" ] || { printf 'force run should not create docs/pegasus/memory\n' >&2; exit 1; }
 assert_no_banned_markdown_memory_persistence_refs "$target"
 [ ! -e "$target/.git" ] || { printf 'bootstrap created git metadata\n' >&2; exit 1; }
+
+uninstall_target="$TMP/uninstall-target"
+"$PYTHON_BIN" "$CLI" --project-name uninstall-project --target-path "$uninstall_target" >/dev/null
+mkdir -p "$uninstall_target/docs/pegasus" "$uninstall_target/.github/agents"
+printf 'user note\n' > "$uninstall_target/docs/pegasus/user-note.md"
+printf 'user agent\n' > "$uninstall_target/.github/agents/user.agent.md"
+uninstall_dry_output="$($PYTHON_BIN "$CLI" --project-name uninstall-project --target-path "$uninstall_target" --uninstall-workspace --dry-run)"
+case "$uninstall_dry_output" in
+  *"Pegasus uninstall plan"*"Workspace file removals:"*"$uninstall_target/.pegasus-bootstrap-ia/manifest.json"*"Dry run only; no files were removed."*) ;;
+  *) printf 'expected workspace uninstall dry-run plan\n' >&2; exit 1 ;;
+esac
+[ -f "$uninstall_target/AGENTS.md" ] || { printf 'workspace uninstall dry-run removed AGENTS.md\n' >&2; exit 1; }
+[ -f "$uninstall_target/.pegasus-bootstrap-ia/manifest.json" ] || { printf 'workspace uninstall dry-run removed manifest\n' >&2; exit 1; }
+uninstall_output="$($PYTHON_BIN "$CLI" --project-name uninstall-project --target-path "$uninstall_target" --uninstall-workspace)"
+case "$uninstall_output" in
+  *"Completed Pegasus workspace uninstall."*"Preserved non-empty directory:"*) ;;
+  *) printf 'expected workspace uninstall completion and non-empty directory preservation\n' >&2; exit 1 ;;
+esac
+[ ! -e "$uninstall_target/AGENTS.md" ] || { printf 'workspace uninstall preserved managed AGENTS.md\n' >&2; exit 1; }
+[ ! -e "$uninstall_target/.github/copilot-instructions.md" ] || { printf 'workspace uninstall preserved managed Copilot instructions\n' >&2; exit 1; }
+[ ! -e "$uninstall_target/.pegasus-bootstrap-ia/manifest.json" ] || { printf 'workspace uninstall preserved manifest\n' >&2; exit 1; }
+[ -f "$uninstall_target/docs/pegasus/user-note.md" ] || { printf 'workspace uninstall removed user docs file\n' >&2; exit 1; }
+[ -f "$uninstall_target/.github/agents/user.agent.md" ] || { printf 'workspace uninstall removed user agent file\n' >&2; exit 1; }
+
+uninstall_global_home="$TMP/uninstall-global-home"
+uninstall_global_xdg="$TMP/uninstall-global-xdg"
+uninstall_global_target="$TMP/uninstall-global-target"
+mkdir -p "$uninstall_global_home" "$uninstall_global_xdg"
+HOME="$uninstall_global_home" XDG_CONFIG_HOME="$uninstall_global_xdg" "$PYTHON_BIN" "$CLI" --project-name uninstall-global --target-path "$uninstall_global_target" --install-copilot-global >/dev/null
+"$PYTHON_BIN" - "$uninstall_global_xdg" <<'PY'
+import json
+import sys
+from pathlib import Path
+xdg = Path(sys.argv[1])
+settings_path = xdg / "Code/User/settings.json"
+settings = json.loads(settings_path.read_text())
+settings["editor.fontSize"] = 17
+settings["chat.agentFilesLocations"]["/user/agents"] = True
+settings_path.write_text(json.dumps(settings, indent=2) + "\n")
+(xdg / "pegasus-ia/copilot/agents/user.agent.md").write_text("user global agent\n")
+PY
+uninstall_global_dry_output="$(HOME="$uninstall_global_home" XDG_CONFIG_HOME="$uninstall_global_xdg" "$PYTHON_BIN" "$CLI" --project-name uninstall-global --target-path "$uninstall_global_target" --uninstall-copilot-global --dry-run)"
+case "$uninstall_global_dry_output" in
+  *"Global VS Code/Copilot uninstall (--uninstall-copilot-global):"*"Settings backup:"*"Asset removals:"*"Dry run only; no files were removed."*) ;;
+  *) printf 'expected Copilot global uninstall dry-run plan\n' >&2; exit 1 ;;
+esac
+[ -f "$uninstall_global_xdg/pegasus-ia/copilot/agents/pegasus-global-orchestrator.agent.md" ] || { printf 'global uninstall dry-run removed managed asset\n' >&2; exit 1; }
+uninstall_global_output="$(HOME="$uninstall_global_home" XDG_CONFIG_HOME="$uninstall_global_xdg" "$PYTHON_BIN" "$CLI" --project-name uninstall-global --target-path "$uninstall_global_target" --uninstall-copilot-global)"
+case "$uninstall_global_output" in
+  *"Completed Pegasus global VS Code/Copilot uninstall."*"Backup created: $uninstall_global_xdg/Code/User/settings.json."*".bak"*"Preserved non-empty global directory:"*) ;;
+  *) printf 'expected Copilot global uninstall completion, backup, and non-empty directory preservation\n' >&2; exit 1 ;;
+esac
+[ ! -e "$uninstall_global_xdg/pegasus-ia/copilot/agents/pegasus-global-orchestrator.agent.md" ] || { printf 'global uninstall preserved managed agent asset\n' >&2; exit 1; }
+[ -f "$uninstall_global_xdg/pegasus-ia/copilot/agents/user.agent.md" ] || { printf 'global uninstall removed user global asset\n' >&2; exit 1; }
+global_uninstall_backup_count=$(compgen -G "$uninstall_global_xdg/Code/User/settings.json.*.bak" | wc -l)
+[ "$global_uninstall_backup_count" -ge 1 ] || { printf 'expected global uninstall settings backup\n' >&2; exit 1; }
+"$PYTHON_BIN" - "$uninstall_global_xdg" <<'PY'
+import json
+import sys
+from pathlib import Path
+xdg = Path(sys.argv[1])
+settings = json.loads((xdg / "Code/User/settings.json").read_text())
+text = json.dumps(settings)
+assert "pegasus-ia/copilot" not in text
+assert settings["editor.fontSize"] == 17
+assert settings["chat.agentFilesLocations"]["/user/agents"] is True
+PY
+
+invalid_uninstall_home="$TMP/invalid-uninstall-home"
+invalid_uninstall_xdg="$TMP/invalid-uninstall-xdg"
+invalid_uninstall_target="$TMP/invalid-uninstall-target"
+mkdir -p "$invalid_uninstall_home" "$invalid_uninstall_xdg/Code/User" "$invalid_uninstall_xdg/pegasus-ia/copilot/agents"
+printf '{ invalid json\n' > "$invalid_uninstall_xdg/Code/User/settings.json"
+printf '<!-- PEGASUS-COPILOT-GLOBAL -->\nmanaged\n' > "$invalid_uninstall_xdg/pegasus-ia/copilot/agents/pegasus-global-orchestrator.agent.md"
+if invalid_uninstall_output="$(HOME="$invalid_uninstall_home" XDG_CONFIG_HOME="$invalid_uninstall_xdg" "$PYTHON_BIN" "$CLI" --project-name invalid-uninstall --target-path "$invalid_uninstall_target" --uninstall-copilot-global 2>&1)"; then
+  printf 'expected invalid settings JSON failure during global uninstall\n' >&2
+  exit 1
+fi
+case "$invalid_uninstall_output" in
+  *"invalid VS Code settings JSON"*) ;;
+  *) printf 'expected clear invalid settings JSON error during global uninstall\n' >&2; exit 1 ;;
+esac
+assert_file_contains "$invalid_uninstall_xdg/Code/User/settings.json" '{ invalid json'
+[ -f "$invalid_uninstall_xdg/pegasus-ia/copilot/agents/pegasus-global-orchestrator.agent.md" ] || { printf 'invalid global uninstall removed managed asset\n' >&2; exit 1; }
+if compgen -G "$invalid_uninstall_xdg/Code/User/settings.json.*.bak" >/dev/null; then
+  printf 'invalid global uninstall should not create backup\n' >&2
+  exit 1
+fi
 
 global_home="$TMP/global-home"
 global_xdg="$TMP/global-xdg"

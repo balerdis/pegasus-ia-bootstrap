@@ -42,9 +42,9 @@ Chain strategy: stacked-to-main
 
 ## Slice 3: Uninstall Safety
 
-- [ ] 3.1 Add workspace uninstall planning/apply flow with `--dry-run`, Pegasus-managed removals only, and empty-directory cleanup.
-- [ ] 3.2 Add global VS Code/Copilot uninstall with settings backup before mutation and user setting preservation.
-- [ ] 3.3 Test invalid/global settings, backups, dry-run, real removal, and non-empty directory preservation.
+- [x] 3.1 Add workspace uninstall planning/apply flow with `--dry-run`, Pegasus-managed removals only, and empty-directory cleanup.
+- [x] 3.2 Add global VS Code/Copilot uninstall with settings backup before mutation and user setting preservation.
+- [x] 3.3 Test invalid/global settings, backups, dry-run, real removal, and non-empty directory preservation.
 
 ## Slice 4: Change-Cycle Creation
 
