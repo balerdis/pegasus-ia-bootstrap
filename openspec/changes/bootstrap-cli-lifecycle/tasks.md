@@ -48,8 +48,8 @@ Chain strategy: stacked-to-main
 
 ## Slice 4: Change-Cycle Creation
 
-- [ ] 4.1 Add `--new-change <change-id>` flow that creates only `docs/pegasus/changes/<change-id>/prd.md`.
-- [ ] 4.2 Test no proposal/spec/design/tasks/apply-progress/verify files are created.
+- [x] 4.1 Add `--new-change <change-id>` flow that creates only `docs/pegasus/changes/<change-id>/prd.md`.
+- [x] 4.2 Test no proposal/spec/design/tasks/apply-progress/verify files are created.
 
 ## Verification, Risk, and Rollback
 

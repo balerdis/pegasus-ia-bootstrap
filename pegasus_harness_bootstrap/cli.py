@@ -56,7 +56,6 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--project-name",
-        required=True,
         help="Project name used for defaults and template tokens.",
     )
     parser.add_argument(
@@ -99,6 +98,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Remove Pegasus-managed global VS Code/Copilot assets and settings entries with backups.",
     )
+    parser.add_argument(
+        "--new-change",
+        metavar="CHANGE_ID",
+        help="Create a new Pegasus change with only docs/pegasus/changes/<change-id>/prd.md.",
+    )
     return parser.parse_args(argv)
 
 
@@ -114,8 +118,24 @@ def validate_project_name(project_name: str) -> None:
         fail("project name may contain only letters, numbers, dot, underscore, and hyphen")
 
 
-def target_path_for(project_name: str, target_path: str | None) -> Path:
+def validate_change_id(change_id: str) -> None:
+    if change_id in {"", ".", ".."} or "/" in change_id or " " in change_id:
+        fail("change id must be non-empty and contain no spaces or slashes")
+    if not PROJECT_NAME_RE.fullmatch(change_id):
+        fail("change id may contain only letters, numbers, dot, underscore, and hyphen")
+
+
+def target_path_for(project_name: str | None, target_path: str | None) -> Path:
+    if project_name is None and target_path is None:
+        fail("--project-name is required unless --target-path is provided")
     target = Path(target_path).expanduser() if target_path else DEFAULT_ROOT / project_name
+    if str(target) == "/":
+        fail("target path cannot be /")
+    return target
+
+
+def change_target_path_for(target_path: str | None) -> Path:
+    target = Path(target_path).expanduser() if target_path else Path.cwd()
     if str(target) == "/":
         fail("target path cannot be /")
     return target
@@ -470,6 +490,66 @@ def load_workspace_manifest(target: Path) -> dict:
     return manifest
 
 
+def new_change_prd_path(target: Path, change_id: str) -> Path:
+    return target / "docs" / "pegasus" / "changes" / change_id / "prd.md"
+
+
+def render_change_prd(change_id: str, manifest: dict) -> str:
+    workspace = manifest.get("workspace", {})
+    project_name = workspace.get("project_name") if isinstance(workspace, dict) else None
+    project_label = project_name if isinstance(project_name, str) else "TBD"
+    return f"""# PRD: {change_id}
+
+## Summary
+
+Define the product problem, user value, and success criteria for this change before proposal, spec, design, or task planning starts.
+
+## Context
+
+- Project: `{project_label}`
+- Change ID: `{change_id}`
+
+## Problem
+
+TBD
+
+## Goals
+
+- TBD
+
+## Non-Goals
+
+- TBD
+
+## Users / Stakeholders
+
+- TBD
+
+## Requirements
+
+- TBD
+
+## Success Criteria
+
+- TBD
+
+## Approval
+
+- Owner: TBD
+- Status: Draft
+"""
+
+
+def create_new_change(target: Path, change_id: str) -> Path:
+    manifest = load_workspace_manifest(target)
+    destination = new_change_prd_path(target, change_id)
+    if destination.exists():
+        fail(f"change PRD already exists: {destination}")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(render_change_prd(change_id, manifest), encoding="utf-8")
+    return destination
+
+
 def workspace_uninstall_files(manifest: dict) -> list[tuple[Path, str]]:
     install = manifest.get("install", {})
     records = install.get("files", []) if isinstance(install, dict) else []
@@ -695,7 +775,22 @@ def apply_copilot_global_uninstall(
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
-    validate_project_name(args.project_name)
+    if args.project_name is not None:
+        validate_project_name(args.project_name)
+
+    if args.new_change:
+        validate_change_id(args.new_change)
+        target = change_target_path_for(args.target_path)
+        prd_path = create_new_change(target, args.new_change)
+        print("Created Pegasus change PRD.")
+        print(f"Target: {target}")
+        print(f"Change: {args.new_change}")
+        print(f"PRD: {prd_path}")
+        print("Later SDD phase progression creates proposal, spec, design, tasks, apply-progress, and verify artifacts.")
+        return 0
+
+    if args.project_name is None and not (args.uninstall_workspace or args.uninstall_copilot_global):
+        fail("--project-name is required unless --new-change or an uninstall flag is used")
 
     target = target_path_for(args.project_name, args.target_path)
     if args.uninstall_workspace or args.uninstall_copilot_global:

@@ -93,6 +93,10 @@ case "$help_output" in
   *"--uninstall-workspace"*"--uninstall-copilot-global"*) ;;
   *) printf 'expected help output to include uninstall lifecycle flags\n' >&2; exit 1 ;;
 esac
+case "$help_output" in
+  *"--new-change"*) ;;
+  *) printf 'expected help output to include new-change lifecycle flag\n' >&2; exit 1 ;;
+esac
 
 default_plan="$($PYTHON_BIN "$CLI" --project-name default-project --dry-run)"
 case "$default_plan" in
@@ -301,6 +305,36 @@ assert paths["AGENTS.md"]["ownership"] == "marker-managed"
 assert paths[".github/agents/pegasus-orchestrator.agent.md"]["ownership"] == "full-file"
 assert manifest["install"]["skipped_conflicts"] == []
 PY
+
+new_change_output="$($PYTHON_BIN "$CLI" --new-change feature-a --target-path "$target")"
+case "$new_change_output" in
+  *"Created Pegasus change PRD."*"Change: feature-a"*"$target/docs/pegasus/changes/feature-a/prd.md"*) ;;
+  *) printf 'expected new-change output to report PRD-only creation\n' >&2; exit 1 ;;
+esac
+[ -f "$target/docs/pegasus/changes/feature-a/prd.md" ] || { printf 'new-change did not create prd.md\n' >&2; exit 1; }
+assert_file_contains "$target/docs/pegasus/changes/feature-a/prd.md" "# PRD: feature-a"
+assert_file_contains "$target/docs/pegasus/changes/feature-a/prd.md" 'Project: `sample-project`'
+for unexpected in proposal spec design tasks apply-progress verify; do
+  [ ! -e "$target/docs/pegasus/changes/feature-a/$unexpected.md" ] || {
+    printf 'new-change created unexpected artifact %s.md\n' "$unexpected" >&2
+    exit 1
+  }
+done
+"$PYTHON_BIN" - "$target/.pegasus-bootstrap-ia/manifest.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+manifest = json.loads(Path(sys.argv[1]).read_text())
+manifest_text = json.dumps(manifest)
+for forbidden in ("active_change", "activeChange", "last_change", "lastChange"):
+    assert forbidden not in manifest_text
+PY
+
+if "$PYTHON_BIN" "$CLI" --new-change missing-manifest --target-path "$TMP/not-installed" >/dev/null 2>&1; then
+  printf 'new-change should require a Pegasus workspace manifest\n' >&2
+  exit 1
+fi
 
 for agent in sdd-spec sdd-design sdd-tasks sdd-apply sdd-verify; do
   agent_file="$target/.github/agents/$agent.agent.md"
