@@ -8,10 +8,10 @@
 | 400-line budget risk | High |
 | Chained PRs recommended | Yes |
 | Suggested split | PR 1 guidance contract -> PR 2 template removal/wiring -> PR 3 smoke/spec follow-up docs |
-| Delivery strategy | ask-on-risk; Slice 1 approved for apply |
+| Delivery strategy | ask-on-risk; Phase 4 approved for apply |
 | Chain strategy | stacked-to-main |
 
-Decision needed before apply: No for Slice 1
+Decision needed before apply: No
 Chained PRs recommended: Yes
 Chain strategy: stacked-to-main
 400-line budget risk: High
@@ -43,9 +43,9 @@ Chain strategy: stacked-to-main
 
 ## Phase 4: Validation and Archive Prep
 
-- [ ] 4.1 Update `tests/smoke.sh` expected files/assertions: no generated `docs/pegasus/memory/*`, exact Spanish warning present, MCP-first guidance present, and no banned Markdown-memory persistence references. Verify smoke passes locally.
-- [ ] 4.2 Run OpenSpec validation for `integrate-pegasus-memory-mcp` and record evidence in the apply/verify artifacts. Verify no spec/task guard line is missing.
-- [ ] 4.3 During archive later, merge this delta into `openspec/specs/pegasus-harness-bootstrap/spec.md` and preserve lineage. Rollback: revert template/test/spec changes; no data migration required.
+- [x] 4.1 Update `tests/smoke.sh` expected files/assertions: no generated `docs/pegasus/memory/*`, exact Spanish warning present, MCP-first guidance present, and no banned Markdown-memory persistence references. Verify smoke passes locally.
+- [x] 4.2 Run OpenSpec validation for `integrate-pegasus-memory-mcp` and record evidence in the apply/verify artifacts. Verify no spec/task guard line is missing.
+- [x] 4.3 During archive later, merge this delta into `openspec/specs/pegasus-harness-bootstrap/spec.md` and preserve lineage. Rollback: revert template/test/spec changes; no data migration required.
 
 ## Risks / Rollback
 

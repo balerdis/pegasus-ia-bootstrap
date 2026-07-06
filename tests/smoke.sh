@@ -16,6 +16,16 @@ assert_file_contains() {
   }
 }
 
+assert_no_banned_markdown_memory_persistence_refs() {
+  local root="$1"
+  local banned_pattern='docs/pegasus/memory/(context|tasks-log|decisions|handoff|learnings)\.md|read from docs/pegasus/memory|write to docs/pegasus/memory|update docs/pegasus/memory|Markdown memory source of truth|Markdown memory backend'
+  if grep -R -E "$banned_pattern" "$root" >/dev/null; then
+    printf 'generated harness contains banned Markdown-memory persistence references\n' >&2
+    grep -R -E "$banned_pattern" "$root" >&2
+    exit 1
+  fi
+}
+
 expected_files=(
   "AGENTS.md"
   ".github/copilot-instructions.md"
@@ -246,7 +256,10 @@ assert_file_contains "$target/.cursor/rules/pegasus-memory.mdc" "Recover active 
 assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "secondary legacy Cursor compatibility guidance"
 assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "do not fall back to Markdown memory"
 assert_file_contains "$target/AGENTS.md" 'El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente'
+assert_file_contains "$target/AGENTS.md" "MCP-first operational memory"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "# MCP-first memory"
 [ ! -e "$target/docs/pegasus/memory" ] || { printf 'generated harness should not include docs/pegasus/memory\n' >&2; exit 1; }
+assert_no_banned_markdown_memory_persistence_refs "$target"
 
 for agent in sdd-spec sdd-design sdd-tasks sdd-apply sdd-verify; do
   agent_file="$target/.github/agents/$agent.agent.md"
@@ -336,6 +349,7 @@ esac
 assert_file_contains "$target/AGENTS.md" "sample-project"
 assert_file_contains "$target/docs/pegasus/apply-progress.md" "Current In-Progress Work"
 [ ! -e "$target/docs/pegasus/memory" ] || { printf 'force run should not create docs/pegasus/memory\n' >&2; exit 1; }
+assert_no_banned_markdown_memory_persistence_refs "$target"
 [ ! -e "$target/.git" ] || { printf 'bootstrap created git metadata\n' >&2; exit 1; }
 
 global_home="$TMP/global-home"
