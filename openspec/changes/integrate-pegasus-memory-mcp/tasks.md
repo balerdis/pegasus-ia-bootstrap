@@ -32,9 +32,9 @@ Chain strategy: stacked-to-main
 
 ## Phase 2: Deprecated Memory Output
 
-- [ ] 2.1 Delete `templates/harness/docs/pegasus/memory/*` and update `bin/pegasus-harness-bootstrap` only if inventory/copy behavior needs explicit exclusion. Verify a new harness no longer contains `docs/pegasus/memory/`.
-- [ ] 2.2 Repurpose or rename `.github/agents/memory-maintainer.agent.md` and `.github/prompts/memory-update.prompt.md` so they describe MCP memory writes, blocked-save behavior, and no retrospective Markdown memory. Verify names/content do not imply file-backed memory.
-- [ ] 2.3 Update `.cursor/rules/pegasus-memory.mdc` and `.cursor/rules/pegasus-workflow.mdc` as legacy compatibility guidance with the same MCP-first/no-fallback rules. Verify legacy assets do not contradict Copilot guidance.
+- [x] 2.1 Delete `templates/harness/docs/pegasus/memory/*` and update `bin/pegasus-harness-bootstrap` only if inventory/copy behavior needs explicit exclusion. Verify a new harness no longer contains `docs/pegasus/memory/`.
+- [x] 2.2 Repurpose or rename `.github/agents/memory-maintainer.agent.md` and `.github/prompts/memory-update.prompt.md` so they describe MCP memory writes, blocked-save behavior, and no retrospective Markdown memory. Verify names/content do not imply file-backed memory.
+- [x] 2.3 Update `.cursor/rules/pegasus-memory.mdc` and `.cursor/rules/pegasus-workflow.mdc` as legacy compatibility guidance with the same MCP-first/no-fallback rules. Verify legacy assets do not contradict Copilot guidance.
 
 ## Phase 3: Change-Cycle Artifacts and Follow-up
 

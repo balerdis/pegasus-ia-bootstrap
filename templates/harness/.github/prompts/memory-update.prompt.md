@@ -1,20 +1,24 @@
 ---
 name: pegasus-memory-update
-description: Update project-local Markdown memory
+description: Record Pegasus operational memory through MCP
 tools:
   - read
   - search
-  - edit
 ---
 
 # Memory update prompt
 
-Review recent changes and update `docs/pegasus/memory/`:
+Review recent changes and record durable operational memory through `pegasus-memory-mcp` when available:
 
-- `context.md` for stable facts and assumptions.
-- `decisions.md` for decisions and tradeoffs.
-- `tasks-log.md` for status and blockers.
-- `handoff.md` for recovery state.
-- `learnings.md` for gotchas and reusable discoveries.
+- Active project/change context.
+- Decisions and tradeoffs.
+- Task progress, status, and blockers.
+- Artifact paths, status, and summaries.
+- Handoffs and recovery state.
+- Observations, gotchas, and reusable discoveries.
 
-Keep entries concise and factual.
+Keep records concise and factual. Use MCP tool inputs, outputs, and documented capabilities as the contract; do not depend on server internals.
+
+If `pegasus-memory-mcp` is unavailable, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Continue artifact work only if appropriate, but do not claim persistent memory was saved.
+
+Do not write retrospective Markdown memory. `docs/pegasus/memory/` is deprecated and is not an active backend, fallback, or co-source for operational memory.

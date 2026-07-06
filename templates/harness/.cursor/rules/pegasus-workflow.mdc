@@ -7,18 +7,24 @@ alwaysApply: true
 
 This is secondary legacy Cursor compatibility guidance. For VS Code/Copilot sessions, prefer `.github/copilot-instructions.md`, `.github/instructions/`, `.github/prompts/`, and `.github/agents/pegasus-orchestrator.agent.md`.
 
-Before making changes, read the local project docs in this order:
+Before making changes, recover context and read the local project docs in this order:
 
-1. `docs/pegasus/memory/context.md`
-2. `docs/pegasus/proposal.md`
-3. `docs/pegasus/spec.md`
-4. `docs/pegasus/design.md`
-5. `docs/pegasus/tasks.md`
-6. `docs/pegasus/apply-progress.md`
+1. Recover active project/change context through `pegasus-memory-mcp` when available.
+2. Search MCP memory for decisions, task progress, handoffs, observations, and learnings.
+3. `docs/pegasus/prd.md`
+4. `docs/pegasus/proposal.md`
+5. `docs/pegasus/spec.md`
+6. `docs/pegasus/design.md`
+7. `docs/pegasus/tasks.md`
+8. `docs/pegasus/apply-progress.md`
 
 Keep work aligned with the documented scope. If requirements are missing or contradictory, update the docs or ask for clarification before implementing.
 
-Before starting a phase or task, check `docs/pegasus/memory/tasks-log.md` and `docs/pegasus/apply-progress.md` for matching work already in progress or completed. Avoid duplicate launches.
+Before starting a phase or task, check MCP task progress and `docs/pegasus/apply-progress.md` for matching work already in progress or completed. Avoid duplicate launches.
+
+If `pegasus-memory-mcp` is unavailable, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Project/change artifact work may continue, but do not claim persistent memory was saved and do not fall back to Markdown memory.
+
+Do not write retrospective Markdown memory. `docs/pegasus/memory/` is deprecated and is not an active backend, fallback, or co-source for operational memory.
 
 Use small slices. Each slice should have a clear goal, limited file impact, implementation status in `docs/pegasus/apply-progress.md`, and verification evidence in `docs/pegasus/verify.md`.
 

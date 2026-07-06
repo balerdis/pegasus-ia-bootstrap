@@ -46,11 +46,6 @@ expected_files=(
   "docs/pegasus/tasks.md"
   "docs/pegasus/apply-progress.md"
   "docs/pegasus/verify.md"
-  "docs/pegasus/memory/context.md"
-  "docs/pegasus/memory/decisions.md"
-  "docs/pegasus/memory/tasks-log.md"
-  "docs/pegasus/memory/handoff.md"
-  "docs/pegasus/memory/learnings.md"
 )
 
 chmod +x "$CLI"
@@ -244,10 +239,14 @@ assert_file_contains "$target/docs/pegasus/apply-progress.md" "Current In-Progre
 assert_file_contains "$target/docs/pegasus/apply-progress.md" "Merge updates into the existing useful history"
 assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "Verify from fresh context when possible"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Launch deduplication"
-assert_file_contains "$target/.cursor/rules/pegasus-memory.mdc" "context compaction"
+assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" 'Record operational memory through `pegasus-memory-mcp`'
+assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "do not claim persistent memory was saved"
+assert_file_contains "$target/.github/prompts/memory-update.prompt.md" "Do not write retrospective Markdown memory"
+assert_file_contains "$target/.cursor/rules/pegasus-memory.mdc" "Recover active project/change context through MCP"
 assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "secondary legacy Cursor compatibility guidance"
-assert_file_contains "$target/docs/pegasus/memory/context.md" "Read this file at the start"
-assert_file_contains "$target/docs/pegasus/memory/context.md" 'VS Code/Copilot assets under `.github/`'
+assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "do not fall back to Markdown memory"
+assert_file_contains "$target/AGENTS.md" 'El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente'
+[ ! -e "$target/docs/pegasus/memory" ] || { printf 'generated harness should not include docs/pegasus/memory\n' >&2; exit 1; }
 
 for agent in sdd-spec sdd-design sdd-tasks sdd-apply sdd-verify; do
   agent_file="$target/.github/agents/$agent.agent.md"
@@ -318,7 +317,7 @@ if grep -R -E 'same as OpenCode|1:1 OpenCode|full OpenCode parity|exact OpenCode
 fi
 
 printf 'user content\n' > "$target/AGENTS.md"
-printf 'custom decisions\n' > "$target/docs/pegasus/memory/decisions.md"
+printf 'custom apply progress\n' > "$target/docs/pegasus/apply-progress.md"
 mkdir -p "$target/.github"
 printf 'custom copilot instructions\n' > "$target/.github/copilot-instructions.md"
 if "$PYTHON_BIN" "$CLI" --project-name sample-project --target-path "$target" >/dev/null 2>&1; then
@@ -326,7 +325,7 @@ if "$PYTHON_BIN" "$CLI" --project-name sample-project --target-path "$target" >/
   exit 1
 fi
 assert_file_contains "$target/AGENTS.md" "user content"
-assert_file_contains "$target/docs/pegasus/memory/decisions.md" "custom decisions"
+assert_file_contains "$target/docs/pegasus/apply-progress.md" "custom apply progress"
 assert_file_contains "$target/.github/copilot-instructions.md" "custom copilot instructions"
 
 force_output="$($PYTHON_BIN "$CLI" --project-name sample-project --target-path "$target" --force)"
@@ -335,7 +334,8 @@ case "$force_output" in
   *) printf 'expected force output to list overwritten harness files\n' >&2; exit 1 ;;
 esac
 assert_file_contains "$target/AGENTS.md" "sample-project"
-assert_file_contains "$target/docs/pegasus/memory/decisions.md" "Decision Log"
+assert_file_contains "$target/docs/pegasus/apply-progress.md" "Current In-Progress Work"
+[ ! -e "$target/docs/pegasus/memory" ] || { printf 'force run should not create docs/pegasus/memory\n' >&2; exit 1; }
 [ ! -e "$target/.git" ] || { printf 'bootstrap created git metadata\n' >&2; exit 1; }
 
 global_home="$TMP/global-home"

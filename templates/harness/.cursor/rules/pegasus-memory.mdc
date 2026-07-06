@@ -1,22 +1,23 @@
 ---
-description: Legacy Cursor compatibility for project-local Markdown memory rules
+description: Legacy Cursor compatibility for MCP-first Pegasus memory rules
 alwaysApply: true
 ---
 
-# Local Memory Rules
+# MCP-first Memory Rules
 
 This is secondary legacy Cursor compatibility guidance. For VS Code/Copilot sessions, prefer `.github/copilot-instructions.md` and `.github/instructions/pegasus-memory.instructions.md`.
 
-Use `docs/pegasus/memory/` as the project continuity layer.
+Use `pegasus-memory-mcp` as the operational memory interface for recovery, search, and writes. This legacy Cursor guidance must not contradict the Copilot-first MCP memory policy.
 
 At session start or after context compaction:
 
-1. Read `context.md` for stable project facts.
-2. Read `decisions.md` for constraints and tradeoffs.
-3. Read `tasks-log.md` for current status.
-4. Read `handoff.md` for the latest recovery note.
-5. Read `learnings.md` for gotchas before repeating work.
+1. Recover active project/change context through MCP when available.
+2. Search MCP memory for decisions, constraints, task progress, handoffs, observations, and learnings.
+3. Read `docs/pegasus/prd.md`, `docs/pegasus/proposal.md`, `docs/pegasus/spec.md`, `docs/pegasus/design.md`, `docs/pegasus/tasks.md`, and `docs/pegasus/apply-progress.md` for file-based SDD artifacts.
+4. Avoid duplicate launches by comparing MCP task progress with `docs/pegasus/apply-progress.md`.
 
-Before applying or verifying work, also read `docs/pegasus/apply-progress.md` and compare it with `tasks-log.md` to avoid duplicate launches for the same phase/task.
+When work changes facts, decisions, task status, blockers, artifacts, handoffs, or gotchas, save the durable record through MCP when available and merge implementation status into `docs/pegasus/apply-progress.md` when relevant.
 
-When work changes facts, decisions, task status, blockers, or gotchas, update the matching memory file immediately and merge implementation status into `docs/pegasus/apply-progress.md` when relevant. Before ending a session, write a concise handoff with current state, completed work, open risks, and next steps.
+If `pegasus-memory-mcp` is unavailable, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Project/change artifact work may continue, but do not claim persistent memory was saved and do not fall back to Markdown memory.
+
+Do not write retrospective Markdown memory. `docs/pegasus/memory/` is deprecated and is not an active backend, fallback, or co-source for operational memory.
