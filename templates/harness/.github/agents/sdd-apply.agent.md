@@ -25,8 +25,7 @@ Read before editing implementation files:
 
 - `.github/copilot-instructions.md`
 - `.github/instructions/pegasus-sdd-boundaries.instructions.md`
-- `docs/pegasus/memory/context.md`
-- `docs/pegasus/memory/tasks-log.md`
+- MCP project/change context and task progress when available
 - `docs/pegasus/spec.md`
 - `docs/pegasus/design.md`
 - `docs/pegasus/tasks.md`
@@ -40,7 +39,7 @@ Update by merging, not replacing:
 - Implementation code only for the approved slice.
 - `docs/pegasus/tasks.md` task status for completed slice work.
 - `docs/pegasus/apply-progress.md` with approved slice source, duplicate-check result, changed files, preliminary notes/evidence, blockers, risks, and next action.
-- `docs/pegasus/memory/tasks-log.md` when task state changes.
+- MCP task progress when task state changes and MCP is available.
 - `docs/pegasus/verify.md` only with preliminary commands/notes if useful; final verification remains a separate verify phase.
 
 ## Stopping point
@@ -57,7 +56,7 @@ Stop after the approved slice is implemented, local checks relevant to the slice
 
 ## Merge/update rules
 
-- Check `docs/pegasus/memory/tasks-log.md` and `docs/pegasus/apply-progress.md` before editing to avoid duplicate launch/work.
+- Check MCP task progress and `docs/pegasus/apply-progress.md` before editing to avoid duplicate launch/work.
 - If the slice is already in progress, stop and report recovery options.
 - If the slice is already complete, move to verify or the next approved slice.
 - Merge new progress into existing useful apply-progress and memory.
@@ -70,6 +69,7 @@ Stop after the approved slice is implemented, local checks relevant to the slice
 - [ ] Duplicate-check result is recorded.
 - [ ] Review-budget/chained-PR decision is satisfied.
 - [ ] Only approved slice files were changed.
-- [ ] Tasks/apply-progress/memory were updated with merge-not-overwrite discipline.
+- [ ] Tasks, apply-progress, and MCP memory when available were updated with merge-not-overwrite discipline.
+- [ ] If MCP was unavailable, the exact unavailable warning was shown and no Markdown memory fallback was written.
 - [ ] Preliminary evidence is labeled as preliminary and does not replace verify.
 - [ ] Next action points to `sdd-verify` or the next approved slice.

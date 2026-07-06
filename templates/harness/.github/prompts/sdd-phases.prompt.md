@@ -16,7 +16,7 @@ Work only on the requested phase. Before moving forward, confirm the required pr
 
 | Phase | Required docs/context | Output |
 |-------|-----------------------|--------|
-| PRD | User request and current memory | `docs/pegasus/prd.md` with approval status |
+| PRD | User request and MCP memory when available | `docs/pegasus/prd.md` with approval status |
 | Proposal | Approved `docs/pegasus/prd.md` | `docs/pegasus/proposal.md` |
 | Spec | Approved PRD and approved proposal | `docs/pegasus/spec.md` requirements and scenarios |
 | Design | Approved proposal and approved spec | `docs/pegasus/design.md` technical approach |
@@ -24,7 +24,7 @@ Work only on the requested phase. Before moving forward, confirm the required pr
 | Apply | Approved spec, design, tasks, and apply-progress | Implementation for only the next approved slice plus `docs/pegasus/apply-progress.md` updates |
 | Verify | Tasks, apply-progress, verify log, implementation diff, and PRD/proposal/spec/design when possible | `docs/pegasus/verify.md` evidence and verdict |
 
-Before delegating or starting a phase/task, check `docs/pegasus/memory/tasks-log.md` and `docs/pegasus/apply-progress.md` for the same phase/task already in progress or completed. Avoid duplicate launches.
+Before delegating or starting a phase/task, check MCP task progress and `docs/pegasus/apply-progress.md` for the same phase/task already in progress or completed. Avoid duplicate launches.
 
 Use the direct-fix path for small, punctual, low-risk changes with clear acceptance criteria. Do not force the full SDD flow when a documented direct fix is safer and faster.
 
@@ -34,6 +34,8 @@ Design writes the technical approach only: decisions, tradeoffs, alternatives, a
 
 Tasks writes the implementation plan only: review workload forecast, exact guard lines, dependency/order, verification, risk, and rollback per slice. Include `Decision needed before apply: Yes|No`, `Chained PRs recommended: Yes|No`, and `400-line budget risk: Low|Medium|High`. Do not implement code from tasks.
 
-If applying, estimate review workload first and honor the tasks guard lines. Stop and ask whether to split into chained PRs when implementation is likely to exceed about 400 changed lines or touch multiple unrelated areas. Implement only the next approved task slice, check tasks-log/apply-progress for duplicate work, and merge status into `docs/pegasus/apply-progress.md`. Apply may record preliminary notes/evidence, but it does not replace the verify phase.
+If applying, estimate review workload first and honor the tasks guard lines. Stop and ask whether to split into chained PRs when implementation is likely to exceed about 400 changed lines or touch multiple unrelated areas. Implement only the next approved task slice, check MCP task progress and apply-progress for duplicate work, and merge status into `docs/pegasus/apply-progress.md`. Apply may record preliminary notes/evidence, but it does not replace the verify phase.
 
-For verification, use fresh context when possible: re-read PRD, proposal, spec, design, tasks, apply-progress, verify log, and changed files before judging completion. Verify the implementation against all of those sources, not just tests. Record a compliance matrix, commands/results, changed files reviewed, deviations, risks, runtime/manual evidence, and final verdict in `docs/pegasus/verify.md`. Do not make unrelated implementation changes during verify unless the user separately asks for remediation. Update `docs/pegasus/memory/` when facts, decisions, task state, handoff notes, or learnings change. Merge updates into existing useful history; do not overwrite prior progress, memory, apply-progress, or verification evidence.
+For verification, use fresh context when possible: re-read PRD, proposal, spec, design, tasks, apply-progress, verify log, and changed files before judging completion. Verify the implementation against all of those sources, not just tests. Record a compliance matrix, commands/results, changed files reviewed, deviations, risks, runtime/manual evidence, and final verdict in `docs/pegasus/verify.md`. Do not make unrelated implementation changes during verify unless the user separately asks for remediation. Save durable facts, decisions, task state, handoff notes, or learnings through MCP when available. Merge updates into existing useful history; do not overwrite prior progress, memory, apply-progress, or verification evidence.
+
+If `pegasus-memory-mcp` is unavailable, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Artifact work may continue, but do not claim persistent memory was saved and do not fall back to Markdown memory. If MCP active-context recovery is ambiguous, do not ask the user to resolve MCP recovery details; continue from available artifacts and record external MCP follow-up when possible.

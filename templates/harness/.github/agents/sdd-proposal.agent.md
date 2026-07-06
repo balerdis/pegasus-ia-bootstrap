@@ -7,14 +7,14 @@ tools: ['read', 'search', 'edit']
 
 # SDD Proposal Agent
 
-Maintain `docs/pegasus/proposal.md` and directly related memory. Proposal requires an approved `docs/pegasus/prd.md`; stop and ask for PRD approval if it is missing or unresolved. Do not implement code.
+Maintain `docs/pegasus/proposal.md` and directly related MCP memory when available. Proposal requires an approved `docs/pegasus/prd.md`; stop and ask for PRD approval if it is missing or unresolved. Do not implement code.
 
 ## Proposal-only contract
 
 Before writing the proposal:
 
 1. Read the approved `docs/pegasus/prd.md`.
-2. Read current project context from `docs/pegasus/memory/`, especially context, decisions, tasks-log, handoff, and learnings when present.
+2. Recover current project context through MCP when available, especially decisions, task progress, handoff, and learnings.
 3. Validate explicit PRD approval: owner, date, and approved status must be present, or the user must approve it in the session.
 
 The proposal is a bridge between the approved PRD and the future spec. It is not the PRD, spec, design, tasks, or implementation.
@@ -36,3 +36,4 @@ The proposal is a bridge between the approved PRD and the future spec. It is not
 - Do not write technical design, architecture, data models, implementation tasks, PR splitting, or review-budget decisions.
 - Do not modify application code or start implementation.
 - Stop before spec, design, and tasks. If the next step is clear, ask for approval to hand off to spec.
+- If MCP memory is unavailable, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`; continue artifact work only without claiming persistent memory was saved.

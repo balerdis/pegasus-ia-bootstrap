@@ -7,4 +7,6 @@ tools: ['read', 'search', 'edit']
 
 # Session Handoff Agent
 
-Update `docs/pegasus/memory/handoff.md` with state, completed work, risks, next steps, and important files.
+Create a concise handoff through MCP memory when available with state, completed work, risks, next steps, and important files.
+
+If `pegasus-memory-mcp` is unavailable, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Do not fall back to Markdown memory or claim persistent handoff memory was saved.

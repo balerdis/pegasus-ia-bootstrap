@@ -23,8 +23,7 @@ Read before writing:
 
 - `.github/copilot-instructions.md`
 - `.github/instructions/pegasus-sdd-boundaries.instructions.md`
-- `docs/pegasus/memory/context.md`
-- `docs/pegasus/memory/tasks-log.md`
+- MCP project/change context and task progress when available
 - `docs/pegasus/spec.md`
 - `docs/pegasus/design.md`
 - Existing `docs/pegasus/tasks.md`
@@ -57,7 +56,7 @@ Stop after producing the task plan. If `Decision needed before apply: Yes`, ask 
 ## Merge/update rules
 
 - Merge tasks into existing useful task history.
-- Preserve completed/in-progress task state from `docs/pegasus/memory/tasks-log.md` and existing tasks.
+- Preserve completed/in-progress task state from MCP task progress and existing tasks.
 - Do not overwrite blockers, progress notes, or prior user decisions.
 - Keep tasks ordered so apply can safely take the next approved slice.
 
@@ -70,3 +69,4 @@ Stop after producing the task plan. If `Decision needed before apply: Yes`, ask 
 - [ ] Slices are reviewable and target roughly the 400-line budget.
 - [ ] No implementation details beyond task guidance are written as code.
 - [ ] Apply can identify the next approved slice without guessing.
+- [ ] Task progress or blockers are recorded through MCP when available; if MCP is unavailable, the exact unavailable warning was shown and no Markdown memory fallback was written.

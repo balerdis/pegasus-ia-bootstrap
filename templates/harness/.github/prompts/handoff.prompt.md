@@ -9,6 +9,8 @@ tools:
 
 # Handoff prompt
 
-Read `docs/pegasus/memory/tasks-log.md`, `docs/pegasus/memory/decisions.md`, and `docs/pegasus/verify.md`.
+Recover task progress, decisions, and prior handoff context through MCP when available, then read `docs/pegasus/verify.md`.
 
-Update `docs/pegasus/memory/handoff.md` with current state, completed work, open risks, next steps, and files that matter for the next session.
+Save an MCP handoff with current state, completed work, open risks, next steps, and files that matter for the next session.
+
+If `pegasus-memory-mcp` is unavailable, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Do not write a Markdown memory fallback or claim persistent handoff memory was saved.

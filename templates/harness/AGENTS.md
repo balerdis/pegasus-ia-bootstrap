@@ -3,7 +3,7 @@
 Target path: `{{TARGET_PATH}}`  
 Harness created: `{{DATE}}`
 
-This target workspace uses the Pegasus IA VS Code/Copilot harness. The harness is a documentation, workflow, and memory scaffold only; Pegasus IA does not generate the business/domain MVP. Build business MVP code later only after the project docs explicitly define and approve that work.
+This target workspace uses the Pegasus IA VS Code/Copilot harness. The harness is a documentation and workflow scaffold with MCP-first operational memory; Pegasus IA does not generate the business/domain MVP. Build business MVP code later only after the project docs explicitly define and approve that work.
 
 VS Code/Copilot entry points live under `.github/`. `AGENTS.md` stays as portable guidance for agents and tools that can read repository instructions.
 
@@ -11,10 +11,10 @@ VS Code/Copilot entry points live under `.github/`. `AGENTS.md` stays as portabl
 
 1. In VS Code with Copilot, start with `.github/agents/pegasus-orchestrator.agent.md`.
 2. Read `.github/copilot-instructions.md` and the scoped files under `.github/instructions/`.
-3. Read `docs/pegasus/memory/context.md` to recover current project context.
+3. Recover current project context through `pegasus-memory-mcp` tools when available.
 4. Read `docs/pegasus/prd.md`, `docs/pegasus/proposal.md`, `docs/pegasus/spec.md`, `docs/pegasus/design.md`, `docs/pegasus/tasks.md`, and `docs/pegasus/apply-progress.md` before changing files.
 5. Use `docs/pegasus/apply-progress.md` to track implementation slices and `docs/pegasus/verify.md` to record verification commands and outcomes.
-6. Update project-local Markdown memory as work progresses.
+6. Save durable decisions, observations, handoffs, artifact references, and task progress through MCP when available.
 
 ## Pegasus IA Workflow
 
@@ -29,7 +29,7 @@ VS Code/Copilot entry points live under `.github/`. `AGENTS.md` stays as portabl
 
 Before moving to the next SDD phase, confirm the required docs exist and ask for user approval. The default SDD path is `request → PRD → proposal → spec → design → tasks → apply → verify → handoff`.
 
-Before delegating or starting a phase/task, check `docs/pegasus/memory/tasks-log.md` and `docs/pegasus/apply-progress.md` for the same phase/task already in progress or completed. Avoid duplicate launches.
+Before delegating or starting a phase/task, check MCP task progress and `docs/pegasus/apply-progress.md` for the same phase/task already in progress or completed. Avoid duplicate launches.
 
 Before large implementation, estimate review workload. If work is likely to exceed about 400 changed lines or touch multiple unrelated areas, stop and ask whether to split it into chained PRs.
 
@@ -37,17 +37,26 @@ Verification should use fresh context when possible: re-read PRD, proposal, spec
 
 Copilot prompts under `.github/prompts/` provide starting points for SDD phases, handoff, and memory updates. They reference `docs/pegasus/` as the source of truth.
 
-## Local Memory Policy
+## MCP Memory Policy
 
-Use `docs/pegasus/memory/` as the continuity source for future or compacted sessions:
+Use `pegasus-memory-mcp` as the operational memory interface for future or compacted sessions. Use MCP tools to recover, search, and save:
 
-- `context.md` — current project facts and operating assumptions.
-- `decisions.md` — dated decisions with rationale and tradeoffs.
-- `tasks-log.md` — task progress and blockers.
-- `handoff.md` — short recovery notes for the next session.
-- `learnings.md` — gotchas and reusable discoveries.
+- active project/change context;
+- decisions and rationale;
+- task progress, blockers, and duplicate-work checks;
+- handoffs and recovery notes;
+- observations, gotchas, and reusable learnings;
+- artifact paths, status, and summaries.
 
-Before ending a session, update `handoff.md` and any memory files affected by your work. Merge new progress, apply-progress, memory, and verification evidence into the existing useful history instead of replacing prior content.
+Treat MCP tool inputs, outputs, and documented capabilities as the memory contract. Do not rely on `pegasus-memory-mcp` implementation details.
+
+If `pegasus-memory-mcp` is unavailable, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Project/change artifact work may continue, but do not claim persistent memory was saved and do not fall back to Markdown memory.
+
+If MCP returns ambiguous active context, do not ask the user to resolve MCP recovery details. Continue from available project artifacts and record external follow-up for `pegasus-memory-mcp` support when possible.
+
+`docs/pegasus/memory/` is deprecated after MCP integration. Existing files may remain historical, but they are not an active backend, fallback, or co-source for operational memory.
+
+Before ending a session, record a handoff through MCP when available. Merge new progress, apply-progress, memory, and verification evidence into existing useful history instead of replacing prior content.
 
 ## Legacy Cursor Compatibility
 
