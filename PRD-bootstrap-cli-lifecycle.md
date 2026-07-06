@@ -147,10 +147,12 @@ pegasus-harness-bootstrap --project-name demo --dry-run
 - During a VS Code/Copilot session, the orchestrator should preserve the current active `change-id` in its working context and continue that change without involving the user in internal organization.
 - If the orchestrator truly cannot determine the active change after context loss, it should recover from local Pegasus state first. It should ask the user only as a last resort, and phrase it as resuming work, not as an internal storage question.
 - `.pegasus-bootstrap-ia/manifest.json` is the workspace install/ownership manifest. It records installed file inventory, Pegasus ownership metadata, workspace metadata, and lifecycle data needed for safe uninstall and future CLI operations.
+- The manifest must not store active-change or last-change pointers. Active change recovery belongs to `pegasus-memory-mcp`, not to the install/ownership manifest.
 - `pegasus-memory-mcp` is the operational memory layer. It records active change context, summaries, decisions, status, handoffs, and recovery data when available.
 - `docs/pegasus/changes/<change-id>/` contains the file artifacts that remain the source of truth for PRD, proposal, spec, design, tasks, apply-progress, and verify evidence.
 - If `pegasus-memory-mcp` is unavailable, Pegasus must warn the user with the exact approved message: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`.
 - When MCP memory is unavailable, Pegasus may continue creating or updating file artifacts under `docs/pegasus/changes/<change-id>/`, but it must not claim persistent memory was saved and must not fall back to generated Markdown memory files.
+- When MCP memory is unavailable and Pegasus needs a change context, it may inspect `docs/pegasus/changes/` as file artifacts, but it must not treat that inspection as recovered operational memory.
 
 ## Workspace File Ownership Review
 
@@ -249,9 +251,9 @@ Expected flow:
 
 The user-facing approval is approval of the Pegasus PRD/SDD workflow, not approval of an internal CLI implementation detail. The orchestrator should not expose CLI mechanics unless terminal execution is unavailable or troubleshooting is needed.
 
-## Open Questions
+## Resolved Decisions
 
-- Should the manifest include a lightweight pointer to the last created change for CLI convenience, while keeping active operational recovery in `pegasus-memory-mcp` when available?
+- Do not store active-change or last-change pointers in `.pegasus-bootstrap-ia/manifest.json`. The manifest remains an install, ownership, update, and uninstall metadata file. Active change recovery belongs to `pegasus-memory-mcp`. If MCP is unavailable, Pegasus may inspect `docs/pegasus/changes/` as file artifacts, but must not treat that as recovered operational memory.
 
 ## Approval
 
