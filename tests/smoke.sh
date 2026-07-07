@@ -116,11 +116,30 @@ dry_target="$TMP/dry-run-project"
 "$PYTHON_BIN" "$CLI" --project-name dry-run-project --target-path "$dry_target" --dry-run >/dev/null
 [ ! -e "$dry_target" ] || { printf 'dry-run wrote files\n' >&2; exit 1; }
 
+missing_confirm_target="$TMP/missing-confirm-target"
+if missing_decline_output="$(printf 'no\n' | "$PYTHON_BIN" "$CLI" --project-name missing-confirm --target-path "$missing_confirm_target" 2>&1)"; then
+  printf 'expected missing explicit target setup to require confirmation\n' >&2
+  exit 1
+fi
+case "$missing_decline_output" in
+  *"Explicit target path does not exist: $missing_confirm_target"*"target path creation cancelled: $missing_confirm_target"*) ;;
+  *) printf 'expected missing target cancellation output with exact path\n' >&2; exit 1 ;;
+esac
+[ ! -e "$missing_confirm_target" ] || { printf 'declined missing target confirmation wrote files\n' >&2; exit 1; }
+
+missing_confirm_yes_target="$TMP/missing-confirm-yes-target"
+missing_confirm_yes_output="$(printf 'yes\n' | "$PYTHON_BIN" "$CLI" --project-name missing-confirm-yes --target-path "$missing_confirm_yes_target")"
+case "$missing_confirm_yes_output" in
+  *"Explicit target path does not exist: $missing_confirm_yes_target"*"Completed Pegasus VS Code/Copilot harness bootstrap."*) ;;
+  *) printf 'expected accepted missing target confirmation output with exact path\n' >&2; exit 1 ;;
+esac
+[ -f "$missing_confirm_yes_target/AGENTS.md" ] || { printf 'accepted missing target confirmation did not write harness\n' >&2; exit 1; }
+
 default_home="$TMP/default-home"
 default_xdg="$TMP/default-xdg"
 default_target="$TMP/default-no-global"
 mkdir -p "$default_home" "$default_xdg"
-default_run_output="$(HOME="$default_home" XDG_CONFIG_HOME="$default_xdg" "$PYTHON_BIN" "$CLI" --project-name default-no-global --target-path "$default_target")"
+default_run_output="$(printf 'yes\n' | HOME="$default_home" XDG_CONFIG_HOME="$default_xdg" "$PYTHON_BIN" "$CLI" --project-name default-no-global --target-path "$default_target")"
 [ -f "$default_target/AGENTS.md" ] || { printf 'default run did not create target harness\n' >&2; exit 1; }
 [ ! -e "$default_xdg/Cursor" ] || { printf 'default run touched XDG Cursor config\n' >&2; exit 1; }
 [ ! -e "$default_home/.config/Cursor" ] || { printf 'default run touched HOME Cursor config\n' >&2; exit 1; }
@@ -155,7 +174,7 @@ copilot_install_home="$TMP/copilot-install-home"
 copilot_install_xdg="$TMP/copilot-install-xdg"
 copilot_install_target="$TMP/copilot-install-target"
 mkdir -p "$copilot_install_home" "$copilot_install_xdg"
-copilot_install_output="$(HOME="$copilot_install_home" XDG_CONFIG_HOME="$copilot_install_xdg" "$PYTHON_BIN" "$CLI" --project-name copilot-install --target-path "$copilot_install_target" --install-copilot-global)"
+copilot_install_output="$(printf 'yes\n' | HOME="$copilot_install_home" XDG_CONFIG_HOME="$copilot_install_xdg" "$PYTHON_BIN" "$CLI" --project-name copilot-install --target-path "$copilot_install_target" --install-copilot-global)"
 [ -f "$copilot_install_xdg/pegasus-ia/copilot/agents/pegasus-global-orchestrator.agent.md" ] || { printf 'expected Copilot global agent asset\n' >&2; exit 1; }
 [ -f "$copilot_install_xdg/pegasus-ia/copilot/instructions/pegasus-global.instructions.md" ] || { printf 'expected Copilot global instruction asset\n' >&2; exit 1; }
 [ -f "$copilot_install_xdg/pegasus-ia/copilot/prompts/pegasus-start.prompt.md" ] || { printf 'expected Copilot global prompt asset\n' >&2; exit 1; }
@@ -180,7 +199,7 @@ copilot_insiders_home="$TMP/copilot-insiders-home"
 copilot_insiders_xdg="$TMP/copilot-insiders-xdg"
 copilot_insiders_target="$TMP/copilot-insiders-target"
 mkdir -p "$copilot_insiders_home" "$copilot_insiders_xdg"
-HOME="$copilot_insiders_home" XDG_CONFIG_HOME="$copilot_insiders_xdg" "$PYTHON_BIN" "$CLI" --project-name copilot-insiders --target-path "$copilot_insiders_target" --install-copilot-global --vscode-target insiders >/dev/null
+printf 'yes\n' | HOME="$copilot_insiders_home" XDG_CONFIG_HOME="$copilot_insiders_xdg" "$PYTHON_BIN" "$CLI" --project-name copilot-insiders --target-path "$copilot_insiders_target" --install-copilot-global --vscode-target insiders >/dev/null
 [ -f "$copilot_insiders_xdg/Code - Insiders/User/settings.json" ] || { printf 'expected Insiders settings file\n' >&2; exit 1; }
 [ ! -e "$copilot_insiders_xdg/Code/User/settings.json" ] || { printf 'Insiders install wrote Stable settings\n' >&2; exit 1; }
 
@@ -200,7 +219,7 @@ cat > "$merge_xdg/Code/User/settings.json" <<'JSON'
   "chat.promptFilesLocations": ["/existing/prompts"]
 }
 JSON
-merge_output="$(HOME="$merge_home" XDG_CONFIG_HOME="$merge_xdg" "$PYTHON_BIN" "$CLI" --project-name copilot-merge --target-path "$merge_target" --install-copilot-global)"
+merge_output="$(printf 'yes\n' | HOME="$merge_home" XDG_CONFIG_HOME="$merge_xdg" "$PYTHON_BIN" "$CLI" --project-name copilot-merge --target-path "$merge_target" --install-copilot-global)"
 case "$merge_output" in
   *"Backup created: $merge_xdg/Code/User/settings.json."*".bak"*) ;;
   *) printf 'expected Copilot settings backup output\n' >&2; exit 1 ;;
@@ -253,7 +272,7 @@ if compgen -G "$invalid_xdg/Code/User/settings.json.*.bak" >/dev/null; then
 fi
 
 target="$TMP/sample-project"
-"$PYTHON_BIN" "$CLI" --project-name sample-project --target-path "$target" >/dev/null
+printf 'yes\n' | "$PYTHON_BIN" "$CLI" --project-name sample-project --target-path "$target" >/dev/null
 for file in "${expected_files[@]}"; do
   [ -f "$target/$file" ] || { printf 'expected generated file %s\n' "$file" >&2; exit 1; }
 done
@@ -442,7 +461,7 @@ assert_no_banned_markdown_memory_persistence_refs "$target"
 [ ! -e "$target/.git" ] || { printf 'bootstrap created git metadata\n' >&2; exit 1; }
 
 uninstall_target="$TMP/uninstall-target"
-"$PYTHON_BIN" "$CLI" --project-name uninstall-project --target-path "$uninstall_target" >/dev/null
+printf 'yes\n' | "$PYTHON_BIN" "$CLI" --project-name uninstall-project --target-path "$uninstall_target" >/dev/null
 mkdir -p "$uninstall_target/docs/pegasus" "$uninstall_target/.github/agents"
 printf 'user note\n' > "$uninstall_target/docs/pegasus/user-note.md"
 printf 'user agent\n' > "$uninstall_target/.github/agents/user.agent.md"
@@ -468,7 +487,7 @@ uninstall_global_home="$TMP/uninstall-global-home"
 uninstall_global_xdg="$TMP/uninstall-global-xdg"
 uninstall_global_target="$TMP/uninstall-global-target"
 mkdir -p "$uninstall_global_home" "$uninstall_global_xdg"
-HOME="$uninstall_global_home" XDG_CONFIG_HOME="$uninstall_global_xdg" "$PYTHON_BIN" "$CLI" --project-name uninstall-global --target-path "$uninstall_global_target" --install-copilot-global >/dev/null
+printf 'yes\n' | HOME="$uninstall_global_home" XDG_CONFIG_HOME="$uninstall_global_xdg" "$PYTHON_BIN" "$CLI" --project-name uninstall-global --target-path "$uninstall_global_target" --install-copilot-global >/dev/null
 "$PYTHON_BIN" - "$uninstall_global_xdg" <<'PY'
 import json
 import sys
@@ -542,7 +561,7 @@ esac
 [ ! -e "$global_xdg/Cursor" ] || { printf 'global dry-run wrote Cursor config\n' >&2; exit 1; }
 
 global_target="$TMP/global-target"
-global_output="$(HOME="$global_home" XDG_CONFIG_HOME="$global_xdg" "$PYTHON_BIN" "$CLI" --project-name global-project --target-path "$global_target" --install-cursor-global)"
+global_output="$(printf 'yes\n' | HOME="$global_home" XDG_CONFIG_HOME="$global_xdg" "$PYTHON_BIN" "$CLI" --project-name global-project --target-path "$global_target" --install-cursor-global)"
 global_rule="$global_xdg/Cursor/User/rules/pegasus-global.mdc"
 [ -f "$global_rule" ] || { printf 'expected global Cursor rule to be written\n' >&2; exit 1; }
 assert_file_contains "$global_rule" "PEGASUS-CURSOR-GLOBAL"
@@ -570,7 +589,7 @@ legacy_home="$TMP/legacy-home"
 legacy_xdg="$TMP/legacy-xdg"
 legacy_target="$TMP/legacy-target"
 mkdir -p "$legacy_home/.cursor/rules" "$legacy_xdg"
-legacy_output="$(HOME="$legacy_home" XDG_CONFIG_HOME="$legacy_xdg" "$PYTHON_BIN" "$CLI" --project-name legacy-project --target-path "$legacy_target" --install-cursor-global)"
+legacy_output="$(printf 'yes\n' | HOME="$legacy_home" XDG_CONFIG_HOME="$legacy_xdg" "$PYTHON_BIN" "$CLI" --project-name legacy-project --target-path "$legacy_target" --install-cursor-global)"
 [ -f "$legacy_home/.cursor/rules/pegasus-global.mdc" ] || { printf 'expected legacy Cursor rules path to be preferred when it exists\n' >&2; exit 1; }
 case "$legacy_output" in
   *"Existing legacy Cursor rules path detected and preferred"*) ;;

@@ -3,10 +3,10 @@
 ## Scope
 
 - Change: `bootstrap-cli-lifecycle`
-- Applied slice: Slice 1 — Installability and README Cleanup; Slice 2 — Manifest and Conflict Safety; Slice 3 — Uninstall Safety; Slice 4 — Change-Cycle Creation
+- Applied slice: Slice 1 — Installability and README Cleanup; Slice 2 — Manifest and Conflict Safety; Slice 3 — Uninstall Safety; Slice 4 — Change-Cycle Creation; targeted remediation — Missing Target Confirmation
 - Mode: Standard apply; strict TDD is disabled in `openspec/config.yaml`
 - Artifact mode: hybrid — OpenSpec files plus Engram memory
-- Previous apply progress: Slice 1, Slice 2, and Slice 3 read from OpenSpec and Engram observation `#4128`; Slice 4 status merged below
+- Previous apply progress: Slice 1, Slice 2, Slice 3, and Slice 4 read from OpenSpec and Engram observation `#4128`; targeted remediation status appended below
 
 ## Workload / PR Boundary
 
@@ -14,6 +14,7 @@
 - Chain strategy: stacked-to-main, as provided by the orchestrator/user for this apply batch
 - Current PR boundary: PRD-only change-cycle creation through `--new-change`, including manifest-backed workspace validation and smoke coverage proving no later SDD phase artifacts are created.
 - Out of scope for this slice: archive/final stable spec updates and creation of proposal/spec/design/tasks/apply-progress/verify files for new changes.
+- Current remediation boundary: missing explicit `--target-path` confirmation only, including smoke coverage for declined and accepted confirmation paths.
 
 ## Completed Tasks
 
@@ -31,6 +32,9 @@
 - [x] 3.3 Extended smoke tests for invalid global settings, backup creation, dry-run behavior, real workspace/global removal, and non-empty directory preservation.
 - [x] 4.1 Added `--new-change <change-id>` so an installed workspace can create only `docs/pegasus/changes/<change-id>/prd.md` using manifest-backed workspace validation without requiring `--project-name`.
 - [x] 4.2 Extended smoke tests to assert `--new-change` creates `prd.md` only, does not create proposal/spec/design/tasks/apply-progress/verify artifacts, does not add active/last pointers to the manifest, and fails for a target without a Pegasus manifest.
+- [x] Remediation: Added confirmation before non-dry-run setup writes to an explicit missing `--target-path`, while preserving dry-run no-write behavior and `--new-change` manifest flow.
+- [x] 5.1 Ran `tests/smoke.sh` and recorded remediation validation evidence in this apply-progress artifact.
+- [x] 5.2 Verified the MCP-first boundary remains covered by smoke checks: no generated `docs/pegasus/memory/` backend and the exact unavailable-memory warning remains preserved.
 
 ## Verification Evidence
 
@@ -41,6 +45,9 @@
 | `bash tests/smoke.sh` | PASS — Slice 2 smoke verification completed successfully, including manifest JSON and no-overwrite conflict behavior. |
 | `bash tests/smoke.sh` | PASS — Slice 3 smoke verification completed successfully, including workspace uninstall dry-run/apply, global Copilot uninstall dry-run/apply, backup creation, invalid settings safety, and non-empty directory preservation. |
 | `bash tests/smoke.sh` | PASS — Slice 4 smoke verification completed successfully, including PRD-only `--new-change`, no later phase artifacts, manifest pointer guard, and missing-manifest failure. |
+| `bash tests/smoke.sh` | PASS — targeted remediation smoke verification completed successfully, including dry-run no-prompt/no-write behavior, declined missing-target confirmation without writes, accepted missing-target confirmation with writes, manifest pointer guard, and no generated `docs/pegasus/memory/` backend. |
+| `python3 -m compileall pegasus_harness_bootstrap` | PASS — package syntax check completed successfully. |
+| `git diff --check` | PASS — whitespace check completed with no output. |
 
 ## MCP-first Boundary Check
 
@@ -73,11 +80,15 @@
 | `tests/smoke.sh` | Modified | Added Slice 4 assertions for help output, no-project-name `--new-change`, PRD-only creation, no later phase artifacts, missing-manifest failure, and manifest pointer preservation. |
 | `openspec/changes/bootstrap-cli-lifecycle/tasks.md` | Modified | Marked Slice 4 tasks complete. |
 | `openspec/changes/bootstrap-cli-lifecycle/apply-progress.md` | Modified | Merged Slice 4 progress with existing Slice 1, Slice 2, and Slice 3 history. |
+| `pegasus_harness_bootstrap/cli.py` | Modified | Added an explicit missing target confirmation gate before non-dry-run setup writes. |
+| `tests/smoke.sh` | Modified | Added remediation smoke assertions for dry-run no-write, declined missing-target confirmation, and accepted missing-target confirmation. |
+| `openspec/changes/bootstrap-cli-lifecycle/tasks.md` | Modified | Marked verification evidence and MCP-first boundary checks complete after remediation validation. |
+| `openspec/changes/bootstrap-cli-lifecycle/apply-progress.md` | Modified | Appended targeted remediation status and verification evidence without removing prior slice history. |
 
 ## Deviations from Design
 
-None — implementation matches the approved Slice 1, Slice 2, Slice 3, and Slice 4 design.
+None — implementation matches the approved Slice 1, Slice 2, Slice 3, Slice 4, and targeted missing-target confirmation requirements.
 
 ## Remaining Tasks
 
-- [ ] Verification/rollback tasks for later slices and final verification
+- [ ] 5.3 Rollback documentation/evidence remains for orchestrator-controlled final verification/archive workflow.

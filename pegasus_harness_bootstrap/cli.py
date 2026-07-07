@@ -134,6 +134,16 @@ def target_path_for(project_name: str | None, target_path: str | None) -> Path:
     return target
 
 
+def confirm_missing_explicit_target(target: Path) -> None:
+    print(f"Explicit target path does not exist: {target}")
+    try:
+        answer = input("Create this target path and write Pegasus harness files? Type yes to continue: ")
+    except EOFError:
+        fail(f"target path creation requires confirmation: {target}")
+    if answer.strip().lower() not in {"y", "yes"}:
+        fail(f"target path creation cancelled: {target}")
+
+
 def change_target_path_for(target_path: str | None) -> Path:
     target = Path(target_path).expanduser() if target_path else Path.cwd()
     if str(target) == "/":
@@ -930,6 +940,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.dry_run:
         print("\nDry run only; no files were written.")
         return 0
+
+    if args.target_path is not None and not target.exists():
+        confirm_missing_explicit_target(target)
 
     paths_to_write = set(workspace_files)
     if conflicts and not args.force:

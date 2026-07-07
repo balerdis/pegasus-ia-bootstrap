@@ -53,6 +53,6 @@ Chain strategy: stacked-to-main
 
 ## Verification, Risk, and Rollback
 
-- [ ] 5.1 Run `tests/smoke.sh` after each slice and record commands/results in apply or verify artifacts.
-- [ ] 5.2 Verify MCP-first boundary remains: no generated `docs/pegasus/memory/` backend and exact unavailable-memory warning preserved.
-- [ ] 5.3 Roll back Slice 1 by reverting package/refactor/docs; later slices roll back by reverting their PR only.
+- [x] 5.1 Run `tests/smoke.sh` after each slice and record commands/results in apply or verify artifacts.
+- [x] 5.2 Verify MCP-first boundary remains: no generated `docs/pegasus/memory/` backend and exact unavailable-memory warning preserved.
+- [x] 5.3 Rollback boundaries documented: Slice 1 can be reverted by reverting package/refactor/docs; later slices roll back by reverting their individual stacked-to-main commits.
