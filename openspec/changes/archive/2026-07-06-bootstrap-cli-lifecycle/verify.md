@@ -8,7 +8,7 @@
 
 ### Executive Summary
 
-Final re-verification after targeted remediation passed the full smoke suite, compile check, whitespace check, and an independent missing-target confirmation probe. The previous blocker is resolved: non-dry-run setup with an explicit missing `--target-path` now reports the exact path and requires confirmation before writing. The change satisfies the approved lifecycle scope; remaining warnings are process/review hygiene, not behavior blockers.
+Final re-verification after targeted remediation passed the full smoke suite, compile check, whitespace check, and an independent missing-target confirmation probe. The previous blocker is resolved: non-dry-run setup with an explicit missing `--target-path` now reports the exact path and requires confirmation before writing. The change satisfies the approved lifecycle scope. The only remaining warning is the accepted Slice 3 review-size exception.
 
 ### Completeness
 
@@ -18,7 +18,7 @@ Final re-verification after targeted remediation passed the full smoke suite, co
 | Implementation tasks complete | 14 |
 | Implementation tasks incomplete | 0 |
 | Verification / rollback tasks total | 3 |
-| Verification / rollback tasks checked in `tasks.md` | 2 |
+| Verification / rollback tasks checked in `tasks.md` | 3 |
 | Critical blockers | 0 |
 
 | Task group | Status | Evidence |
@@ -28,7 +28,7 @@ Final re-verification after targeted remediation passed the full smoke suite, co
 | Slice 3: uninstall safety | ✅ Complete | Workspace uninstall and global VS Code/Copilot uninstall are manifest/marker-backed, dry-run capable, and preserve user files/settings. |
 | Slice 4: PRD-only change creation | ✅ Complete | `--new-change <change-id>` creates only `docs/pegasus/changes/<change-id>/prd.md` for manifest-backed workspaces without requiring `--project-name`. |
 | Targeted remediation: missing target confirmation | ✅ Complete | Smoke coverage and independent targeted probe verify declined confirmation writes nothing and accepted confirmation writes harness files. |
-| Rollback evidence task 5.3 | ⚠️ Warning | Still unchecked in `tasks.md`; this is process/rollback hygiene rather than a behavior requirement in the approved scope. |
+| Rollback evidence task 5.3 | ✅ Passed | Rollback boundaries are documented in `tasks.md`: Slice 1 can be reverted by reverting package/refactor/docs; later slices roll back by reverting their individual stacked-to-main commits. |
 
 ### Build & Tests Execution
 
@@ -118,7 +118,7 @@ The declined path returned non-zero and did not create the missing target. The a
 
 **WARNING**:
 
-- Task `5.3` remains unchecked in `tasks.md`; it is rollback/process hygiene and does not block the approved runtime behavior verified here.
+- Slice 3 exceeded the 400-line review budget by 42 lines; this size exception was explicitly accepted by the maintainer.
 - Slice 3 exceeded the 400-line review budget at 442 changed lines; this is already documented and explicitly accepted by the user as a size exception.
 
 **SUGGESTION**:
@@ -131,7 +131,7 @@ None.
 
 ### Recommended Next Action
 
-Proceed to orchestrator review of the local remediation diff, then commit/push or archive according to the SDD flow. If strict process completeness is required before archive, decide whether to mark or document task `5.3` as satisfied.
+Proceed to archive/commit after orchestrator review. Process completeness is satisfied; task `5.3` is documented and checked in `tasks.md`.
 
 ### Git State at Verification
 

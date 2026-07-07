@@ -7,7 +7,7 @@ Define a local-first bootstrap that configures only the VS Code/Copilot-first Pe
 ## Requirements
 ### Requirement: Bootstrap inputs
 
-The system MUST accept a target workspace path and project name, with a safe default target path derived from the project name when no explicit path is provided.
+The system MUST accept a target workspace path and project name, with a safe default target path derived from the project name when no explicit path is provided. If an explicit target path does not exist, non-dry-run execution MUST report the exact path and require confirmation before creation.
 
 #### Scenario: Explicit target path and project name
 
@@ -21,6 +21,65 @@ The system MUST accept a target workspace path and project name, with a safe def
 - GIVEN only a valid project name
 - WHEN the bootstrap is run
 - THEN it targets `/var/www/html/personal/<project-name>`
+
+#### Scenario: Missing target confirmation
+
+- GIVEN an explicit target path that does not exist
+- WHEN non-dry-run setup starts
+- THEN it reports the exact path and waits for confirmation before writing
+
+### Requirement: Installable CLI lifecycle
+
+The system MUST be installable as a Python package exposing `pegasus-harness-bootstrap`. Documentation MUST cover `.venv` editable usage and `pipx` usage.
+
+#### Scenario: Development or pipx command
+
+- GIVEN editable `.venv` install or `pipx` install
+- WHEN `pegasus-harness-bootstrap --project-name demo --dry-run` runs
+- THEN it works without an absolute repository script path
+
+### Requirement: Manifest-owned lifecycle metadata
+
+The manifest `.pegasus-bootstrap-ia/manifest.json` MUST record install, ownership, update, uninstall, and workspace metadata. It MUST NOT store active-change or last-change pointers.
+
+#### Scenario: Manifest supports uninstall
+
+- GIVEN a successful workspace setup
+- WHEN the manifest is inspected
+- THEN it records Pegasus-managed ownership for uninstall
+- AND it contains no active-change or last-change pointer
+
+### Requirement: Workspace uninstall safety
+
+Workspace uninstall MUST be non-interactive by default, support `--dry-run`, remove only Pegasus-managed content, and remove only directories that become empty.
+
+#### Scenario: Dry-run and cleanup
+
+- GIVEN an installed workspace with Pegasus and user files
+- WHEN workspace uninstall runs dry-run or real
+- THEN dry-run reports removals without writing
+- AND real execution leaves non-empty directories in place and reports them
+
+### Requirement: Global VS Code/Copilot uninstall safety
+
+Global VS Code/Copilot uninstall MUST back up affected `settings.json`, remove only Pegasus-managed assets/settings entries, and preserve user settings.
+
+#### Scenario: Global uninstall preserves settings
+
+- GIVEN VS Code settings contain Pegasus and non-Pegasus entries
+- WHEN global uninstall runs
+- THEN a backup is written before mutation
+- AND non-Pegasus entries remain unchanged
+
+### Requirement: Change-cycle creation starts with PRD only
+
+`--new-change <change-id>` MUST create only `docs/pegasus/changes/<change-id>/prd.md`; later SDD artifacts MUST be created by phase progression.
+
+#### Scenario: New change creates PRD
+
+- GIVEN a workspace has a Pegasus manifest
+- WHEN the CLI runs with `--new-change feature-a --target-path <workspace>`
+- THEN only `docs/pegasus/changes/feature-a/prd.md` is created
 
 ### Requirement: Harness-only output
 
@@ -302,7 +361,7 @@ The generated guidance MUST use a single project-selected Copilot model for all 
 
 ### Requirement: Existing file protection
 
-The system MUST NOT overwrite existing files unless an explicit overwrite flag or interactive confirmation is provided.
+The system MUST NOT overwrite existing files unless an explicit overwrite flag or interactive confirmation is provided. Default conflict behavior MUST report conflicts and perform no writes for conflicting paths.
 
 #### Scenario: Existing file without overwrite approval
 

@@ -91,4 +91,4 @@ None — implementation matches the approved Slice 1, Slice 2, Slice 3, Slice 4,
 
 ## Remaining Tasks
 
-- [ ] 5.3 Rollback documentation/evidence remains for orchestrator-controlled final verification/archive workflow.
+- [x] 5.3 Rollback boundaries documented: Slice 1 can be reverted by reverting package/refactor/docs; later slices roll back by reverting their individual stacked-to-main commits.
