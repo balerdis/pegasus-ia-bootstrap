@@ -23,7 +23,7 @@ Read before writing:
 
 - `.github/copilot-instructions.md`
 - `.github/instructions/pegasus-sdd-boundaries.instructions.md`
-- MCP project/change context and task progress when available
+- MCP project/change context and task progress after `health` succeeds
 - `docs/pegasus/spec.md`
 - `docs/pegasus/design.md`
 - Existing `docs/pegasus/tasks.md`
@@ -69,4 +69,4 @@ Stop after producing the task plan. If `Decision needed before apply: Yes`, ask 
 - [ ] Slices are reviewable and target roughly the 400-line budget.
 - [ ] No implementation details beyond task guidance are written as code.
 - [ ] Apply can identify the next approved slice without guessing.
-- [ ] Task progress or blockers are recorded through MCP when available; if MCP is unavailable, the exact unavailable warning was shown and no Markdown memory fallback was written.
+- [ ] MCP `health` was called first, and task progress or blockers were recorded through MCP after `health` succeeded; if MCP was unavailable, the exact unavailable warning was shown and no Markdown memory fallback was written.

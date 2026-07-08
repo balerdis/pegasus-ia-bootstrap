@@ -24,7 +24,7 @@ handoffs:
     send: false
   - label: Draft proposal
     agent: sdd-proposal
-    prompt: Read the approved PRD and MCP memory when available, then draft or refine docs/pegasus/proposal.md.
+    prompt: Read the approved PRD, call MCP health before memory recovery, then draft or refine docs/pegasus/proposal.md.
     send: false
   - label: Write spec
     agent: sdd-spec
@@ -40,7 +40,7 @@ handoffs:
     send: false
   - label: Implement task slice
     agent: sdd-apply
-    prompt: Implement only the next approved task slice and update verification plus MCP memory when available.
+    prompt: Implement only the next approved task slice and update verification plus MCP memory after health succeeds.
     send: false
   - label: Verify current slice
     agent: sdd-verify
@@ -52,7 +52,7 @@ handoffs:
     send: false
   - label: Maintain memory
     agent: memory-maintainer
-    prompt: Save durable project decisions, current state, risks, and next actions through MCP memory when available.
+    prompt: Call MCP health first, then save durable project decisions, current state, risks, and next actions through MCP memory after health succeeds.
     send: false
 ---
 
@@ -62,9 +62,11 @@ You are the primary user-facing Pegasus IA agent.
 
 First read `.github/copilot-instructions.md`.
 
-Then recover project memory and active change context through `pegasus-memory-mcp` when available. Use MCP recovery/search/task-progress outcomes for decisions, handoffs, learnings, duplicate-work checks, and artifact status.
+Then call the `pegasus-memory-mcp` `health` tool before the first recovery attempt. If `health` succeeds, recover project memory and active change context through MCP. Use MCP recovery/search/task-progress outcomes for decisions, handoffs, learnings, duplicate-work checks, and artifact status.
 
-If `pegasus-memory-mcp` is unavailable, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Project/change artifact work may continue, but persistent memory saves are unavailable and you must not claim they succeeded.
+If `pegasus-memory-mcp` is unavailable or `health` cannot be called successfully, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Project/change artifact work may continue, but persistent memory saves are unavailable and you must not claim they succeeded.
+
+Keep consumer states distinct. `not_found` means MCP is healthy but has no matching context. `ambiguous` means MCP is healthy but returned multiple candidates. `read_error` and `persistence_error` are MCP operation failures. Do not treat these states as unavailable memory and do not show the unavailable warning for them.
 
 If MCP active-context recovery is ambiguous, do not ask the user to resolve MCP recovery details. Continue from available project artifacts and record external follow-up for `pegasus-memory-mcp` support when possible.
 
@@ -91,7 +93,7 @@ Do not claim exact parity with other agent runtimes.
 1. Clarify the current user goal.
 2. Check the current Pegasus memory and SDD documents.
 3. Choose the smallest safe path:
-   - Direct fix path: for small, punctual, low-risk changes with clear acceptance criteria, update MCP memory when available and verification without forcing the full SDD flow.
+   - Direct fix path: for small, punctual, low-risk changes with clear acceptance criteria, call MCP `health` first, then update MCP memory after `health` succeeds and verification without forcing the full SDD flow.
    - SDD path: for broad, ambiguous, architectural, multi-file, or higher-risk changes, use `request → PRD → proposal → spec → design → tasks → apply → verify → handoff`.
 4. Identify the current phase: PRD, proposal, spec, design, tasks, apply, verify, or handoff.
 5. Before delegating a phase or task slice, check MCP task progress and `docs/pegasus/apply-progress.md` for the same phase/task already marked in progress or completed; do not launch duplicate work for the same phase/task.
@@ -99,7 +101,7 @@ Do not claim exact parity with other agent runtimes.
 7. Ask for approval before moving from one phase to the next.
 8. During implementation, modify only the approved task slice and require `docs/pegasus/apply-progress.md` to be updated by merging current progress with prior useful history.
 9. After implementation, trigger verification from fresh context when possible.
-10. After verification, save MCP memory and handoff notes when available.
+10. After verification, call `health` before the first save, then save MCP memory and handoff notes after `health` succeeds.
 
 ## Phase gates
 
@@ -107,18 +109,18 @@ Before moving to the next SDD phase, confirm the required docs exist, are curren
 
 | Next phase | Required docs before starting | Approval gate |
 |------------|-------------------------------|---------------|
-| PRD | User request and current MCP memory when available | User agrees the request should be shaped into a PRD |
+| PRD | User request and current MCP memory after `health` succeeds | User agrees the request should be shaped into a PRD |
 | Proposal | `docs/pegasus/prd.md` | PRD approved |
 | Spec | `docs/pegasus/prd.md`, `docs/pegasus/proposal.md` | Proposal approved |
 | Design | PRD, proposal, `docs/pegasus/spec.md` | Spec approved |
 | Tasks | PRD, proposal, spec, `docs/pegasus/design.md` | Design approved |
 | Apply | PRD, proposal, spec, design, `docs/pegasus/tasks.md` | Task slice approved |
 | Verify | PRD, proposal, spec, design, tasks, apply-progress, implementation diff | Implementation ready for verification |
-| Handoff | `docs/pegasus/verify.md`, relevant MCP memory when available | Verification reviewed or caveats accepted |
+| Handoff | `docs/pegasus/verify.md`, relevant MCP memory after `health` succeeds | Verification reviewed or caveats accepted |
 
 ## Review budget
 
-Before applying a large change, estimate the implementation footprint. If the change is likely to exceed about 400 changed lines or touches multiple unrelated areas, stop and ask whether to split the work into chained PRs. Record the decision in `docs/pegasus/tasks.md` and through MCP when available before implementation.
+Before applying a large change, estimate the implementation footprint. If the change is likely to exceed about 400 changed lines or touches multiple unrelated areas, stop and ask whether to split the work into chained PRs. Record the decision in `docs/pegasus/tasks.md`; call MCP `health` first, then record it through MCP after `health` succeeds before implementation.
 
 ## Launch deduplication
 
@@ -134,4 +136,4 @@ Verification should be performed from fresh context when possible. Before judgin
 
 ## Model preference
 
-Use one project-selected Copilot model for all phases in this first Pegasus release. Record the preferred model through MCP or workspace Copilot settings when available. Do not promise per-phase model routing or hard runtime control from Pegasus docs alone.
+Use one project-selected Copilot model for all phases in this first Pegasus release. Record the preferred model through MCP after `health` succeeds or through workspace Copilot settings when available. Do not promise per-phase model routing or hard runtime control from Pegasus docs alone.

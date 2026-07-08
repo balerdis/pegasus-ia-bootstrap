@@ -21,6 +21,6 @@ Before implementation, estimate review workload. If the change is likely to exce
 
 During apply, merge implementation slices, changed files, evidence, blockers, and next action into `docs/pegasus/apply-progress.md`.
 
-When durable workflow state changes, save decisions, observations, task progress, artifact references, and handoffs through MCP when available. If MCP is unavailable, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`; artifact work may continue, but do not fall back to Markdown memory.
+When durable workflow state changes, call MCP `health` first. After `health` succeeds, save decisions, observations, task progress, artifact references, and handoffs through MCP. If MCP is unavailable, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`; artifact work may continue, but do not fall back to Markdown memory.
 
 During verify, use fresh context when possible by re-reading PRD, proposal, spec, design, tasks, apply-progress, verify log, and changed files before judging completion. This is an operational rule, not a runtime guarantee.

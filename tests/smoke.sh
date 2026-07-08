@@ -316,8 +316,15 @@ assert_file_contains "$target/docs/pegasus/apply-progress.md" "Merge updates int
 assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "Verify from fresh context when possible"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Launch deduplication"
 assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" 'Record operational memory through `pegasus-memory-mcp`'
+assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "Before the first recovery or save attempt, call the MCP \`health\` tool"
 assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "do not claim persistent memory was saved"
+assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "not_found"
+assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "ambiguous"
+assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "read_error"
+assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "persistence_error"
 assert_file_contains "$target/.github/prompts/memory-update.prompt.md" "Do not write retrospective Markdown memory"
+assert_file_contains "$target/.github/prompts/memory-update.prompt.md" "call the \`pegasus-memory-mcp\` \`health\` tool before the first recovery or save attempt"
+assert_file_contains "$target/.github/prompts/memory-update.prompt.md" "Preserve MCP consumer states: \`not_found\`, \`ambiguous\`, \`read_error\`, and \`persistence_error\`"
 assert_file_contains "$target/.cursor/rules/pegasus-memory.mdc" "Recover active project/change context through MCP"
 assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "secondary legacy Cursor compatibility guidance"
 assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "do not fall back to Markdown memory"
@@ -325,7 +332,31 @@ assert_file_contains "$target/AGENTS.md" 'El pegasus-memory-mcp no se encuentra 
 assert_file_contains "$target/AGENTS.md" "MCP-first operational memory"
 assert_file_contains "$target/AGENTS.md" "pegasus-harness:start path=AGENTS.md ownership=marker-managed"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "pegasus-harness:start path=.github/agents/pegasus-orchestrator.agent.md ownership=full-file"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "call the \`pegasus-memory-mcp\` \`health\` tool before the first recovery attempt"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "call \`health\` before the first save"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "# MCP-first memory"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Call the MCP \`health\` tool before the first recovery or save attempt"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "do not fall back to Markdown memory"
+assert_file_contains "$target/.github/copilot-instructions.md" "call the \`pegasus-memory-mcp\` \`health\` tool before the first recovery attempt"
+assert_file_contains "$target/.github/copilot-instructions.md" "call \`health\` before the first MCP save attempt"
+assert_file_contains "$target/.github/copilot-instructions.md" "Keep consumer states distinct: \`not_found\`"
+"$PYTHON_BIN" - "$target/.github" <<'PY'
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+ambiguous = []
+for path in sorted(root.rglob("*.md")):
+    for line_number, line in enumerate(path.read_text().splitlines(), start=1):
+        lower = line.lower()
+        if "mcp" in lower and "when available" in lower and "health" not in lower:
+            ambiguous.append(f"{path.relative_to(root)}:{line_number}: {line}")
+
+if ambiguous:
+    print("Generated .github MCP guidance must state the health precondition inline:", file=sys.stderr)
+    print("\n".join(ambiguous), file=sys.stderr)
+    raise SystemExit(1)
+PY
 "$PYTHON_BIN" - "$target/.vscode/mcp.json" "$PEGASUS_MEMORY_MCP_ROOT/dist/bin/pegasus-memory-mcp.js" <<'PY'
 import json
 import sys

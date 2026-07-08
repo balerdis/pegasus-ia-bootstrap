@@ -31,18 +31,18 @@ Chain strategy: stacked-to-main
 
 ## Phase 2: Harness Guidance / Contract
 
-- [ ] 2.1 Update `templates/harness/.github/copilot-instructions.md` to require MCP `health` before first recovery/save and preserve `not_found`, `ambiguous`, `read_error`, and `persistence_error`.
-- [ ] 2.2 Update `templates/harness/.github/agents/pegasus-orchestrator.agent.md` and `templates/harness/.github/agents/memory-maintainer.agent.md` to gate saves on `health` and use the exact unavailable warning.
-- [ ] 2.3 Align `templates/harness/.github/instructions/pegasus-memory.instructions.md` and `templates/harness/.github/prompts/memory-update.prompt.md` with the no-Markdown-fallback contract.
+- [x] 2.1 Update `templates/harness/.github/copilot-instructions.md` to require MCP `health` before first recovery/save and preserve `not_found`, `ambiguous`, `read_error`, and `persistence_error`.
+- [x] 2.2 Update `templates/harness/.github/agents/pegasus-orchestrator.agent.md` and `templates/harness/.github/agents/memory-maintainer.agent.md` to gate saves on `health` and use the exact unavailable warning.
+- [x] 2.3 Align `templates/harness/.github/instructions/pegasus-memory.instructions.md` and `templates/harness/.github/prompts/memory-update.prompt.md` with the no-Markdown-fallback contract.
 
 ## Phase 3: Wiring / Documentation
 
-- [ ] 3.1 Wire the new MCP path token through bootstrap rendering so generated workspaces receive absolute `mcp.json` paths.
-- [ ] 3.2 Keep `.pegasus-bootstrap-ia/manifest.json` install/ownership-only and add assertions for excluded operational memory fields.
-- [ ] 3.3 Update `README.md` with the default-on install flow, local fallback behavior, and the `npm rebuild better-sqlite3` gotcha.
+- [x] 3.1 Wire the new MCP path token through bootstrap rendering so generated workspaces receive absolute `mcp.json` paths.
+- [x] 3.2 Keep `.pegasus-bootstrap-ia/manifest.json` install/ownership-only and add assertions for excluded operational memory fields.
+- [x] 3.3 Update `README.md` with the default-on install flow, local fallback behavior, and the `npm rebuild better-sqlite3` gotcha.
 
 ## Phase 4: Testing / Verification
 
-- [ ] 4.1 Extend `tests/smoke.sh` to check help output, `--install-memory-mcp`, and generated `.vscode/mcp.json` shape.
-- [ ] 4.2 Add smoke coverage for warning text, `health`-gated recovery/save guidance, and no Markdown memory fallback.
-- [ ] 4.3 Verify rollback path in smoke notes: slice 2 can revert without removing slice 1 resolver/packaging work.
+- [x] 4.1 Extend `tests/smoke.sh` to check help output, `--install-memory-mcp`, and generated `.vscode/mcp.json` shape.
+- [x] 4.2 Add smoke coverage for warning text, `health`-gated recovery/save guidance, and no Markdown memory fallback.
+- [x] 4.3 Verify rollback path in smoke notes: slice 2 can revert without removing slice 1 resolver/packaging work.

@@ -23,7 +23,7 @@ Read before writing:
 
 - `.github/copilot-instructions.md`
 - `.github/instructions/pegasus-sdd-boundaries.instructions.md`
-- MCP project/change context and prior decisions when available
+- MCP project/change context and prior decisions after `health` succeeds
 - `docs/pegasus/proposal.md`
 - `docs/pegasus/spec.md`
 - Existing `docs/pegasus/design.md`
@@ -58,7 +58,7 @@ Stop when the technical approach is reviewable and enough for task planning. Ask
 
 - Merge new design decisions with existing useful design history.
 - Preserve prior decisions and tradeoffs unless explicitly superseded.
-- If architecture changes, update `docs/pegasus/design.md` and record the durable decision through MCP when available.
+- If architecture changes, update `docs/pegasus/design.md`, call MCP `health` first, and record the durable decision through MCP after `health` succeeds.
 - If MCP is unavailable, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente` and do not fall back to Markdown memory.
 - Keep unresolved questions visible instead of assuming answers.
 

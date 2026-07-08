@@ -23,7 +23,7 @@ Read before writing:
 
 - `.github/copilot-instructions.md`
 - `.github/instructions/pegasus-sdd-boundaries.instructions.md`
-- MCP project/change context when available
+- MCP project/change context after `health` succeeds
 - `docs/pegasus/prd.md`
 - `docs/pegasus/proposal.md`
 - Existing `docs/pegasus/spec.md`
@@ -57,7 +57,7 @@ Stop after the acceptance contract is clear enough for design. Ask the user/orch
 - Preserve prior approved requirements unless the user explicitly approves replacement.
 - Mark superseded requirements clearly instead of silently deleting them.
 - Keep `docs/pegasus/` as the source of truth for phase artifacts.
-- Save durable observations or artifact status through MCP when available; if MCP is unavailable, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente` and do not fall back to Markdown memory.
+- Call MCP `health` first; after `health` succeeds, save durable observations or artifact status through MCP. If MCP is unavailable, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente` and do not fall back to Markdown memory.
 
 ## Phase-specific checklist
 

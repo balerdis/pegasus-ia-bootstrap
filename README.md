@@ -46,6 +46,7 @@ After a successful run, open the target workspace in VS Code with GitHub Copilot
 .github/agents/session-handoff.agent.md
 .github/agents/memory-maintainer.agent.md
 .github/agents/doc-designer.agent.md
+.vscode/mcp.json
 AGENTS.md
 docs/pegasus/prd.md
 docs/pegasus/proposal.md
@@ -58,7 +59,35 @@ docs/pegasus/verify.md
 .cursor/rules/pegasus-memory.mdc
 ```
 
-The `.github/` tree is the primary Copilot-native control surface. `AGENTS.md` remains portable guidance for agents that do not read Copilot-specific files. `.cursor/` is retained only as secondary legacy compatibility and points back to the VS Code/Copilot assets. Operational memory is MCP-first; the bootstrap does not generate a Markdown memory backend.
+The `.github/` tree is the primary Copilot-native control surface. `.vscode/mcp.json` configures Pegasus Memory MCP as a workspace stdio server. `AGENTS.md` remains portable guidance for agents that do not read Copilot-specific files. `.cursor/` is retained only as secondary legacy compatibility and points back to the VS Code/Copilot assets. Operational memory is MCP-first; the bootstrap does not generate a Markdown memory backend.
+
+## Default Pegasus Memory MCP setup
+
+Workspace memory setup is default-on. A normal bootstrap run resolves `pegasus-memory-mcp`, renders `.vscode/mcp.json`, and tells VS Code to launch the MCP server with:
+
+```json
+{"servers":{"pegasus-memory-mcp":{"command":"node","args":["/absolute/path/dist/bin/pegasus-memory-mcp.js"]}}}
+```
+
+Use `--install-memory-mcp` when you want the plan to label the same default workspace memory setup explicitly. The CLI resolves the built MCP script in this order:
+
+1. `pegasus-memory-mcp` or `pegasus-memory-mcp.js` on `PATH`.
+2. `/home/serg/ia-scripts/pegasus-memory-mcp/dist/bin/pegasus-memory-mcp.js`.
+3. Clone/build fallback from `https://github.com/balerdis/pegasus-memory-mcp.git` branch `stable/0.1.0`.
+
+If MCP cannot be prepared, the bootstrap keeps file-only harness setup available and prints exactly:
+
+```txt
+El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente
+```
+
+Generated guidance requires agents to call MCP `health` before the first recovery or save. If MCP is unavailable, agents must not claim persistent-memory saves succeeded and must not fall back to `docs/pegasus/memory/`.
+
+Pegasus Memory MCP stores its database at `~/.local/share/pegasus-memory-mcp/memory.db` by default. If local install/build fails after `npm ci` and `npm config get ignore-scripts` returns `true`, rebuild the native SQLite dependency with:
+
+```sh
+npm_config_ignore_scripts=false npm rebuild better-sqlite3 --foreground-scripts
+```
 
 ## Optional global VS Code/Copilot install
 
@@ -106,6 +135,6 @@ Run smoke verification with:
 bash tests/smoke.sh
 ```
 
-The smoke wrapper runs the Python CLI with isolated temporary targets and verifies help output, dry-run no-write behavior, Copilot-first structure generation, orchestrator and secondary agents, excluded reviewer agents, safe conflict handling, force overwrite reporting, banned public references, conditional legacy Cursor wording, no `.git` creation, and project-name validation.
+The smoke wrapper runs the Python CLI with isolated temporary targets and verifies help output, dry-run no-write behavior, Copilot-first structure generation, MCP stdio config rendering, `health`-gated recovery/save guidance, no Markdown memory fallback, orchestrator and secondary agents, excluded reviewer agents, safe conflict handling, force overwrite reporting, banned public references, conditional legacy Cursor wording, no `.git` creation, and project-name validation.
 
 It also verifies optional global Copilot dry-run/install/update behavior for Stable and Insiders with temporary `HOME` and `XDG_CONFIG_HOME` values, including settings backups and non-destructive settings merge. Legacy Cursor global planning/install/update behavior is covered with isolated temporary paths so real user configuration is not touched.

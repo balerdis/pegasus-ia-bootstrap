@@ -43,7 +43,7 @@ Update `docs/pegasus/verify.md` with merge-not-overwrite discipline:
 - Deviations, risks, and unresolved questions.
 - Test coverage or manual check summary.
 - Final verdict for the verified slice.
-- MCP memory updates for durable observations, task status, artifact status, and handoff notes when available.
+- MCP memory updates for durable observations, task status, artifact status, and handoff notes after `health` succeeds.
 
 ## Stopping point
 
@@ -74,4 +74,4 @@ Stop after recording the verification verdict and any caveats. If remediation is
 - [ ] Deviations and risks are recorded.
 - [ ] No unrelated implementation changes were made.
 - [ ] Final verdict is explicit: Pass, Pass with caveats, Blocked, or Fail.
-- [ ] Durable observations were saved through MCP when available; if MCP was unavailable, the exact unavailable warning was shown: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`.
+- [ ] MCP `health` was called first, and durable observations were saved through MCP after `health` succeeded; if MCP was unavailable, the exact unavailable warning was shown: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`.

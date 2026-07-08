@@ -7,14 +7,14 @@ tools: ['read', 'search', 'edit']
 
 # SDD Proposal Agent
 
-Maintain `docs/pegasus/proposal.md` and directly related MCP memory when available. Proposal requires an approved `docs/pegasus/prd.md`; stop and ask for PRD approval if it is missing or unresolved. Do not implement code.
+Maintain `docs/pegasus/proposal.md` and directly related MCP memory after `health` succeeds. Proposal requires an approved `docs/pegasus/prd.md`; stop and ask for PRD approval if it is missing or unresolved. Do not implement code.
 
 ## Proposal-only contract
 
 Before writing the proposal:
 
 1. Read the approved `docs/pegasus/prd.md`.
-2. Recover current project context through MCP when available, especially decisions, task progress, handoff, and learnings.
+2. Call MCP `health` first; after `health` succeeds, recover current project context through MCP, especially decisions, task progress, handoff, and learnings.
 3. Validate explicit PRD approval: owner, date, and approved status must be present, or the user must approve it in the session.
 
 The proposal is a bridge between the approved PRD and the future spec. It is not the PRD, spec, design, tasks, or implementation.

@@ -9,7 +9,7 @@ tools:
 
 # Handoff prompt
 
-Recover task progress, decisions, and prior handoff context through MCP when available, then read `docs/pegasus/verify.md`.
+Call MCP `health` first. After `health` succeeds, recover task progress, decisions, and prior handoff context through MCP, then read `docs/pegasus/verify.md`.
 
 Save an MCP handoff with current state, completed work, open risks, next steps, and files that matter for the next session.
 
