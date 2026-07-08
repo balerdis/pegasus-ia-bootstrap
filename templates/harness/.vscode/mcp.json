@@ -1,0 +1,10 @@
+{
+  "servers": {
+    "pegasus-memory-mcp": {
+      "command": "node",
+      "args": [
+        "{{MEMORY_MCP_SCRIPT_PATH}}"
+      ]
+    }
+  }
+}

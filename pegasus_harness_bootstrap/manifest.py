@@ -19,9 +19,19 @@ FORBIDDEN_POINTER_KEYS = (
     "active_change",
     "active-change",
     "activeChange",
+    "memory",
+    "memory_state",
+    "memory-state",
+    "memoryState",
     "last_change",
     "last-change",
     "lastChange",
+    "operational_memory",
+    "operational-memory",
+    "operationalMemory",
+    "recovery_state",
+    "recovery-state",
+    "recoveryState",
 )
 
 MARKER_MANAGED_FILES = {
@@ -41,6 +51,8 @@ def checksum_text(content: str) -> str:
 
 def render_workspace_content(content: str, rel_path: Path) -> str:
     """Wrap generated content with Pegasus ownership markers."""
+    if rel_path.suffix == ".json":
+        return content.rstrip("\n")
     path = rel_path.as_posix()
     mode = ownership_mode(rel_path)
     body = content.rstrip("\n")

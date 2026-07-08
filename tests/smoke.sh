@@ -6,6 +6,8 @@ CLI="$ROOT/bin/pegasus-harness-bootstrap"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
+export PEGASUS_MEMORY_MCP_ROOT="$TMP/pegasus-memory-mcp"
+export PEGASUS_MEMORY_MCP_SKIP_INSTALL=1
 
 VENV="$TMP/editable-venv"
 "$PYTHON_BIN" -m venv "$VENV"
@@ -33,6 +35,7 @@ assert_no_banned_markdown_memory_persistence_refs() {
 
 expected_files=(
   "AGENTS.md"
+  ".vscode/mcp.json"
   ".github/copilot-instructions.md"
   ".github/instructions/pegasus-workflow.instructions.md"
   ".github/instructions/pegasus-memory.instructions.md"
@@ -90,6 +93,10 @@ case "$help_output" in
   *) printf 'expected help output to include Copilot global planning flags\n' >&2; exit 1 ;;
 esac
 case "$help_output" in
+  *"--install-memory-mcp"*) ;;
+  *) printf 'expected help output to include memory MCP planning flag\n' >&2; exit 1 ;;
+esac
+case "$help_output" in
   *"--uninstall-workspace"*"--uninstall-copilot-global"*) ;;
   *) printf 'expected help output to include uninstall lifecycle flags\n' >&2; exit 1 ;;
 esac
@@ -107,6 +114,16 @@ case "$default_plan" in
   *"Primary IDE: VS Code with GitHub Copilot"*".github/copilot-instructions.md"*"AGENTS.md"*"docs/pegasus"*".cursor"*) ;;
   *) printf 'expected dry-run output to list Copilot-first and legacy workspace surfaces\n' >&2; exit 1 ;;
 esac
+case "$default_plan" in
+  *"Pegasus Memory MCP workspace stdio setup (default-on):"*"Command: node"*"Script: $PEGASUS_MEMORY_MCP_ROOT/dist/bin/pegasus-memory-mcp.js"*"Source: unavailable"*) ;;
+  *) printf 'expected dry-run output to include default-on memory MCP stdio planning\n' >&2; exit 1 ;;
+esac
+explicit_memory_plan="$($PYTHON_BIN "$CLI" --project-name explicit-memory --target-path "$TMP/explicit-memory" --install-memory-mcp --dry-run)"
+case "$explicit_memory_plan" in
+  *"Pegasus Memory MCP workspace stdio setup (explicit):"*"Command: node"*) ;;
+  *) printf 'expected explicit memory MCP planning output\n' >&2; exit 1 ;;
+esac
+assert_file_contains "$ROOT/pyproject.toml" 'templates/harness/.vscode/*.json'
 case "$default_plan" in
   *"Open the target workspace in Cursor"*) printf 'default dry-run should not present Cursor as the primary next step\n' >&2; exit 1 ;;
   *) ;;
@@ -150,6 +167,10 @@ default_run_output="$(printf 'yes\n' | HOME="$default_home" XDG_CONFIG_HOME="$de
 case "$default_run_output" in
   *"Open the target workspace in VS Code with Copilot"*"Primary Copilot entry point: .github/agents/pegasus-orchestrator.agent.md"*) ;;
   *) printf 'expected default completion output to point to VS Code/Copilot and the Pegasus orchestrator\n' >&2; exit 1 ;;
+esac
+case "$default_run_output" in
+  *"El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente"*) ;;
+  *) printf 'expected default run to warn when memory MCP is unavailable\n' >&2; exit 1 ;;
 esac
 case "$default_run_output" in
   *"Open the target workspace in Cursor"*) printf 'default completion should not present Cursor as the primary next step\n' >&2; exit 1 ;;
@@ -305,6 +326,17 @@ assert_file_contains "$target/AGENTS.md" "MCP-first operational memory"
 assert_file_contains "$target/AGENTS.md" "pegasus-harness:start path=AGENTS.md ownership=marker-managed"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "pegasus-harness:start path=.github/agents/pegasus-orchestrator.agent.md ownership=full-file"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "# MCP-first memory"
+"$PYTHON_BIN" - "$target/.vscode/mcp.json" "$PEGASUS_MEMORY_MCP_ROOT/dist/bin/pegasus-memory-mcp.js" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+config = json.loads(Path(sys.argv[1]).read_text())
+server = config["servers"]["pegasus-memory-mcp"]
+assert server["command"] == "node"
+assert server["args"] == [sys.argv[2]]
+assert Path(server["args"][0]).is_absolute()
+PY
 [ ! -e "$target/docs/pegasus/memory" ] || { printf 'generated harness should not include docs/pegasus/memory\n' >&2; exit 1; }
 assert_no_banned_markdown_memory_persistence_refs "$target"
 "$PYTHON_BIN" - "$target/.pegasus-bootstrap-ia/manifest.json" <<'PY'
@@ -314,13 +346,15 @@ from pathlib import Path
 
 manifest = json.loads(Path(sys.argv[1]).read_text())
 manifest_text = json.dumps(manifest)
-for forbidden in ("active_change", "activeChange", "last_change", "lastChange"):
+for forbidden in ("active_change", "activeChange", "last_change", "lastChange", "operational_memory", "operationalMemory", "memory_state", "memoryState", "recovery_state", "recoveryState"):
     assert forbidden not in manifest_text
 assert manifest["workspace"]["project_name"] == "sample-project"
 assert manifest["uninstall"]["remove_only_managed"] is True
 paths = {record["path"]: record for record in manifest["install"]["files"]}
 assert "AGENTS.md" in paths
+assert ".vscode/mcp.json" in paths
 assert paths["AGENTS.md"]["ownership"] == "marker-managed"
+assert paths[".vscode/mcp.json"]["ownership"] == "full-file"
 assert paths[".github/agents/pegasus-orchestrator.agent.md"]["ownership"] == "full-file"
 assert manifest["install"]["skipped_conflicts"] == []
 PY

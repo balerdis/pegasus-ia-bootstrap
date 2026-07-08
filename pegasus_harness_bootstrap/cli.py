@@ -9,7 +9,9 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 from pegasus_harness_bootstrap.manifest import (
@@ -33,6 +35,7 @@ COPILOT_SETTINGS_KEYS = (
     ("chat.promptFilesLocations", "prompts"),
 )
 COPILOT_SURFACES = (
+    ".vscode/",
     ".github/",
     ".github/copilot-instructions.md",
     ".github/instructions/",
@@ -47,6 +50,22 @@ WORKSPACE_SURFACES = COPILOT_SURFACES + (
 PLANNED_WORKSPACE_FILES = (
     Path(".github/copilot-instructions.md"),
 )
+MEMORY_MCP_PACKAGE = "pegasus-memory-mcp"
+MEMORY_MCP_REPOSITORY = "https://github.com/balerdis/pegasus-memory-mcp.git"
+MEMORY_MCP_BRANCH = "stable/0.1.0"
+MEMORY_MCP_DEFAULT_ROOT = Path("/home/serg/ia-scripts/pegasus-memory-mcp")
+MEMORY_MCP_SCRIPT_RELATIVE_PATH = Path("dist/bin/pegasus-memory-mcp.js")
+MEMORY_MCP_UNAVAILABLE_WARNING = (
+    "El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, "
+    "no se guardara nada de lo que hagamos en memoria persistente"
+)
+
+
+@dataclass(frozen=True)
+class MemoryMcpResolution:
+    script_path: Path
+    source: str
+    warning: str | None = None
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -87,6 +106,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "--install-cursor-global",
         action="store_true",
         help="Legacy: install or update opt-in global Cursor user rules with backups.",
+    )
+    parser.add_argument(
+        "--install-memory-mcp",
+        action="store_true",
+        help="Plan the default Pegasus Memory MCP workspace stdio setup explicitly.",
     )
     parser.add_argument(
         "--uninstall-workspace",
@@ -227,6 +251,64 @@ def vscode_settings_path(vscode_target: str) -> Path:
     return xdg_config_root() / app_dir / "User" / "settings.json"
 
 
+def memory_mcp_default_root() -> Path:
+    override = os.environ.get("PEGASUS_MEMORY_MCP_ROOT")
+    return Path(override).expanduser() if override else MEMORY_MCP_DEFAULT_ROOT
+
+
+def memory_mcp_default_script_path() -> Path:
+    return (memory_mcp_default_root() / MEMORY_MCP_SCRIPT_RELATIVE_PATH).resolve()
+
+
+def memory_mcp_path_script() -> Path | None:
+    for binary in (MEMORY_MCP_PACKAGE, "pegasus-memory-mcp.js"):
+        found = shutil.which(binary)
+        if found is None:
+            continue
+        resolved = Path(found).resolve()
+        if resolved.name == MEMORY_MCP_SCRIPT_RELATIVE_PATH.name and resolved.is_file():
+            return resolved
+    return None
+
+
+def run_memory_mcp_command(command: list[str], cwd: Path) -> bool:
+    try:
+        subprocess.run(command, cwd=cwd, check=True)
+    except (OSError, subprocess.CalledProcessError):
+        return False
+    return True
+
+
+def install_memory_mcp(default_root: Path) -> bool:
+    if os.environ.get("PEGASUS_MEMORY_MCP_SKIP_INSTALL") == "1":
+        return False
+    if not default_root.exists():
+        default_root.parent.mkdir(parents=True, exist_ok=True)
+        clone_command = ["git", "clone", "--branch", MEMORY_MCP_BRANCH, MEMORY_MCP_REPOSITORY, str(default_root)]
+        if not run_memory_mcp_command(clone_command, default_root.parent):
+            return False
+    if not run_memory_mcp_command(["npm", "ci"], default_root):
+        return False
+    if not run_memory_mcp_command(["npm", "run", "build"], default_root):
+        return False
+    return (default_root / MEMORY_MCP_SCRIPT_RELATIVE_PATH).is_file()
+
+
+def resolve_memory_mcp(allow_install: bool) -> MemoryMcpResolution:
+    path_script = memory_mcp_path_script()
+    if path_script is not None:
+        return MemoryMcpResolution(path_script, "path")
+
+    default_script = memory_mcp_default_script_path()
+    if default_script.is_file():
+        return MemoryMcpResolution(default_script, "default-local")
+
+    if allow_install and install_memory_mcp(memory_mcp_default_root()):
+        return MemoryMcpResolution(default_script, "installed")
+
+    return MemoryMcpResolution(default_script, "unavailable", MEMORY_MCP_UNAVAILABLE_WARNING)
+
+
 def build_plan(target: Path, files: list[Path], force: bool) -> tuple[list[Path], list[Path], list[Path]]:
     creates: list[Path] = []
     overwrites: list[Path] = []
@@ -300,6 +382,8 @@ def print_plan(
     copilot_settings_backup: Path | None = None,
     install_copilot_global: bool = False,
     vscode_target: str = "stable",
+    memory_mcp: MemoryMcpResolution | None = None,
+    install_memory_mcp_requested: bool = False,
 ) -> None:
     print("Pegasus VS Code/Copilot harness bootstrap plan")
     print(f"Project: {project_name}")
@@ -307,6 +391,15 @@ def print_plan(
     print(f"Template root: {root}")
     print("Primary IDE: VS Code with GitHub Copilot")
     print(f"Manifest: {target / MANIFEST_RELATIVE_PATH}")
+
+    if memory_mcp is not None:
+        label = "explicit" if install_memory_mcp_requested else "default-on"
+        print(f"\nPegasus Memory MCP workspace stdio setup ({label}):")
+        print("  Command: node")
+        print(f"  Script: {memory_mcp.script_path}")
+        print(f"  Source: {memory_mcp.source}")
+        if memory_mcp.warning is not None:
+            print(f"  Warning: {memory_mcp.warning}")
 
     print("\nManaged workspace surfaces:")
     for surface in WORKSPACE_SURFACES:
@@ -374,12 +467,13 @@ def print_plan(
                 print(f"    {key} += {copilot_root / subdir}")
 
 
-def render_template(content: str, project_name: str, target: Path) -> str:
+def render_template(content: str, project_name: str, target: Path, memory_mcp_script_path: Path) -> str:
     today = dt.date.today().isoformat()
     return (
         content.replace("{{PROJECT_NAME}}", project_name)
         .replace("{{TARGET_PATH}}", str(target))
         .replace("{{DATE}}", today)
+        .replace("{{MEMORY_MCP_SCRIPT_PATH}}", str(memory_mcp_script_path))
     )
 
 
@@ -397,14 +491,14 @@ def render_copilot_global_template(content: str) -> str:
     return f"{marker}\n{body}"
 
 
-def write_files(root: Path, target: Path, files: list[Path], project_name: str) -> list[dict]:
+def write_files(root: Path, target: Path, files: list[Path], project_name: str, memory_mcp_script_path: Path) -> list[dict]:
     written: list[dict] = []
     for rel_path in files:
         source = root / rel_path
         destination = target / rel_path
         destination.parent.mkdir(parents=True, exist_ok=True)
         content = source.read_text(encoding="utf-8")
-        rendered = render_workspace_content(render_template(content, project_name, target), rel_path)
+        rendered = render_workspace_content(render_template(content, project_name, target, memory_mcp_script_path), rel_path)
         action = "updated" if destination.exists() else "created"
         destination.write_text(rendered + "\n", encoding="utf-8")
         written.append(file_record(rel_path, rendered, action))
@@ -612,6 +706,10 @@ def plan_workspace_uninstall(target: Path, manifest: dict) -> tuple[list[Path], 
         text = path.read_text(encoding="utf-8")
         stripped = remove_marker_block(text, rel_path)
         if stripped is None:
+            if ownership == "full-file":
+                remove_files.append(path)
+                cleanup_dirs.update(path.parents)
+                continue
             preserve_files.append(path)
             continue
         if ownership == "marker-managed" and stripped.strip():
@@ -883,6 +981,7 @@ def main(argv: list[str] | None = None) -> int:
     files = template_files(root)
     workspace_files = workspace_inventory_files(files)
     creates, overwrites, conflicts = build_plan(target, workspace_files, args.force)
+    memory_mcp = resolve_memory_mcp(allow_install=not args.dry_run)
 
     global_root = None
     global_files: list[Path] = []
@@ -935,6 +1034,8 @@ def main(argv: list[str] | None = None) -> int:
         copilot_settings_backup,
         args.install_copilot_global,
         args.vscode_target,
+        memory_mcp,
+        args.install_memory_mcp,
     )
 
     if args.dry_run:
@@ -950,7 +1051,9 @@ def main(argv: list[str] | None = None) -> int:
         paths_to_write = paths_to_write.difference(skipped_rel_paths)
         print("\nExisting generated paths were preserved; skipped conflicting writes.")
         print("Run with --force to replace known harness files.")
-    written_files = write_files(root, target, sorted(paths_to_write), args.project_name)
+    if memory_mcp.warning is not None:
+        print(memory_mcp.warning)
+    written_files = write_files(root, target, sorted(paths_to_write), args.project_name, memory_mcp.script_path)
     manifest = build_manifest(
         project_name=args.project_name,
         target=target,
