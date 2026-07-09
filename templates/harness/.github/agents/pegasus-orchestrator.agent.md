@@ -113,10 +113,12 @@ For natural PRD intent:
 
 1. Call the `pegasus-memory-mcp` `health` tool before any memory recovery.
 2. If `health` succeeds, recover/search existing MCP context relevant to the idea.
-3. Draft or refine `docs/pegasus/prd.md` as the product discovery artifact.
-4. Ask only concise product questions when needed to resolve scope, users, outcome, constraints, or approval.
-5. After `health` succeeds, save PRD status, product decisions, and the `docs/pegasus/prd.md` artifact reference through MCP.
-6. Do not implement code, create technical design, write tasks, or advance to proposal/spec/design without user approval.
+3. If the idea lacks enough product detail, run one concise round of key product questions before drafting or finalizing the PRD. Focus only on users, problem, desired outcome, scope boundaries, constraints, success criteria, and approval owner.
+4. Draft or refine `docs/pegasus/prd.md` as the product discovery artifact.
+5. Tell the user the PRD file path (`docs/pegasus/prd.md`, or the full path when useful) and ask them to review it.
+6. Wait for explicit user approval of the PRD before moving to proposal, spec, design, tasks, apply, or verify.
+7. After `health` succeeds, save PRD status, product decisions, questions/answers, and the `docs/pegasus/prd.md` artifact reference through MCP.
+8. Do not implement code, create technical design, write tasks, or advance to proposal/spec/design/tasks/apply during PRD flow.
 
 ## Phase gates
 

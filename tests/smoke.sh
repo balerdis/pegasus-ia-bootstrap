@@ -336,8 +336,11 @@ assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "cal
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "call \`health\` before the first save"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Natural-language PRD intent"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "quiero armar un PRD para esta idea"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "save PRD status, product decisions, and the \`docs/pegasus/prd.md\` artifact reference through MCP"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Do not implement code, create technical design, write tasks, or advance to proposal/spec/design without user approval."
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "If the idea lacks enough product detail, run one concise round of key product questions before drafting or finalizing the PRD."
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Tell the user the PRD file path (\`docs/pegasus/prd.md\`, or the full path when useful) and ask them to review it."
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Wait for explicit user approval of the PRD before moving to proposal, spec, design, tasks, apply, or verify."
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "save PRD status, product decisions, questions/answers, and the \`docs/pegasus/prd.md\` artifact reference through MCP"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Do not implement code, create technical design, write tasks, or advance to proposal/spec/design/tasks/apply during PRD flow."
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "# MCP-first memory"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Call the MCP \`health\` tool before the first recovery or save attempt"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Save proactively after important changes"
@@ -352,7 +355,9 @@ assert_file_contains "$target/.github/copilot-instructions.md" "call \`health\` 
 assert_file_contains "$target/.github/copilot-instructions.md" "proactively save durable decisions, bugfixes, discoveries/gotchas"
 assert_file_contains "$target/.github/copilot-instructions.md" "Keep consumer states distinct: \`not_found\`"
 assert_file_contains "$target/.github/copilot-instructions.md" "Natural-language PRD intent is enough to start PRD discovery."
+assert_file_contains "$target/.github/copilot-instructions.md" "wait for explicit PRD approval before proposal/spec/design/tasks/apply, and do not implement code during PRD flow"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Natural-language product intent should trigger PRD discovery automatically."
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "tell the user the PRD file path and ask them to review it"
 for memory_guided_agent in doc-designer sdd-proposal sdd-spec sdd-design sdd-tasks sdd-apply sdd-verify session-handoff memory-maintainer pegasus-orchestrator; do
   assert_file_contains "$target/.github/agents/$memory_guided_agent.agent.md" "pegasus-memory.instructions.md"
 done
