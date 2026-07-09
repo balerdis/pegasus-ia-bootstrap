@@ -63,10 +63,10 @@ The `.github/` tree is the primary Copilot-native control surface. `.vscode/mcp.
 
 ## Default Pegasus Memory MCP setup
 
-Workspace memory setup is default-on. A normal bootstrap run resolves `pegasus-memory-mcp`, renders `.vscode/mcp.json`, and tells VS Code to launch the MCP server with:
+Workspace memory setup is default-on. A normal bootstrap run resolves `pegasus-memory-mcp`, renders `.vscode/mcp.json`, and tells VS Code to launch the MCP server from the resolved MCP root with:
 
 ```json
-{"servers":{"pegasus-memory-mcp":{"command":"node","args":["/absolute/path/dist/bin/pegasus-memory-mcp.js"]}}}
+{"servers":{"pegasus-memory-mcp":{"command":"node","cwd":"/absolute/path","args":["/absolute/path/dist/bin/pegasus-memory-mcp.js"]}}}
 ```
 
 Use `--install-memory-mcp` when you want the plan to label the same default workspace memory setup explicitly. The CLI resolves the built MCP script in this order:

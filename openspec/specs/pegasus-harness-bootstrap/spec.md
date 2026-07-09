@@ -112,13 +112,13 @@ The system MUST create a portable `AGENTS.md` that explains the Pegasus IA workf
 
 ### Requirement: MCP-first operational memory
 
-The generated harness MUST use the `pegasus-memory-mcp` MCP tool contract as the operational memory interface for recovery, search, persistence, and availability checks. It MUST configure memory by default, MUST support `--install-memory-mcp` as the explicit install/config flag, MUST resolve the executable from PATH first and then the default local install path, and MUST generate VS Code workspace stdio config that launches `node` with the absolute built script path. It MUST NOT require users or agents to write operational memory to `docs/pegasus/memory/`, and it MUST NOT depend on MCP server internals, SQLite details, database paths, or source modules.
+The generated harness MUST use the `pegasus-memory-mcp` MCP tool contract as the operational memory interface for recovery, search, persistence, and availability checks. It MUST configure memory by default, MUST support `--install-memory-mcp` as the explicit install/config flag, MUST resolve the executable from PATH first and then the default local install path, and MUST generate VS Code workspace stdio config that launches `node` with the absolute built script path and sets `cwd` to the resolved MCP root. It MUST NOT require users or agents to write operational memory to `docs/pegasus/memory/`, and it MUST NOT depend on MCP server internals, SQLite details, database paths, or source modules.
 
 #### Scenario: Session starts with memory available
 
 - GIVEN `pegasus-memory-mcp` is available on PATH or at the default local path
 - WHEN the bootstrap writes workspace harness files
-- THEN it emits VS Code `.vscode/mcp.json` stdio config for `node` and the built script path
+- THEN it emits VS Code `.vscode/mcp.json` stdio config for `node`, the built script path, and the resolved MCP root `cwd`
 - AND it uses the resolved executable for memory availability checks
 
 #### Scenario: Missing install falls back to clone/build

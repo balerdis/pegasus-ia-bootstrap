@@ -115,7 +115,7 @@ case "$default_plan" in
   *) printf 'expected dry-run output to list Copilot-first and legacy workspace surfaces\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
-  *"Pegasus Memory MCP workspace stdio setup (default-on):"*"Command: node"*"Script: $PEGASUS_MEMORY_MCP_ROOT/dist/bin/pegasus-memory-mcp.js"*"Source: unavailable"*) ;;
+  *"Pegasus Memory MCP workspace stdio setup (default-on):"*"Command: node"*"Script: $PEGASUS_MEMORY_MCP_ROOT/dist/bin/pegasus-memory-mcp.js"*"Cwd: $PEGASUS_MEMORY_MCP_ROOT"*"Source: unavailable"*) ;;
   *) printf 'expected dry-run output to include default-on memory MCP stdio planning\n' >&2; exit 1 ;;
 esac
 explicit_memory_plan="$($PYTHON_BIN "$CLI" --project-name explicit-memory --target-path "$TMP/explicit-memory" --install-memory-mcp --dry-run)"
@@ -357,16 +357,21 @@ if ambiguous:
     print("\n".join(ambiguous), file=sys.stderr)
     raise SystemExit(1)
 PY
-"$PYTHON_BIN" - "$target/.vscode/mcp.json" "$PEGASUS_MEMORY_MCP_ROOT/dist/bin/pegasus-memory-mcp.js" <<'PY'
+"$PYTHON_BIN" - "$target/.vscode/mcp.json" "$PEGASUS_MEMORY_MCP_ROOT" "$PEGASUS_MEMORY_MCP_ROOT/dist/bin/pegasus-memory-mcp.js" <<'PY'
 import json
 import sys
 from pathlib import Path
 
 config = json.loads(Path(sys.argv[1]).read_text())
+expected_root = Path(sys.argv[2])
+expected_script = Path(sys.argv[3])
 server = config["servers"]["pegasus-memory-mcp"]
 assert server["command"] == "node"
-assert server["args"] == [sys.argv[2]]
+assert server["cwd"] == str(expected_root)
+assert server["args"] == [str(expected_script)]
+assert Path(server["cwd"]).is_absolute()
 assert Path(server["args"][0]).is_absolute()
+assert Path(server["args"][0]).parent.parent.parent == Path(server["cwd"])
 PY
 [ ! -e "$target/docs/pegasus/memory" ] || { printf 'generated harness should not include docs/pegasus/memory\n' >&2; exit 1; }
 assert_no_banned_markdown_memory_persistence_refs "$target"

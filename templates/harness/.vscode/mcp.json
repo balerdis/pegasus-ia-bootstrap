@@ -2,6 +2,7 @@
   "servers": {
     "pegasus-memory-mcp": {
       "command": "node",
+      "cwd": "{{MEMORY_MCP_CWD}}",
       "args": [
         "{{MEMORY_MCP_SCRIPT_PATH}}"
       ]

@@ -64,6 +64,7 @@ MEMORY_MCP_UNAVAILABLE_WARNING = (
 @dataclass(frozen=True)
 class MemoryMcpResolution:
     script_path: Path
+    cwd: Path
     source: str
     warning: str | None = None
 
@@ -260,6 +261,12 @@ def memory_mcp_default_script_path() -> Path:
     return (memory_mcp_default_root() / MEMORY_MCP_SCRIPT_RELATIVE_PATH).resolve()
 
 
+def memory_mcp_root_from_script(script_path: Path) -> Path:
+    if tuple(script_path.parts[-len(MEMORY_MCP_SCRIPT_RELATIVE_PATH.parts) :]) == MEMORY_MCP_SCRIPT_RELATIVE_PATH.parts:
+        return script_path.parents[len(MEMORY_MCP_SCRIPT_RELATIVE_PATH.parts) - 1]
+    return script_path.parent
+
+
 def memory_mcp_path_script() -> Path | None:
     for binary in (MEMORY_MCP_PACKAGE, "pegasus-memory-mcp.js"):
         found = shutil.which(binary)
@@ -297,16 +304,17 @@ def install_memory_mcp(default_root: Path) -> bool:
 def resolve_memory_mcp(allow_install: bool) -> MemoryMcpResolution:
     path_script = memory_mcp_path_script()
     if path_script is not None:
-        return MemoryMcpResolution(path_script, "path")
+        return MemoryMcpResolution(path_script, memory_mcp_root_from_script(path_script), "path")
 
     default_script = memory_mcp_default_script_path()
+    default_root = memory_mcp_default_root().resolve()
     if default_script.is_file():
-        return MemoryMcpResolution(default_script, "default-local")
+        return MemoryMcpResolution(default_script, default_root, "default-local")
 
-    if allow_install and install_memory_mcp(memory_mcp_default_root()):
-        return MemoryMcpResolution(default_script, "installed")
+    if allow_install and install_memory_mcp(default_root):
+        return MemoryMcpResolution(default_script, default_root, "installed")
 
-    return MemoryMcpResolution(default_script, "unavailable", MEMORY_MCP_UNAVAILABLE_WARNING)
+    return MemoryMcpResolution(default_script, default_root, "unavailable", MEMORY_MCP_UNAVAILABLE_WARNING)
 
 
 def build_plan(target: Path, files: list[Path], force: bool) -> tuple[list[Path], list[Path], list[Path]]:
@@ -397,6 +405,7 @@ def print_plan(
         print(f"\nPegasus Memory MCP workspace stdio setup ({label}):")
         print("  Command: node")
         print(f"  Script: {memory_mcp.script_path}")
+        print(f"  Cwd: {memory_mcp.cwd}")
         print(f"  Source: {memory_mcp.source}")
         if memory_mcp.warning is not None:
             print(f"  Warning: {memory_mcp.warning}")
@@ -467,13 +476,20 @@ def print_plan(
                 print(f"    {key} += {copilot_root / subdir}")
 
 
-def render_template(content: str, project_name: str, target: Path, memory_mcp_script_path: Path) -> str:
+def render_template(
+    content: str,
+    project_name: str,
+    target: Path,
+    memory_mcp_script_path: Path,
+    memory_mcp_cwd: Path,
+) -> str:
     today = dt.date.today().isoformat()
     return (
         content.replace("{{PROJECT_NAME}}", project_name)
         .replace("{{TARGET_PATH}}", str(target))
         .replace("{{DATE}}", today)
         .replace("{{MEMORY_MCP_SCRIPT_PATH}}", str(memory_mcp_script_path))
+        .replace("{{MEMORY_MCP_CWD}}", str(memory_mcp_cwd))
     )
 
 
@@ -491,14 +507,23 @@ def render_copilot_global_template(content: str) -> str:
     return f"{marker}\n{body}"
 
 
-def write_files(root: Path, target: Path, files: list[Path], project_name: str, memory_mcp_script_path: Path) -> list[dict]:
+def write_files(
+    root: Path,
+    target: Path,
+    files: list[Path],
+    project_name: str,
+    memory_mcp_script_path: Path,
+    memory_mcp_cwd: Path,
+) -> list[dict]:
     written: list[dict] = []
     for rel_path in files:
         source = root / rel_path
         destination = target / rel_path
         destination.parent.mkdir(parents=True, exist_ok=True)
         content = source.read_text(encoding="utf-8")
-        rendered = render_workspace_content(render_template(content, project_name, target, memory_mcp_script_path), rel_path)
+        rendered = render_workspace_content(
+            render_template(content, project_name, target, memory_mcp_script_path, memory_mcp_cwd), rel_path
+        )
         action = "updated" if destination.exists() else "created"
         destination.write_text(rendered + "\n", encoding="utf-8")
         written.append(file_record(rel_path, rendered, action))
@@ -1053,7 +1078,7 @@ def main(argv: list[str] | None = None) -> int:
         print("Run with --force to replace known harness files.")
     if memory_mcp.warning is not None:
         print(memory_mcp.warning)
-    written_files = write_files(root, target, sorted(paths_to_write), args.project_name, memory_mcp.script_path)
+    written_files = write_files(root, target, sorted(paths_to_write), args.project_name, memory_mcp.script_path, memory_mcp.cwd)
     manifest = build_manifest(
         project_name=args.project_name,
         target=target,
