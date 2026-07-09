@@ -10,17 +10,19 @@ Repository:
 
 - Local: `/home/serg/ia-scripts/pegasus-memory-mcp`
 - GitHub: `https://github.com/balerdis/pegasus-memory-mcp`
-- Stable branch: `stable/0.1.0`
+- Stable branch: `stable/0.1.1`
 - Testing branch: `testing`
-- Latest integration commit: `5b2aee8 feat: agrega contrato de disponibilidad mcp`
+- Latest integration commits: `b411959`, `3814da4`, `d81cc96`
 
 The change was implemented, verified, archived, committed, and pushed.
 
 ## What is now available
 
-`pegasus-memory-mcp` now exposes a side-effect-free MCP tool:
+`pegasus-memory-mcp` now exposes bootstrap-safe MCP tools:
 
-- `health`
+- `health` with `health.capabilities.parent_bootstrap`
+- `ensure_project`
+- `ensure_change`
 
 The `health` tool is intended for availability checks by installers/bootstrap flows.
 
@@ -45,11 +47,17 @@ Pegasus Bootstrap should distinguish these cases:
 
 3. **MCP available but recovery is ambiguous**
    - MCP is running, but recovery returns `ambiguous` with candidate context choices.
-   - The consuming agent/bootstrap may ask one concise clarification if needed.
+   - The consuming agent/bootstrap should not ask users to resolve MCP recovery internals. It should continue from available project artifacts and record a follow-up for MCP support when possible.
 
-4. **Real persistence/read error**
+4. **Project/change precondition missing**
+   - MCP is running, but recovery returns `not_found` with `project_not_found`.
+   - The consumer should call `ensure_project` before recording observations, artifacts, task progress, or handoffs.
+   - When creating a PRD/change such as `docs/pegasus/changes/<change-id>/prd.md`, call `ensure_change` before `record_artifact` or change-scoped observations.
+
+5. **Real persistence/read error**
    - MCP is running, but a read operation fails with `read_error`.
    - Write failures are surfaced as `persistence_error`.
+   - Foreign-key write failures are flow/precondition bugs, not MCP unavailability.
    - Validation/programmer errors should not be hidden as persistence/read errors.
 
 ## VS Code MCP stdio setup
@@ -106,9 +114,9 @@ Suggested SDD prompt:
 Quiero integrar `pegasus-ia-bootstrap` con el `pegasus-memory-mcp` ya disponible.
 
 Contexto:
-- `pegasus-memory-mcp` está implementado y publicado en `stable/0.1.0`.
-- Último commit relevante: `5b2aee8 feat: agrega contrato de disponibilidad mcp`.
-- Expone tool MCP side-effect-free `health`.
+- `pegasus-memory-mcp` está implementado y publicado en `stable/0.1.1`.
+- Commits relevantes: `b411959`, `3814da4`, `d81cc96`.
+- Expone tools MCP `health`, `ensure_project`, `ensure_change`.
 - README documenta VS Code `mcp.json` para stdio.
 - Default DB path: `~/.local/share/pegasus-memory-mcp/memory.db`.
 - Si MCP no está disponible, Pegasus debe mostrar exactamente:

@@ -14,7 +14,7 @@ VS Code/Copilot entry points live under `.github/`. `AGENTS.md` stays as portabl
 3. Recover current project context through `pegasus-memory-mcp` tools when available.
 4. Read `docs/pegasus/prd.md`, `docs/pegasus/proposal.md`, `docs/pegasus/spec.md`, `docs/pegasus/design.md`, `docs/pegasus/tasks.md`, and `docs/pegasus/apply-progress.md` before changing files.
 5. Use `docs/pegasus/apply-progress.md` to track implementation slices and `docs/pegasus/verify.md` to record verification commands and outcomes.
-6. Call MCP `health` first, then save durable decisions, observations, handoffs, artifact references, and task progress through MCP when healthy.
+6. Call MCP `health` first, ensure the project/change exists when MCP recovery reports missing preconditions, then save durable decisions, observations, handoffs, artifact references, and task progress through MCP when healthy.
 
 ## Pegasus IA Workflow
 
@@ -50,6 +50,8 @@ Use `pegasus-memory-mcp` as the operational memory interface for future or compa
 - bugfixes, discoveries/gotchas, conventions/patterns, configuration changes, user constraints, verification evidence, and session summaries.
 
 Treat MCP tool inputs, outputs, and documented capabilities as the memory contract. Do not rely on `pegasus-memory-mcp` implementation details.
+
+After `health` succeeds, if recovery returns `not_found` with `project_not_found`, call `ensure_project` before recording observations, artifacts, task progress, or handoffs. When creating a new PRD/change under `docs/pegasus/changes/<change-id>/prd.md`, call `ensure_change` before `record_artifact` or change-scoped observations. Treat `persistence_error` or foreign-key write failures as precondition/flow bugs to report clearly, not MCP unavailability. Keep this internal; users should not need to mention ensure tools.
 
 If `pegasus-memory-mcp` is unavailable, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Project/change artifact work may continue, but do not claim persistent memory was saved and do not fall back to Markdown memory.
 

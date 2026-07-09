@@ -112,7 +112,7 @@ The system MUST create a portable `AGENTS.md` that explains the Pegasus IA workf
 
 ### Requirement: MCP-first operational memory
 
-The generated harness MUST use the `pegasus-memory-mcp` MCP tool contract as the operational memory interface for recovery, search, persistence, and availability checks. It MUST configure memory by default, MUST support `--install-memory-mcp` as the explicit install/config flag, MUST resolve the executable from PATH first and then the default local install path, and MUST generate VS Code workspace stdio config that launches `node` with the absolute built script path and sets `cwd` to the resolved MCP root. It MUST NOT require users or agents to write operational memory to `docs/pegasus/memory/`, and it MUST NOT depend on MCP server internals, SQLite details, database paths, or source modules.
+The generated harness MUST use the `pegasus-memory-mcp` MCP tool contract as the operational memory interface for recovery, search, persistence, and availability checks. It MUST configure memory by default, MUST support `--install-memory-mcp` as the explicit install/config flag, MUST resolve the executable from PATH first and then the default local install path, and MUST generate VS Code workspace stdio config that launches `node` with the absolute built script path and sets `cwd` to the resolved MCP root. The clone/build fallback MUST use the published `stable/0.1.1` branch. Generated guidance MUST recognize `health.capabilities.parent_bootstrap` when present. It MUST NOT require users or agents to write operational memory to `docs/pegasus/memory/`, and it MUST NOT depend on MCP server internals, SQLite details, database paths, or source modules.
 
 #### Scenario: Session starts with memory available
 
@@ -126,6 +126,7 @@ The generated harness MUST use the `pegasus-memory-mcp` MCP tool contract as the
 - GIVEN `pegasus-memory-mcp` is absent from PATH and the default local path
 - WHEN bootstrap reaches memory setup
 - THEN it warns and attempts GitHub clone/install/build into the default local location
+- AND the clone fallback uses branch `stable/0.1.1`
 - AND normal bootstrap flow remains default-on
 
 #### Scenario: Durable records are produced
@@ -143,7 +144,7 @@ The generated harness MUST use the `pegasus-memory-mcp` MCP tool contract as the
 
 ### Requirement: Memory unavailable behavior
 
-The generated harness MUST call `health` before the first recovery or save attempt and MUST detect unavailable memory before relying on persistence. If `pegasus-memory-mcp` is unavailable, the user-facing warning MUST be exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Pegasus MAY continue project/change artifact work, but it MUST NOT claim persistent memory was saved and MUST NOT fall back to Markdown memory. It MUST distinguish `not_found`, `ambiguous`, `read_error`, and `persistence_error` from true unavailability.
+The generated harness MUST call `health` before the first recovery or save attempt and MUST detect unavailable memory before relying on persistence. If `pegasus-memory-mcp` is unavailable, the user-facing warning MUST be exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Pegasus MAY continue project/change artifact work, but it MUST NOT claim persistent memory was saved and MUST NOT fall back to Markdown memory. It MUST distinguish `not_found`, `ambiguous`, `read_error`, and `persistence_error` from true unavailability. When recovery returns `not_found` with `project_not_found`, generated guidance MUST call `ensure_project` before recording observations, artifacts, task progress, or handoff records. When creating a new change/PRD, generated guidance MUST call `ensure_change` before `record_artifact` or change-scoped observations. `persistence_error` or foreign-key write failures MUST be reported as write-flow precondition failures, not MCP unavailability.
 
 #### Scenario: MCP missing or unreachable
 
@@ -159,12 +160,26 @@ The generated harness MUST call `health` before the first recovery or save attem
 - THEN it reports the recoverable state rather than unavailable memory
 - AND it does not show the approved warning
 
+#### Scenario: Missing project is ensured before writes
+
+- GIVEN MCP is running and recovery returns `not_found` with `project_not_found`
+- WHEN Pegasus needs to record observations, artifacts, task progress, or handoff records
+- THEN it calls `ensure_project` before the write
+- AND it keeps this precondition flow internal to the agent guidance
+
+#### Scenario: New change is ensured before change-scoped writes
+
+- GIVEN MCP is running and Pegasus creates a new PRD/change under `docs/pegasus/changes/<change-id>/prd.md`
+- WHEN it records the artifact or change-scoped observations
+- THEN it calls `ensure_change` before `record_artifact` or change-scoped observation writes
+
 #### Scenario: Read and persistence errors are not availability failures
 
 - GIVEN MCP is running and a read or write fails
 - WHEN the consumer handles persistence
 - THEN it surfaces `read_error` or `persistence_error`
 - AND it does not collapse the failure into unavailable memory
+- AND foreign-key write failures are treated as precondition/flow bugs to report clearly
 
 #### Scenario: Work continues without memory saves
 

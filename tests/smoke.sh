@@ -104,6 +104,7 @@ case "$help_output" in
   *"--new-change"*) ;;
   *) printf 'expected help output to include new-change lifecycle flag\n' >&2; exit 1 ;;
 esac
+assert_file_contains "$ROOT/pegasus_harness_bootstrap/cli.py" 'MEMORY_MCP_BRANCH = "stable/0.1.1"'
 
 default_plan="$($PYTHON_BIN "$CLI" --project-name default-project --dry-run)"
 case "$default_plan" in
@@ -322,9 +323,14 @@ assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "not_fo
 assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "ambiguous"
 assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "read_error"
 assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "persistence_error"
+assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "ensure_project"
+assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "ensure_change"
+assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "project_not_found"
 assert_file_contains "$target/.github/prompts/memory-update.prompt.md" "Do not write retrospective Markdown memory"
 assert_file_contains "$target/.github/prompts/memory-update.prompt.md" "call the \`pegasus-memory-mcp\` \`health\` tool before the first recovery or save attempt"
 assert_file_contains "$target/.github/prompts/memory-update.prompt.md" "Preserve MCP consumer states: \`not_found\`, \`ambiguous\`, \`read_error\`, and \`persistence_error\`"
+assert_file_contains "$target/.github/prompts/memory-update.prompt.md" "ensure_project"
+assert_file_contains "$target/.github/prompts/memory-update.prompt.md" "ensure_change"
 assert_file_contains "$target/.cursor/rules/pegasus-memory.mdc" "Recover active project/change context through MCP"
 assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "secondary legacy Cursor compatibility guidance"
 assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "do not fall back to Markdown memory"
@@ -339,8 +345,11 @@ assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "qui
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "If the idea lacks enough product detail, run one concise round of key product questions before drafting or finalizing the PRD."
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Tell the user the PRD file path (\`docs/pegasus/prd.md\`, or the full path when useful) and ask them to review it."
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Wait for explicit user approval of the PRD before moving to proposal, spec, design, tasks, apply, or verify."
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "save PRD status, product decisions, questions/answers, and the \`docs/pegasus/prd.md\` artifact reference through MCP"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "save PRD status, product decisions, questions/answers, and the artifact reference through MCP"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Do not implement code, create technical design, write tasks, or advance to proposal/spec/design/tasks/apply during PRD flow."
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "ensure_project"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "ensure_change"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "project_not_found"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "# MCP-first memory"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Call the MCP \`health\` tool before the first recovery or save attempt"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Save proactively after important changes"
@@ -350,12 +359,20 @@ assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.m
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "After context compaction, context loss, or a long pause"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "save a concise handoff/session summary through MCP when healthy"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "do not fall back to Markdown memory"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "health.capabilities.parent_bootstrap"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "ensure_project"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "ensure_change"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "project_not_found"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "foreign-key failures"
 assert_file_contains "$target/.github/copilot-instructions.md" "call the \`pegasus-memory-mcp\` \`health\` tool before the first recovery attempt"
 assert_file_contains "$target/.github/copilot-instructions.md" "call \`health\` before the first MCP save attempt"
 assert_file_contains "$target/.github/copilot-instructions.md" "proactively save durable decisions, bugfixes, discoveries/gotchas"
 assert_file_contains "$target/.github/copilot-instructions.md" "Keep consumer states distinct: \`not_found\`"
 assert_file_contains "$target/.github/copilot-instructions.md" "Natural-language PRD intent is enough to start PRD discovery."
 assert_file_contains "$target/.github/copilot-instructions.md" "wait for explicit PRD approval before proposal/spec/design/tasks/apply, and do not implement code during PRD flow"
+assert_file_contains "$target/.github/copilot-instructions.md" "ensure_project"
+assert_file_contains "$target/.github/copilot-instructions.md" "ensure_change"
+assert_file_contains "$target/.github/copilot-instructions.md" "project_not_found"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Natural-language product intent should trigger PRD discovery automatically."
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "tell the user the PRD file path and ask them to review it"
 for memory_guided_agent in doc-designer sdd-proposal sdd-spec sdd-design sdd-tasks sdd-apply sdd-verify session-handoff memory-maintainer pegasus-orchestrator; do

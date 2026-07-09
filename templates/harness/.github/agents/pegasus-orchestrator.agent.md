@@ -64,11 +64,11 @@ First read `.github/copilot-instructions.md`.
 
 Follow `.github/instructions/pegasus-memory.instructions.md` for centralized MCP memory behavior. Keep memory internals hidden from the user: expose only useful status, blockers, questions, or the exact unavailable warning.
 
-Then call the `pegasus-memory-mcp` `health` tool before the first recovery attempt. If `health` succeeds, recover project memory and active change context through MCP. Use MCP recovery/search/task-progress outcomes for decisions, handoffs, learnings, duplicate-work checks, and artifact status.
+Then call the `pegasus-memory-mcp` `health` tool before the first recovery attempt. If `health` succeeds, recover project memory and active change context through MCP. Prefer `health.capabilities.parent_bootstrap` when present. If recovery returns `not_found` with `project_not_found`, call `ensure_project` before recording observations, artifacts, task progress, or handoff records. Use MCP recovery/search/task-progress outcomes for decisions, handoffs, learnings, duplicate-work checks, and artifact status.
 
 If `pegasus-memory-mcp` is unavailable or `health` cannot be called successfully, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Project/change artifact work may continue, but persistent memory saves are unavailable and you must not claim they succeeded.
 
-Keep consumer states distinct. `not_found` means MCP is healthy but has no matching context. `ambiguous` means MCP is healthy but returned multiple candidates. `read_error` and `persistence_error` are MCP operation failures. Do not treat these states as unavailable memory and do not show the unavailable warning for them.
+Keep consumer states distinct. `not_found` means MCP is healthy but has no matching context; when it includes `project_not_found`, run `ensure_project` before writes. `ambiguous` means MCP is healthy but returned multiple candidates. `read_error` is a failed read. `persistence_error` and foreign-key write failures are flow bugs/precondition failures, usually missing `ensure_project` or `ensure_change`; report them clearly and correct the precondition flow. Do not treat these states as unavailable memory and do not show the unavailable warning for them. Preserve the exact unavailable warning only for true MCP unavailability or failed `health`.
 
 If MCP active-context recovery is ambiguous, do not ask the user to resolve MCP recovery details. Continue from available project artifacts and record external follow-up for `pegasus-memory-mcp` support when possible.
 
@@ -117,7 +117,7 @@ For natural PRD intent:
 4. Draft or refine `docs/pegasus/prd.md` as the product discovery artifact.
 5. Tell the user the PRD file path (`docs/pegasus/prd.md`, or the full path when useful) and ask them to review it.
 6. Wait for explicit user approval of the PRD before moving to proposal, spec, design, tasks, apply, or verify.
-7. After `health` succeeds, save PRD status, product decisions, questions/answers, and the `docs/pegasus/prd.md` artifact reference through MCP.
+7. After `health` succeeds, ensure the project exists when recovery reports `project_not_found`; for a new change PRD under `docs/pegasus/changes/<change-id>/prd.md`, call `ensure_change`, then save PRD status, product decisions, questions/answers, and the artifact reference through MCP.
 8. Do not implement code, create technical design, write tasks, or advance to proposal/spec/design/tasks/apply during PRD flow.
 
 ## Phase gates
@@ -149,7 +149,7 @@ When updating apply-progress, MCP memory, verification, or handoff records, merg
 
 ## Memory state
 
-Call MCP `health` before the first recovery or save. If healthy, recover context at session start and save decisions, discoveries, bugfixes, config changes, user constraints, artifact status, task progress, verification evidence, and handoff/session summaries through MCP. If unavailable, show the exact warning and continue only with project artifacts; never expose MCP recovery mechanics as user-facing requirements.
+Call MCP `health` before the first recovery or save. If healthy, recover context at session start; when recovery reports `project_not_found`, call `ensure_project` before any write; when creating a change, call `ensure_change` before change-scoped artifact or observation writes. Then save decisions, discoveries, bugfixes, config changes, user constraints, artifact status, task progress, verification evidence, and handoff/session summaries through MCP. If unavailable, show the exact warning and continue only with project artifacts; never expose MCP recovery mechanics as user-facing requirements.
 
 ## Verification context
 

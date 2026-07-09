@@ -5,7 +5,7 @@ applyTo: "**"
 
 # MCP-first memory
 
-Use `pegasus-memory-mcp` as the project continuity layer. Call the MCP `health` tool before the first recovery or save attempt. If `health` succeeds, recover, search, and save operational memory through MCP tools.
+Use `pegasus-memory-mcp` as the project continuity layer. Call the MCP `health` tool before the first recovery or save attempt. If `health` succeeds, recover, search, and save operational memory through MCP tools. Use `health.capabilities.parent_bootstrap` when present as confirmation that project/change bootstrap preconditions are supported.
 
 At session start, call `health` first, then recover active project/change context through MCP when healthy. Search MCP for prior decisions, observations, task progress, blockers, handoffs, artifact references, and learnings. Before applying or verifying work, also read `docs/pegasus/apply-progress.md`.
 
@@ -13,7 +13,7 @@ After context compaction, context loss, or a long pause, call `health` first, th
 
 Keep phase artifacts as files under `docs/pegasus/` or change-scoped `docs/pegasus/changes/<change-id>/` paths. MCP memory records summaries, status, and artifact references; it does not replace those files as the source of truth.
 
-Save proactively after important changes. Call `health` before the first save and save the durable record through MCP immediately when healthy for:
+Save proactively after important changes. Call `health` before the first save and save the durable record through MCP immediately when healthy. If recovery returns `not_found` with `project_not_found`, call `ensure_project` before recording observations, artifacts, task progress, or handoff records. When creating a new change/PRD such as `docs/pegasus/changes/<change-id>/prd.md`, call `ensure_change` before `record_artifact` or change-scoped observations. Keep this flow internal; users should not need to mention ensure tools. Save durable records for:
 
 - decisions, rationale, assumptions, and tradeoffs;
 - bugfixes, root causes, and remediation notes;
@@ -32,7 +32,7 @@ Treat MCP tool inputs, outputs, and documented capabilities as the memory contra
 
 If `pegasus-memory-mcp` is unavailable or `health` cannot be called successfully, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Continue project/change artifact work only if appropriate, but do not claim persistent memory was saved and do not fall back to Markdown memory.
 
-Keep consumer states distinct. `not_found` means MCP is healthy but has no matching context. `ambiguous` means MCP is healthy but returned multiple candidates. `read_error` and `persistence_error` are MCP operation failures. Do not treat these states as unavailable memory and do not show the unavailable warning for them.
+Keep consumer states distinct. `not_found` means MCP is healthy but has no matching context; when it includes `project_not_found`, satisfy the precondition with `ensure_project` before writes. `ambiguous` means MCP is healthy but returned multiple candidates. `read_error` is a failed read. `persistence_error` and database foreign-key failures during writes are flow bugs/precondition failures, usually missing `ensure_project` or `ensure_change`; report them clearly and fix the write flow. Do not treat these states as unavailable memory and do not show the unavailable warning for them. Preserve the exact unavailable warning only for true MCP unavailability or failed `health`.
 
 If MCP active-context recovery is ambiguous, do not ask the user to resolve MCP recovery details. Continue from available project artifacts and record external follow-up for `pegasus-memory-mcp` support when possible.
 

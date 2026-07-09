@@ -8,7 +8,7 @@ tools:
 
 # Memory update prompt
 
-Review recent changes and call the `pegasus-memory-mcp` `health` tool before the first recovery or save attempt. If `health` succeeds, record durable operational memory through MCP:
+Review recent changes and call the `pegasus-memory-mcp` `health` tool before the first recovery or save attempt. If `health` succeeds, recover context and ensure write preconditions: when recovery returns `not_found` with `project_not_found`, call `ensure_project`; when recording a new change/PRD under `docs/pegasus/changes/<change-id>/`, call `ensure_change` before `record_artifact` or change-scoped observations. Then record durable operational memory through MCP:
 
 - Active project/change context.
 - Decisions and tradeoffs.
@@ -21,7 +21,7 @@ Review recent changes and call the `pegasus-memory-mcp` `health` tool before the
 - Handoffs and recovery state.
 - Observations, gotchas, and reusable discoveries.
 
-Keep records concise and factual. Before ending or pausing, save a concise handoff/session summary after MCP `health` succeeds. Merge updates into existing useful history instead of replacing prior progress, evidence, blockers, or decisions. Use MCP tool inputs, outputs, and documented capabilities as the contract; do not depend on server internals. Preserve MCP consumer states: `not_found`, `ambiguous`, `read_error`, and `persistence_error` are not MCP unavailability.
+Keep records concise and factual. Before ending or pausing, save a concise handoff/session summary after MCP `health` succeeds. Merge updates into existing useful history instead of replacing prior progress, evidence, blockers, or decisions. Use MCP tool inputs, outputs, and documented capabilities as the contract; do not depend on server internals. Preserve MCP consumer states: `not_found`, `ambiguous`, `read_error`, and `persistence_error` are not MCP unavailability. Treat `persistence_error` or foreign-key write failures as precondition/flow bugs to report clearly, not as unavailable MCP.
 
 If `pegasus-memory-mcp` is unavailable or `health` cannot be called successfully, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Continue artifact work only if appropriate, but do not claim persistent memory was saved.
 

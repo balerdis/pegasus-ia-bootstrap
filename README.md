@@ -73,7 +73,7 @@ Use `--install-memory-mcp` when you want the plan to label the same default work
 
 1. `pegasus-memory-mcp` or `pegasus-memory-mcp.js` on `PATH`.
 2. `/home/serg/ia-scripts/pegasus-memory-mcp/dist/bin/pegasus-memory-mcp.js`.
-3. Clone/build fallback from `https://github.com/balerdis/pegasus-memory-mcp.git` branch `stable/0.1.0`.
+3. Clone/build fallback from `https://github.com/balerdis/pegasus-memory-mcp.git` branch `stable/0.1.1`.
 
 If MCP cannot be prepared, the bootstrap keeps file-only harness setup available and prints exactly:
 
@@ -81,7 +81,7 @@ If MCP cannot be prepared, the bootstrap keeps file-only harness setup available
 El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente
 ```
 
-Generated guidance requires agents to call MCP `health` before the first recovery or save. If MCP is unavailable, agents must not claim persistent-memory saves succeeded and must not fall back to `docs/pegasus/memory/`.
+Generated guidance requires agents to call MCP `health` before the first recovery or save and use `health.capabilities.parent_bootstrap` when available. If recovery returns `not_found` with `project_not_found`, agents call `ensure_project` before recording observations, artifacts, task progress, or handoffs. When creating a new change/PRD under `docs/pegasus/changes/<change-id>/`, agents call `ensure_change` before `record_artifact` or change-scoped observations. If MCP is unavailable, agents must not claim persistent-memory saves succeeded and must not fall back to `docs/pegasus/memory/`.
 
 Pegasus Memory MCP stores its database at `~/.local/share/pegasus-memory-mcp/memory.db` by default. If local install/build fails after `npm ci` and `npm config get ignore-scripts` returns `true`, rebuild the native SQLite dependency with:
 

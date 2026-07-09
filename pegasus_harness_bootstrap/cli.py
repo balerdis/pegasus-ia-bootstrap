@@ -52,7 +52,7 @@ PLANNED_WORKSPACE_FILES = (
 )
 MEMORY_MCP_PACKAGE = "pegasus-memory-mcp"
 MEMORY_MCP_REPOSITORY = "https://github.com/balerdis/pegasus-memory-mcp.git"
-MEMORY_MCP_BRANCH = "stable/0.1.0"
+MEMORY_MCP_BRANCH = "stable/0.1.1"
 MEMORY_MCP_DEFAULT_ROOT = Path("/home/serg/ia-scripts/pegasus-memory-mcp")
 MEMORY_MCP_SCRIPT_RELATIVE_PATH = Path("dist/bin/pegasus-memory-mcp.js")
 MEMORY_MCP_UNAVAILABLE_WARNING = (
