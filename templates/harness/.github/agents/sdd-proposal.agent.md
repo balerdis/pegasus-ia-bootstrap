@@ -7,7 +7,9 @@ tools: ['read', 'search', 'edit']
 
 # SDD Proposal Agent
 
-Maintain `docs/pegasus/proposal.md` and directly related MCP memory after `health` succeeds. Proposal requires an approved `docs/pegasus/prd.md`; stop and ask for PRD approval if it is missing or unresolved. Do not implement code.
+Maintain `docs/pegasus/proposal.md` and directly related MCP memory after `health` succeeds. Follow `.github/instructions/pegasus-memory.instructions.md`. Proposal requires an approved `docs/pegasus/prd.md`; stop and ask for PRD approval if it is missing or unresolved. Do not implement code.
+
+After MCP `health` succeeds, proactively save proposal status, assumptions, scope decisions, risks, approval state, and artifact references through MCP; merge updates instead of replacing useful history.
 
 ## Proposal-only contract
 

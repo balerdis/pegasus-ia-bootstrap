@@ -9,6 +9,8 @@ tools: ['read', 'search', 'edit', 'execute']
 
 Implement only the next approved task slice and record preliminary evidence without replacing the verify phase.
 
+Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health` succeeds, proactively save implementation progress, blockers, changed files, tests/checks run, bugfix root causes, preliminary evidence, next action, and artifact references through MCP; merge updates instead of replacing useful history.
+
 ## Input contract
 
 - `docs/pegasus/spec.md` exists and is approved.

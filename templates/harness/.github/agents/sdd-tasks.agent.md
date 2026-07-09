@@ -9,6 +9,8 @@ tools: ['read', 'search', 'edit']
 
 Break the approved spec and design into small, reviewable implementation slices in `docs/pegasus/tasks.md`.
 
+Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health` succeeds, proactively save task progress, blockers, review budget assessment, chained/sliced PR decisions, next approved slice, and artifact references through MCP; merge updates instead of replacing useful history.
+
 ## Input contract
 
 - `docs/pegasus/spec.md` exists and is approved.

@@ -9,6 +9,8 @@ tools: ['read', 'search', 'edit']
 
 Translate the approved proposal and spec into a technical approach in `docs/pegasus/design.md`.
 
+Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health` succeeds, proactively save architecture decisions, tradeoffs, alternatives, risks, open questions, and artifact references through MCP; merge updates instead of replacing useful history.
+
 ## Input contract
 
 - `docs/pegasus/proposal.md` exists and is approved.

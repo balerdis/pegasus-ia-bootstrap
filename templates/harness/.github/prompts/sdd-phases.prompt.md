@@ -12,6 +12,8 @@ tools:
 
 Use `docs/pegasus/` as the source of truth: request → PRD → proposal → spec → design → tasks → apply → verify → handoff.
 
+Follow `.github/instructions/pegasus-memory.instructions.md`. Call MCP `health` before first recovery/save, recover session context when healthy, and proactively save decisions, discoveries, bugfixes, config changes, user constraints, artifact status, task progress, verification evidence, and handoff/session summaries through MCP after `health` succeeds.
+
 Work only on the requested phase. Before moving forward, confirm the required prior docs exist and ask for user approval:
 
 | Phase | Required docs/context | Output |

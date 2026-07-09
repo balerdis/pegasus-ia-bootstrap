@@ -8,9 +8,13 @@ Use `.github/agents/pegasus-orchestrator.agent.md` as the primary Copilot agent 
 
 ## Source of truth and memory
 
+Follow `.github/instructions/pegasus-memory.instructions.md` as the centralized MCP memory policy.
+
 Before changing files, call the `pegasus-memory-mcp` `health` tool before the first recovery attempt. If `health` succeeds, recover project/change context through MCP, then read `docs/pegasus/prd.md`, `proposal.md`, `spec.md`, `design.md`, `tasks.md`, and `apply-progress.md`.
 
-Record implementation status in `docs/pegasus/apply-progress.md`, record verification in `docs/pegasus/verify.md`, and call `health` before the first MCP save attempt. When MCP is healthy, save durable decisions, observations, handoffs, artifact references, and task progress through MCP. Merge updates into existing useful history; do not overwrite prior progress, apply-progress, memory, or verification evidence.
+Natural-language PRD intent is enough to start PRD discovery. If the user describes an idea or says something like "I want to draft a PRD for this idea" / "quiero armar un PRD para esta idea", infer the PRD workflow without asking for Pegasus internals: call MCP `health` before recovery, recover/search context if healthy, draft or refine `docs/pegasus/prd.md`, ask concise product questions only when needed, save PRD status/decisions/artifact reference through MCP after `health` succeeds, and do not implement code.
+
+Record implementation status in `docs/pegasus/apply-progress.md`, record verification in `docs/pegasus/verify.md`, and call `health` before the first MCP save attempt. When MCP is healthy, proactively save durable decisions, bugfixes, discoveries/gotchas, conventions/patterns, config/environment changes, user constraints/preferences, artifact status, task progress/blockers, verification evidence, handoffs, and session summaries through MCP. Merge updates into existing useful history; do not overwrite prior progress, apply-progress, memory, or verification evidence.
 
 Record the project-selected Copilot model preference through MCP after `health` succeeds or through workspace settings when available. Use one model for all phases in this first release; do not promise per-phase model routing or hard runtime control from Pegasus docs alone.
 

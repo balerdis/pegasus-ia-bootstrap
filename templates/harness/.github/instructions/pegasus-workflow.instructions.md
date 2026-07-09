@@ -7,6 +7,8 @@ applyTo: "**"
 
 Use the smallest safe workflow. Small, punctual, low-risk changes with clear acceptance criteria may use a direct-fix path with MCP memory and verification updates. Broader, ambiguous, architectural, or higher-risk changes use the local SDD flow under `docs/pegasus/`: request, PRD, proposal, spec, design, tasks, apply, verify, and handoff.
 
+Natural-language product intent should trigger PRD discovery automatically. If the user describes an idea or asks to draft a PRD, do not expose Pegasus internals; call MCP `health` before recovery, recover/search context if healthy, draft or refine `docs/pegasus/prd.md`, ask concise product questions only when needed, save PRD status/decisions/artifact reference through MCP after `health` succeeds, and do not implement code.
+
 Phase artifacts stay file-based under `docs/pegasus/` or change-scoped `docs/pegasus/changes/<change-id>/` paths. Use MCP for durable memory summaries, task progress, handoffs, observations, and artifact references.
 
 If requirements are missing, contradictory, or too broad, stop and clarify or update the docs before editing implementation files.

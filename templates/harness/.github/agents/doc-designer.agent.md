@@ -9,6 +9,8 @@ tools: ['read', 'search', 'edit']
 
 Improve documentation structure without changing approved scope. Preserve the local SDD source of truth.
 
+Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health` succeeds, save PRD/product discoveries, product decisions, open questions, approval status, and artifact references through MCP; merge updates instead of replacing useful history.
+
 ## PRD and discovery contract
 
 When drafting or refining `docs/pegasus/prd.md`, make the product discovery usable before SDD starts. Capture enough information for a human to approve the problem and scope, but do not turn the PRD into a technical plan.

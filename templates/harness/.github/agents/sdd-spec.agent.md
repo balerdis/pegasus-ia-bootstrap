@@ -9,6 +9,8 @@ tools: ['read', 'search', 'edit']
 
 Convert an approved PRD and approved proposal into the acceptance contract in `docs/pegasus/spec.md`.
 
+Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health` succeeds, proactively save requirement decisions, scenario coverage, open questions, approval status, and artifact references through MCP; merge updates instead of replacing useful history.
+
 ## Input contract
 
 - `docs/pegasus/prd.md` exists and is approved.

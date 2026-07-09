@@ -14,7 +14,7 @@ VS Code/Copilot entry points live under `.github/`. `AGENTS.md` stays as portabl
 3. Recover current project context through `pegasus-memory-mcp` tools when available.
 4. Read `docs/pegasus/prd.md`, `docs/pegasus/proposal.md`, `docs/pegasus/spec.md`, `docs/pegasus/design.md`, `docs/pegasus/tasks.md`, and `docs/pegasus/apply-progress.md` before changing files.
 5. Use `docs/pegasus/apply-progress.md` to track implementation slices and `docs/pegasus/verify.md` to record verification commands and outcomes.
-6. Save durable decisions, observations, handoffs, artifact references, and task progress through MCP when available.
+6. Call MCP `health` first, then save durable decisions, observations, handoffs, artifact references, and task progress through MCP when healthy.
 
 ## Pegasus IA Workflow
 
@@ -47,6 +47,7 @@ Use `pegasus-memory-mcp` as the operational memory interface for future or compa
 - handoffs and recovery notes;
 - observations, gotchas, and reusable learnings;
 - artifact paths, status, and summaries.
+- bugfixes, discoveries/gotchas, conventions/patterns, configuration changes, user constraints, verification evidence, and session summaries.
 
 Treat MCP tool inputs, outputs, and documented capabilities as the memory contract. Do not rely on `pegasus-memory-mcp` implementation details.
 
@@ -56,7 +57,7 @@ If MCP returns ambiguous active context, do not ask the user to resolve MCP reco
 
 `docs/pegasus/memory/` is deprecated after MCP integration. Existing files may remain historical, but they are not an active backend, fallback, or co-source for operational memory.
 
-Before ending a session, record a handoff through MCP when available. Merge new progress, apply-progress, memory, and verification evidence into existing useful history instead of replacing prior content.
+Before ending or pausing a session, call MCP `health` first and record a concise handoff/session summary through MCP when healthy. Merge new progress, apply-progress, memory, and verification evidence into existing useful history instead of replacing prior content.
 
 ## Legacy Cursor Compatibility
 

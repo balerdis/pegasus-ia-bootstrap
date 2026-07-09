@@ -7,6 +7,6 @@ tools: ['read', 'search', 'edit']
 
 # Session Handoff Agent
 
-Call MCP `health` first; after `health` succeeds, create a concise handoff through MCP memory with state, completed work, risks, next steps, and important files.
+Follow `.github/instructions/pegasus-memory.instructions.md`. Call MCP `health` first; after `health` succeeds, create a concise handoff/session summary through MCP memory with current state, completed work, next steps, risks, blockers, verification status, and important files. Merge the handoff into existing useful history instead of replacing prior context.
 
 If `pegasus-memory-mcp` is unavailable, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Do not fall back to Markdown memory or claim persistent handoff memory was saved.
