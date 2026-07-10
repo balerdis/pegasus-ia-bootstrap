@@ -59,6 +59,14 @@ Use `.github/agents/pegasus-orchestrator.agent.md` as the primary VS Code/Copilo
 |-------------------|--------|-------------------|
 | TBD | TBD | TBD |
 
+Record only assumptions explicitly stated in the approved PRD. Record every material detail absent from the PRD as an unresolved gap with its impact; do not invent a default or state that the PRD preserved it.
+
+## PRD Traceability
+
+| Proposal Claim | Explicit PRD Text / Section | Status |
+|----------------|-----------------------------|--------|
+| TBD | TBD | Traceable or unresolved gap |
+
 ## Risks
 
 | Risk | Impact | Mitigation |

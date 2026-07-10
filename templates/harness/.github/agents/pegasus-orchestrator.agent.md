@@ -24,7 +24,7 @@ handoffs:
     send: false
   - label: Draft proposal
     agent: sdd-proposal
-    prompt: Read the referenced PRD artifact and verify its in-file approval state before drafting. Call MCP health before memory recovery, then draft or refine only the sibling proposal artifact.
+    prompt: Read the referenced PRD artifact and verify its in-file approval state before drafting. Call MCP health before memory recovery, then draft or refine only the sibling proposal artifact. Preserve only explicit PRD claims, record material omissions as unresolved gaps, include correct markers for a new change-scoped proposal, and return the required MCP persistence summary block.
     send: false
   - label: Write spec
     agent: sdd-spec
@@ -106,6 +106,20 @@ Do not claim exact parity with other agent runtimes.
 10. After verification, call `health` before the first save, then save MCP memory and handoff notes after `health` succeeds.
 
 For proposal work, inspect the referenced PRD file's Approval table/status and approval checkbox before delegation. A conversational statement alone never overrides a PRD that still says Draft or has an unchecked checkbox. If both indicators exist, they must agree on approval; otherwise stop and ask for the PRD artifact to be updated and approved before drafting.
+
+For proposal work, require every product claim to be traceable to explicit PRD text. Do not preserve inferred product details as PRD assumptions. Ask one concise question when a material decision is missing; if it cannot be answered, record the exact unresolved gap and its impact without inventing a default. A new change-scoped proposal MUST use the actual `docs/pegasus/changes/<change-id>/proposal.md` path in both Pegasus managed markers. The proposal handoff/final response MUST include this exact block, even if MCP is unavailable:
+
+```text
+MCP persistence summary:
+ensure_project: <succeeded|not needed|failed: reason>
+ensure_change: <succeeded|not needed|failed: reason>
+record_artifact: <succeeded|not needed|failed: reason>
+record_observation: <succeeded|not needed|failed: reason>
+record_task_progress: <succeeded|not needed|failed: reason>
+record_handoff: <succeeded|not needed|failed: reason>
+```
+
+If required artifact or observation persistence fails, it MUST also state `Proposal persistence: file-only — <reason>`.
 
 ## Natural-language PRD intent
 

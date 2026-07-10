@@ -336,14 +336,30 @@ assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "Stop before
 assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "Conversational approval does not override a PRD that still says Draft"
 assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "record_task_progress"
 assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "record_handoff"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "Every product claim, scope item, user, rule"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "MCP persistence summary:"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "Proposal persistence: file-only"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "pegasus-harness:start path=docs/pegasus/changes/<change-id>/proposal.md"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "pegasus-harness:end path=docs/pegasus/changes/<change-id>/proposal.md"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "ensure_project: <succeeded|not needed|failed: reason>"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "ensure_change: <succeeded|not needed|failed: reason>"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "record_artifact: <succeeded|not needed|failed: reason>"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "record_observation: <succeeded|not needed|failed: reason>"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "record_task_progress: <succeeded|not needed|failed: reason>"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "record_handoff: <succeeded|not needed|failed: reason>"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "including when MCP is unavailable"
 assert_file_contains "$target/docs/pegasus/prd.md" "Current Situation / Gap"
 assert_file_contains "$target/docs/pegasus/prd.md" "Approval Owner"
 assert_file_contains "$target/docs/pegasus/proposal.md" "PRD Source / Status"
 assert_file_contains "$target/docs/pegasus/proposal.md" "Explicit Exclusions"
+assert_file_contains "$target/docs/pegasus/proposal.md" "## PRD Traceability"
+assert_file_contains "$target/docs/pegasus/proposal.md" "Record only assumptions explicitly stated in the approved PRD"
 assert_file_contains "$target/docs/pegasus/apply-progress.md" "Current In-Progress Work"
 assert_file_contains "$target/docs/pegasus/apply-progress.md" "Merge updates into the existing useful history"
 assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "Verify from fresh context when possible"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Launch deduplication"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "MCP persistence summary:"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "ensure_project: <succeeded|not needed|failed: reason>"
 assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" 'Record operational memory through `pegasus-memory-mcp`'
 assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "Before the first recovery or save attempt, call the MCP \`health\` tool"
 assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "do not claim persistent memory was saved"
@@ -414,11 +430,15 @@ assert_file_contains "$target/.github/copilot-instructions.md" 'before any git c
 assert_file_contains "$target/.github/copilot-instructions.md" 'must not reset, delete, recreate, or overwrite the Pegasus Memory database'
 assert_file_contains "$target/.github/copilot-instructions.md" "wait for explicit PRD approval before proposal/spec/design/tasks/apply, and do not implement code during PRD flow"
 assert_file_contains "$target/.github/copilot-instructions.md" "Before proposal, inspect the referenced PRD file rather than relying on conversational approval."
+assert_file_contains "$target/.github/copilot-instructions.md" "do not turn unstated details into preserved PRD assumptions"
+assert_file_contains "$target/.github/copilot-instructions.md" "Proposal persistence: file-only"
 assert_file_contains "$target/.github/copilot-instructions.md" "ensure_project"
 assert_file_contains "$target/.github/copilot-instructions.md" "ensure_change"
 assert_file_contains "$target/.github/copilot-instructions.md" "project_not_found"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Natural-language product intent should trigger PRD discovery automatically."
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Before proposal drafting, inspect the referenced PRD artifact's Approval table/status."
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "never call an unstated detail a preserved PRD assumption"
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "MCP persistence summary:"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "tell the user the PRD file path and ask them to review it"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "product decisions are open"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'record_artifact`, and `record_observation` as `succeeded`, `not needed`, or `failed: <reason>`'
@@ -588,7 +608,7 @@ assert_file_contains "$target/.github/copilot-instructions.md" 'before any git c
 assert_file_contains "$target/.github/copilot-instructions.md" 'include a small MCP persistence summary marking `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation` as `succeeded`, `not needed`, or `failed: <reason>`'
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'before any git command first check for `.git` and never run `git diff`, `git status`, or other git validation in non-git workspaces'
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'For PRD closure, include a small MCP persistence summary with one line each for `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation`'
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'For proposal closure, also include one status line each for `ensure_project`, `ensure_change`, `record_artifact`, `record_observation`, `record_task_progress`, and `record_handoff`'
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'For proposal closure, the final response MUST contain this exact block even when MCP is unavailable'
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'do not mention git validation as attempted'
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'The only acceptable database mutation is an explicit Pegasus Memory schema migration performed by Pegasus Memory itself'
 assert_file_contains "$target/.github/prompts/sdd-phases.prompt.md" "approved PRD and approved proposal"

@@ -364,6 +364,20 @@ The system MUST create a PRD template and production-ready SDD templates under `
 - THEN generated guidance reports `ensure_project`, `ensure_change`, `record_artifact`, `record_observation`, `record_task_progress`, and `record_handoff` as `succeeded`, `not needed`, or `failed: <reason>`
 - AND it reports file-only status with the reason when required proposal artifact or observation persistence fails
 
+#### Scenario: Proposal preserves only explicit PRD decisions
+
+- GIVEN an approved PRD omits a material product decision
+- WHEN generated guidance drafts a proposal
+- THEN it MUST NOT invent a default or call the omitted detail a preserved PRD assumption
+- AND it MUST ask for clarification before finalizing or record the exact unresolved gap and impact
+
+#### Scenario: Change-scoped proposal is managed and closes explicitly
+
+- GIVEN generated guidance creates `docs/pegasus/changes/<change-id>/proposal.md`
+- WHEN the proposal phase closes
+- THEN the proposal MUST use that actual path in both Pegasus managed markers
+- AND the user-facing final response MUST contain the exact `MCP persistence summary:` block with one status line for each required proposal MCP tool, even when MCP is unavailable
+
 #### Scenario: PRD captures product discovery
 
 - GIVEN a future Copilot-guided project session
