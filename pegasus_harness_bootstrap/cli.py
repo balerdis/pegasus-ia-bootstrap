@@ -13,13 +13,18 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 from pegasus_harness_bootstrap.manifest import (
     MANIFEST_RELATIVE_PATH,
     OWNERSHIP_MARKER,
     build_manifest,
+    classify_manifest_path,
     file_record,
+    is_safe_sync_managed_path,
+    manifest_file_records,
     render_workspace_content,
+    update_manifest_for_sync,
     write_manifest,
 )
 
@@ -67,6 +72,22 @@ class MemoryMcpResolution:
     cwd: Path
     source: str
     warning: str | None = None
+
+
+@dataclass(frozen=True)
+class WorkspaceTarget:
+    project_name: str
+    root: Path
+
+
+SyncState = Literal["create", "updateable", "conflict", "untouched", "obsolete"]
+
+
+@dataclass(frozen=True)
+class SyncPlanItem:
+    rel_path: Path
+    state: SyncState
+    reason: str = ""
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -117,6 +138,16 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "--uninstall-workspace",
         action="store_true",
         help="Remove Pegasus-managed workspace files recorded in the manifest.",
+    )
+    parser.add_argument(
+        "--sync-workspace",
+        action="store_true",
+        help="Update safe Pegasus-managed files in the current workspace using manifest checksum evidence.",
+    )
+    parser.add_argument(
+        "--overwrite-conflicts",
+        action="store_true",
+        help="During --sync-workspace, back up and replace user-modified Pegasus-managed conflicts.",
     )
     parser.add_argument(
         "--uninstall-copilot-global",
@@ -619,6 +650,146 @@ def load_workspace_manifest(target: Path) -> dict:
     return manifest
 
 
+def workspace_target_for(project_name: str, target: Path) -> WorkspaceTarget:
+    return WorkspaceTarget(project_name=project_name, root=target)
+
+
+def sync_inventory_files(files: list[Path]) -> list[Path]:
+    return sorted(path for path in workspace_inventory_files(files) if is_safe_sync_managed_path(path))
+
+
+def rendered_workspace_file(
+    root: Path,
+    rel_path: Path,
+    target: WorkspaceTarget,
+    memory_mcp: MemoryMcpResolution,
+) -> str:
+    content = (root / rel_path).read_text(encoding="utf-8")
+    return render_workspace_content(
+        render_template(content, target.project_name, target.root, memory_mcp.script_path, memory_mcp.cwd), rel_path
+    )
+
+
+def plan_workspace_sync(target: WorkspaceTarget, manifest: dict, current_files: list[Path]) -> list[SyncPlanItem]:
+    records = manifest_file_records(manifest)
+    current = set(current_files)
+    plan: list[SyncPlanItem] = []
+
+    for rel_path in sorted(current):
+        state = classify_manifest_path(target.root, rel_path, records.get(rel_path))
+        reason = "current generated file missing" if state == "create" else "manifest checksum matched"
+        if state == "conflict":
+            reason = "current file differs from manifest checksum"
+        elif state == "untouched":
+            reason = "existing file is not manifest-owned"
+        plan.append(SyncPlanItem(rel_path, state, reason))
+
+    for rel_path in sorted(path for path in records if is_safe_sync_managed_path(path) and path not in current):
+        plan.append(SyncPlanItem(rel_path, "obsolete", "manifest-owned file is not in the current template inventory"))
+    return plan
+
+
+def sync_backup_root(target: WorkspaceTarget) -> Path:
+    timestamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d%H%M%S")
+    return target.root / ".pegasus-bootstrap-ia" / "backups" / timestamp
+
+
+def backup_workspace_file(target: WorkspaceTarget, rel_path: Path, backup_root: Path) -> Path:
+    source = target.root / rel_path
+    backup = backup_root / rel_path
+    backup.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, backup)
+    return backup
+
+
+def print_sync_plan(
+    target: WorkspaceTarget,
+    root: Path,
+    plan: list[SyncPlanItem],
+    backup_root: Path,
+    overwrite_conflicts: bool,
+) -> None:
+    print("Pegasus workspace sync plan")
+    print(f"Project: {target.project_name}")
+    print(f"Target: {target.root}")
+    print(f"Template root: {root}")
+    print(f"Manifest: {target.root / MANIFEST_RELATIVE_PATH}")
+    print("Scope: current workspace only")
+
+    sections = (
+        ("Creates:", "create"),
+        ("Updates:", "updateable"),
+        ("Conflicts (skipped unless --overwrite-conflicts):", "conflict"),
+        ("User-created files preserved:", "untouched"),
+        ("Obsolete managed files (report-only):", "obsolete"),
+    )
+    for title, state in sections:
+        items = [item for item in plan if item.state == state]
+        if not items:
+            continue
+        print(f"\n{title}")
+        for item in items:
+            print(f"  {target.root / item.rel_path} ({item.reason})")
+
+    backup_items = [item for item in plan if item.state == "updateable" or (item.state == "conflict" and overwrite_conflicts)]
+    if backup_items:
+        print("\nBackups before replacement:")
+        for item in backup_items:
+            if (target.root / item.rel_path).exists():
+                print(f"  {target.root / item.rel_path} -> {backup_root / item.rel_path}")
+
+    print("\nPreserved user artifacts:")
+    for artifact in (
+        "docs/pegasus/prd.md",
+        "proposal.md",
+        "spec.md",
+        "design.md",
+        "tasks.md",
+        "apply-progress.md",
+        "verify.md",
+        "docs/pegasus/changes/**",
+    ):
+        print(f"  {target.root / artifact}")
+
+
+def apply_workspace_sync(
+    target: WorkspaceTarget,
+    root: Path,
+    plan: list[SyncPlanItem],
+    manifest: dict,
+    memory_mcp: MemoryMcpResolution,
+    overwrite_conflicts: bool,
+    backup_root: Path,
+) -> tuple[list[Path], list[Path], Path | None]:
+    writable = [item for item in plan if item.state in {"create", "updateable"} or (item.state == "conflict" and overwrite_conflicts)]
+    active_backup_root = backup_root if any((target.root / item.rel_path).exists() for item in writable) else None
+    written_records: list[dict] = []
+    written_paths: list[Path] = []
+    backups: list[Path] = []
+    overwritten_conflicts: list[Path] = []
+
+    for item in writable:
+        destination = target.root / item.rel_path
+        if destination.exists():
+            assert active_backup_root is not None
+            backups.append(backup_workspace_file(target, item.rel_path, active_backup_root))
+            if item.state == "conflict":
+                overwritten_conflicts.append(item.rel_path)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        rendered = rendered_workspace_file(root, item.rel_path, target, memory_mcp)
+        destination.write_text(rendered + "\n", encoding="utf-8")
+        action = "created" if item.state == "create" else "updated"
+        written_records.append(file_record(item.rel_path, rendered, action))
+        written_paths.append(destination)
+
+    if written_records:
+        write_manifest(
+            target.root,
+            update_manifest_for_sync(manifest, updated_records=written_records, overwritten_conflicts=overwritten_conflicts),
+        )
+    return written_paths, backups, active_backup_root
+
+
 def new_change_prd_path(target: Path, change_id: str) -> Path:
     return target / "docs" / "pegasus" / "changes" / change_id / "prd.md"
 
@@ -922,10 +1093,52 @@ def main(argv: list[str] | None = None) -> int:
         print("Later SDD phase progression creates proposal, spec, design, tasks, apply-progress, and verify artifacts.")
         return 0
 
+    if args.overwrite_conflicts and not args.sync_workspace:
+        fail("--overwrite-conflicts can only be used with --sync-workspace")
+
     if args.project_name is None and not (args.uninstall_workspace or args.uninstall_copilot_global):
         fail("--project-name is required unless --new-change or an uninstall flag is used")
 
     target = target_path_for(args.project_name, args.target_path)
+    if args.sync_workspace:
+        assert args.project_name is not None
+        workspace_target = workspace_target_for(args.project_name, target)
+        manifest = load_workspace_manifest(workspace_target.root)
+        root = template_root()
+        current_files = sync_inventory_files(template_files(root))
+        memory_mcp = resolve_memory_mcp(allow_install=not args.dry_run)
+        sync_plan = plan_workspace_sync(workspace_target, manifest, current_files)
+        plan_backup_root = sync_backup_root(workspace_target)
+        print_sync_plan(workspace_target, root, sync_plan, plan_backup_root, args.overwrite_conflicts)
+
+        if args.dry_run:
+            print("\nDry run only; no files were written.")
+            return 0
+
+        if memory_mcp.warning is not None:
+            print(memory_mcp.warning)
+        written_paths, backup_paths, _ = apply_workspace_sync(
+            workspace_target,
+            root,
+            sync_plan,
+            manifest,
+            memory_mcp,
+            args.overwrite_conflicts,
+            plan_backup_root,
+        )
+        print("\nCompleted Pegasus workspace sync.")
+        for path in written_paths:
+            print(f"Updated: {path}")
+        for backup in backup_paths:
+            print(f"Backup created: {backup}")
+        conflicts = [item for item in sync_plan if item.state == "conflict"]
+        if conflicts and not args.overwrite_conflicts:
+            print("Conflicting Pegasus-managed files were preserved; rerun with --overwrite-conflicts to back up and replace them.")
+        obsolete = [item for item in sync_plan if item.state == "obsolete"]
+        if obsolete:
+            print("Obsolete Pegasus-managed files were reported only; none were deleted.")
+        return 0
+
     if args.uninstall_workspace or args.uninstall_copilot_global:
         workspace_removes: list[Path] = []
         workspace_updates: list[Path] = []

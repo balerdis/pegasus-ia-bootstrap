@@ -104,6 +104,10 @@ case "$help_output" in
   *"--new-change"*) ;;
   *) printf 'expected help output to include new-change lifecycle flag\n' >&2; exit 1 ;;
 esac
+case "$help_output" in
+  *"--sync-workspace"*"--overwrite-conflicts"*) ;;
+  *) printf 'expected help output to include workspace sync flags\n' >&2; exit 1 ;;
+esac
 assert_file_contains "$ROOT/pegasus_harness_bootstrap/cli.py" 'MEMORY_MCP_BRANCH = "stable/0.1.1"'
 
 default_plan="$($PYTHON_BIN "$CLI" --project-name default-project --dry-run)"
@@ -583,6 +587,92 @@ assert_file_contains "$target/docs/pegasus/apply-progress.md" "Current In-Progre
 [ ! -e "$target/docs/pegasus/memory" ] || { printf 'force run should not create docs/pegasus/memory\n' >&2; exit 1; }
 assert_no_banned_markdown_memory_persistence_refs "$target"
 [ ! -e "$target/.git" ] || { printf 'bootstrap created git metadata\n' >&2; exit 1; }
+
+sync_target="$TMP/sync-target"
+printf 'yes\n' | "$PYTHON_BIN" "$CLI" --project-name sync-project --target-path "$sync_target" >/dev/null
+printf 'custom prd\n' > "$sync_target/docs/pegasus/prd.md"
+printf 'root proposal\n' > "$sync_target/proposal.md"
+mkdir -p "$sync_target/docs/pegasus/changes/change-a" "$sync_target/.github/agents"
+printf 'change spec\n' > "$sync_target/docs/pegasus/changes/change-a/spec.md"
+printf 'user agent\n' > "$sync_target/.github/agents/user.agent.md"
+printf 'old mcp config\n' > "$sync_target/.vscode/mcp.json"
+printf 'user agents conflict\n' > "$sync_target/AGENTS.md"
+printf 'obsolete managed\n' > "$sync_target/.cursor/rules/obsolete.mdc"
+"$PYTHON_BIN" - "$sync_target/.pegasus-bootstrap-ia/manifest.json" "$sync_target/.vscode/mcp.json" <<'PY'
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+manifest_path = Path(sys.argv[1])
+mcp_path = Path(sys.argv[2])
+manifest = json.loads(manifest_path.read_text())
+old_checksum = hashlib.sha256(mcp_path.read_text().rstrip("\n").encode()).hexdigest()
+for section in (manifest["install"]["files"], manifest["ownership"]["files"]):
+    for record in section:
+        if record["path"] == ".vscode/mcp.json":
+            record["checksum_sha256"] = old_checksum
+obsolete = {
+    "path": ".cursor/rules/obsolete.mdc",
+    "ownership": "full-file",
+    "managed_by": "pegasus-harness-bootstrap",
+    "template_version": "1",
+    "checksum_sha256": hashlib.sha256(b"obsolete managed").hexdigest(),
+    "action": "created",
+}
+manifest["install"]["files"].append(obsolete)
+manifest["ownership"]["files"].append(obsolete)
+manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+PY
+sync_dry_output="$($PYTHON_BIN "$CLI" --project-name sync-project --target-path "$sync_target" --sync-workspace --dry-run)"
+case "$sync_dry_output" in
+  *"Pegasus workspace sync plan"*"Scope: current workspace only"*"Updates:"*"$sync_target/.vscode/mcp.json"*"Conflicts (skipped unless --overwrite-conflicts):"*"$sync_target/AGENTS.md"*"Obsolete managed files (report-only):"*"$sync_target/.cursor/rules/obsolete.mdc"*"Preserved user artifacts:"*"$sync_target/docs/pegasus/changes/**"*"Dry run only; no files were written."*) ;;
+  *) printf 'expected workspace sync dry-run plan with updates, conflicts, obsolete files, and preserved artifacts\n' >&2; exit 1 ;;
+esac
+assert_file_contains "$sync_target/.vscode/mcp.json" 'old mcp config'
+sync_output="$($PYTHON_BIN "$CLI" --project-name sync-project --target-path "$sync_target" --sync-workspace)"
+case "$sync_output" in
+  *"Completed Pegasus workspace sync."*"Updated: $sync_target/.vscode/mcp.json"*"Backup created: $sync_target/.pegasus-bootstrap-ia/backups/"*"Conflicting Pegasus-managed files were preserved"*"Obsolete Pegasus-managed files were reported only; none were deleted."*) ;;
+  *) printf 'expected workspace sync completion with backup, conflict skip, and obsolete report-only output\n' >&2; exit 1 ;;
+esac
+assert_file_contains "$sync_target/AGENTS.md" 'user agents conflict'
+assert_file_contains "$sync_target/docs/pegasus/prd.md" 'custom prd'
+assert_file_contains "$sync_target/proposal.md" 'root proposal'
+assert_file_contains "$sync_target/docs/pegasus/changes/change-a/spec.md" 'change spec'
+assert_file_contains "$sync_target/.github/agents/user.agent.md" 'user agent'
+assert_file_contains "$sync_target/.cursor/rules/obsolete.mdc" 'obsolete managed'
+"$PYTHON_BIN" - "$sync_target/.vscode/mcp.json" "$PEGASUS_MEMORY_MCP_ROOT" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+config = json.loads(Path(sys.argv[1]).read_text())
+assert config["servers"]["pegasus-memory-mcp"]["cwd"] == sys.argv[2]
+PY
+sync_backup_count=$(compgen -G "$sync_target/.pegasus-bootstrap-ia/backups/*/.vscode/mcp.json" | wc -l)
+[ "$sync_backup_count" -ge 1 ] || { printf 'expected workspace sync backup for mcp.json\n' >&2; exit 1; }
+sync_override_output="$($PYTHON_BIN "$CLI" --project-name sync-project --target-path "$sync_target" --sync-workspace --overwrite-conflicts)"
+case "$sync_override_output" in
+  *"Completed Pegasus workspace sync."*"Updated: $sync_target/AGENTS.md"*"Backup created: $sync_target/.pegasus-bootstrap-ia/backups/"*) ;;
+  *) printf 'expected overwrite-conflicts sync to back up and update AGENTS.md\n' >&2; exit 1 ;;
+esac
+assert_file_contains "$sync_target/AGENTS.md" 'sync-project'
+if ! grep -R -F 'user agents conflict' "$sync_target/.pegasus-bootstrap-ia/backups" >/dev/null; then
+  printf 'expected overwrite-conflicts backup to preserve AGENTS.md user content\n' >&2
+  exit 1
+fi
+"$PYTHON_BIN" - "$sync_target/.pegasus-bootstrap-ia/manifest.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+manifest = json.loads(Path(sys.argv[1]).read_text())
+text = json.dumps(manifest)
+for forbidden in ("active_change", "activeChange", "memory_state", "memoryState", "recovery_state", "recoveryState"):
+    assert forbidden not in text
+assert "last_run_at" in manifest["update"]
+assert "AGENTS.md" in manifest["update"]["overwrite_conflicts"]
+PY
 
 uninstall_target="$TMP/uninstall-target"
 printf 'yes\n' | "$PYTHON_BIN" "$CLI" --project-name uninstall-project --target-path "$uninstall_target" >/dev/null

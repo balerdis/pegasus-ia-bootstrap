@@ -38,9 +38,27 @@ The system MUST be installable as a Python package exposing `pegasus-harness-boo
 - WHEN `pegasus-harness-bootstrap --project-name demo --dry-run` runs
 - THEN it works without an absolute repository script path
 
+### Requirement: Current-workspace sync
+
+The system MUST provide a workspace sync/update command that operates only on the current workspace in the first version. The design MUST remain compatible with a future global registry, but it MUST NOT require global multi-workspace sync now. `--dry-run` MUST show planned updates, conflicts, obsolete managed files, and backup needs without writing.
+
+#### Scenario: Dry-run plans current workspace only
+
+- GIVEN an installed workspace with managed files
+- WHEN sync runs with `--dry-run`
+- THEN it reports only the current workspace plan
+- AND it writes nothing
+
+#### Scenario: Future registry remains optional
+
+- GIVEN no global workspace registry exists
+- WHEN sync runs
+- THEN it still operates on the current workspace
+- AND it does not fail because multi-workspace sync is unavailable
+
 ### Requirement: Manifest-owned lifecycle metadata
 
-The manifest `.pegasus-bootstrap-ia/manifest.json` MUST record install, ownership, update, uninstall, and workspace metadata only. It MUST NOT store operational memory, active-change pointers, recovery state, or any Markdown-memory backend data.
+The manifest `.pegasus-bootstrap-ia/manifest.json` MUST record install, ownership, update, uninstall, and workspace metadata only. It MUST be workspace-local evidence for sync decisions and MUST NOT store operational memory, active-change pointers, recovery state, registry data, or any Markdown-memory backend data. Sync MUST use manifest evidence, not `docs/pegasus/memory/`, to decide workspace ownership and file state.
 
 #### Scenario: Manifest supports uninstall
 
@@ -48,6 +66,49 @@ The manifest `.pegasus-bootstrap-ia/manifest.json` MUST record install, ownershi
 - WHEN the manifest is inspected
 - THEN it records Pegasus-managed ownership for uninstall
 - AND it contains no active-change or last-change pointer
+
+#### Scenario: Manifest stays local
+
+- GIVEN workspace sync needs ownership evidence
+- WHEN it reads `.pegasus-bootstrap-ia/manifest.json`
+- THEN it treats the manifest as workspace-local metadata only
+- AND it does not use it as a global workspace registry or operational memory store
+
+### Requirement: Safe ownership classification
+
+The system MUST use `.pegasus-bootstrap-ia/manifest.json` ownership and checksums to classify workspace files as unmodified Pegasus-managed, user-modified Pegasus-managed, user-created, or obsolete Pegasus-managed. Safe update targets MUST include `.github/`, `.vscode/mcp.json`, `AGENTS.md`, and legacy `.cursor/` assets. User work artifacts under `docs/pegasus/prd.md`, root `proposal.md`, `spec.md`, `design.md`, `tasks.md`, `apply-progress.md`, `verify.md`, and `docs/pegasus/changes/**` MUST be preserved. `.vscode/mcp.json` MUST be updated to the current generated MCP config when it is safe to do so.
+
+#### Scenario: Managed file matches recorded state
+
+- GIVEN a managed file still matches the manifest checksum
+- WHEN sync runs
+- THEN it is eligible for update from the current bootstrap templates
+- AND the plan identifies it as unmodified Pegasus-managed
+
+#### Scenario: User artifact is preserved
+
+- GIVEN a workspace contains `docs/pegasus/changes/x/spec.md`
+- WHEN sync runs
+- THEN the file is preserved
+- AND it is not treated as a managed target
+
+### Requirement: Conflict and backup policy
+
+The system MUST report and skip user-modified Pegasus-managed files by default and MUST report obsolete Pegasus-managed files by default without removing them. Real writes MUST create timestamped backups for files changed by sync. An explicit overwrite override MAY back up and replace conflicting managed files; overwrite MUST NOT be the default.
+
+#### Scenario: Default conflict is skip
+
+- GIVEN a managed file changed outside Pegasus
+- WHEN sync runs without override
+- THEN it reports the conflict
+- AND it does not overwrite the file
+
+#### Scenario: Real write backs up files
+
+- GIVEN a managed file is safe to update
+- WHEN sync runs without `--dry-run`
+- THEN it writes a timestamped backup first
+- AND then updates the file
 
 ### Requirement: Workspace uninstall safety
 

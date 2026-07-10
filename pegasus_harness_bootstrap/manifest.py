@@ -39,6 +39,16 @@ MARKER_MANAGED_FILES = {
     Path(".github/copilot-instructions.md"),
 }
 
+SYNC_MANAGED_PREFIXES = (
+    Path(".github"),
+    Path(".cursor"),
+)
+
+SYNC_MANAGED_FILES = {
+    Path("AGENTS.md"),
+    Path(".vscode/mcp.json"),
+}
+
 
 def ownership_mode(rel_path: Path) -> str:
     """Return the ownership mode used by future uninstall planning."""
@@ -47,6 +57,78 @@ def ownership_mode(rel_path: Path) -> str:
 
 def checksum_text(content: str) -> str:
     return hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+
+def checksum_file(path: Path) -> str:
+    return checksum_text(path.read_text(encoding="utf-8").rstrip("\n"))
+
+
+def is_safe_sync_managed_path(rel_path: Path) -> bool:
+    clean = Path(rel_path.as_posix())
+    return clean in SYNC_MANAGED_FILES or any(clean == prefix or prefix in clean.parents for prefix in SYNC_MANAGED_PREFIXES)
+
+
+def manifest_file_records(manifest: dict[str, Any]) -> dict[Path, dict[str, Any]]:
+    install = manifest.get("install", {})
+    records = install.get("files", []) if isinstance(install, dict) else []
+    indexed: dict[Path, dict[str, Any]] = {}
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        raw_path = record.get("path")
+        if not isinstance(raw_path, str) or raw_path.startswith("/") or ".." in Path(raw_path).parts:
+            continue
+        if record.get("managed_by") != MANAGED_BY:
+            continue
+        indexed[Path(raw_path)] = record
+    return indexed
+
+
+def classify_manifest_path(target: Path, rel_path: Path, record: dict[str, Any] | None) -> str:
+    destination = target / rel_path
+    if record is None:
+        return "untouched" if destination.exists() else "create"
+    if not destination.exists():
+        return "create"
+    expected_checksum = record.get("checksum_sha256")
+    if not isinstance(expected_checksum, str):
+        return "conflict"
+    return "updateable" if checksum_file(destination) == expected_checksum else "conflict"
+
+
+def update_manifest_for_sync(
+    manifest: dict[str, Any],
+    *,
+    updated_records: list[dict[str, Any]],
+    overwritten_conflicts: list[Path],
+) -> dict[str, Any]:
+    now = dt.datetime.now(dt.timezone.utc).isoformat()
+    next_manifest = dict(manifest)
+    existing = manifest_file_records(manifest)
+    for record in updated_records:
+        raw_path = record.get("path")
+        if isinstance(raw_path, str):
+            existing[Path(raw_path)] = record
+
+    records = [existing[path] for path in sorted(existing)]
+    install = dict(next_manifest.get("install", {})) if isinstance(next_manifest.get("install"), dict) else {}
+    install["files"] = records
+    install["skipped_conflicts"] = []
+    next_manifest["install"] = install
+
+    ownership = dict(next_manifest.get("ownership", {})) if isinstance(next_manifest.get("ownership"), dict) else {}
+    ownership["mode"] = "manifest-backed"
+    ownership["marker"] = OWNERSHIP_MARKER
+    ownership["files"] = records
+    next_manifest["ownership"] = ownership
+
+    update = dict(next_manifest.get("update", {})) if isinstance(next_manifest.get("update"), dict) else {}
+    update["last_run_at"] = now
+    update["overwrite_conflicts"] = [path.as_posix() for path in overwritten_conflicts]
+    next_manifest["update"] = update
+
+    _assert_no_forbidden_pointers(next_manifest)
+    return next_manifest
 
 
 def render_workspace_content(content: str, rel_path: Path) -> str:
