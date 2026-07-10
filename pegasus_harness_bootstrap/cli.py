@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -94,6 +95,7 @@ class SyncPlanItem:
 class MemoryCleanupPlan:
     label: str
     command: list[str]
+    cwd: Path | None = None
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -159,6 +161,13 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         "--purge-memory",
         action="store_true",
         help="With workspace uninstall, delegate total Pegasus Memory purge to pegasus-memory-mcp.",
+    )
+    parser.add_argument(
+        "--memory-cli-command",
+        help=(
+            "Override memory cleanup delegation command. Pass an executable path/name or a .js entrypoint; "
+            ".js paths are invoked with node."
+        ),
     )
     parser.add_argument(
         "--sync-workspace",
@@ -338,34 +347,108 @@ def run_memory_mcp_command(command: list[str], cwd: Path) -> bool:
     return True
 
 
-def memory_cleanup_plan(project_name: str, *, reset_project: bool, purge: bool, dry_run: bool) -> MemoryCleanupPlan | None:
+def memory_cleanup_suffix(project_name: str, *, reset_project: bool, purge: bool, dry_run: bool) -> tuple[str, list[str]] | None:
     if reset_project:
-        command = [MEMORY_MCP_PACKAGE, "reset", "--project", project_name]
+        command = ["reset", "--project", project_name]
         command.append("--dry-run" if dry_run else "--yes")
-        return MemoryCleanupPlan("Pegasus Memory project reset", command)
+        return "Pegasus Memory project reset", command
     if purge:
-        command = [MEMORY_MCP_PACKAGE, "purge", "--all"]
+        command = ["purge", "--all"]
         command.append("--dry-run" if dry_run else "--yes-i-understand-this-deletes-data")
-        return MemoryCleanupPlan("Pegasus Memory total purge", command)
+        return "Pegasus Memory total purge", command
     return None
 
 
-def format_command(command: list[str]) -> str:
-    return " ".join(command)
+def command_from_memory_cli_override(memory_cli_command: str) -> list[str]:
+    candidate = Path(memory_cli_command).expanduser()
+    command_text = str(candidate) if candidate != Path(memory_cli_command) else memory_cli_command
+    if command_text.endswith(".js"):
+        return ["node", command_text]
+    return [command_text]
 
 
-def ensure_memory_cleanup_cli_available() -> None:
-    if shutil.which(MEMORY_MCP_PACKAGE) is None:
+def command_from_workspace_mcp_config(target: Path) -> tuple[list[str], Path | None] | None:
+    config_path = target / ".vscode" / "mcp.json"
+    if not config_path.exists():
+        return None
+    try:
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(config, dict):
+        return None
+    servers = config.get("servers")
+    if not isinstance(servers, dict):
+        return None
+    server = servers.get(MEMORY_MCP_PACKAGE)
+    if not isinstance(server, dict):
+        return None
+    raw_command = server.get("command")
+    raw_args = server.get("args", [])
+    raw_cwd = server.get("cwd")
+    if not isinstance(raw_command, str):
+        return None
+    if not isinstance(raw_args, list) or not all(isinstance(arg, str) for arg in raw_args):
+        return None
+    cwd = Path(raw_cwd).expanduser() if isinstance(raw_cwd, str) and raw_cwd else None
+
+    command_name = Path(raw_command).name
+    if command_name == "node" and raw_args and raw_args[0].endswith(".js"):
+        return [raw_command, raw_args[0]], cwd
+    if MEMORY_MCP_PACKAGE in command_name and not any(arg in {"stdio", "--stdio", "serve", "server"} for arg in raw_args):
+        return [raw_command, *raw_args], cwd
+    return None
+
+
+def resolve_memory_cleanup_base_command(target: Path, memory_cli_command: str | None) -> tuple[list[str], Path | None] | None:
+    if memory_cli_command:
+        return command_from_memory_cli_override(memory_cli_command), None
+    if shutil.which(MEMORY_MCP_PACKAGE) is not None:
+        return [MEMORY_MCP_PACKAGE], None
+    return command_from_workspace_mcp_config(target)
+
+
+def memory_cleanup_plan(
+    project_name: str,
+    *,
+    reset_project: bool,
+    purge: bool,
+    dry_run: bool,
+    target: Path,
+    memory_cli_command: str | None,
+) -> MemoryCleanupPlan | None:
+    cleanup = memory_cleanup_suffix(project_name, reset_project=reset_project, purge=purge, dry_run=dry_run)
+    if cleanup is None:
+        return None
+    label, suffix = cleanup
+    resolved = resolve_memory_cleanup_base_command(target, memory_cli_command)
+    if resolved is None:
         fail(
-            f"{MEMORY_MCP_PACKAGE} is required for requested memory cleanup; "
-            "install it or remove the memory cleanup flag. Pegasus IA will not delete memory data directly."
+            f"could not resolve {MEMORY_MCP_PACKAGE} for requested memory cleanup; install it on PATH, "
+            "pass --memory-cli-command, or keep a compatible target .vscode/mcp.json. "
+            "Pegasus IA will not delete memory data directly."
+        )
+    command, cwd = resolved
+    return MemoryCleanupPlan(label, [*command, *suffix], cwd)
+
+
+def format_command(command: list[str]) -> str:
+    return " ".join(shlex.quote(part) for part in command)
+
+
+def ensure_memory_cleanup_cli_available(plan: MemoryCleanupPlan) -> None:
+    if shutil.which(plan.command[0]) is None:
+        fail(
+            f"{MEMORY_MCP_PACKAGE} is required for requested memory cleanup; install it on PATH, "
+            "configure a compatible workspace .vscode/mcp.json, pass --memory-cli-command, or remove the "
+            "memory cleanup flag. Pegasus IA will not delete memory data directly."
         )
 
 
 def run_memory_cleanup(plan: MemoryCleanupPlan) -> None:
-    ensure_memory_cleanup_cli_available()
+    ensure_memory_cleanup_cli_available(plan)
     try:
-        subprocess.run(plan.command, check=True)
+        subprocess.run(plan.command, cwd=plan.cwd, check=True)
     except subprocess.CalledProcessError as exc:
         fail(f"memory cleanup command failed with exit code {exc.returncode}: {format_command(plan.command)}")
     except OSError as exc:
@@ -1042,6 +1125,8 @@ def print_uninstall_plan(
     if memory_cleanup is not None:
         print(f"\n{memory_cleanup.label} (delegated):")
         print(f"  Command: {format_command(memory_cleanup.command)}")
+        if memory_cleanup.cwd is not None:
+            print(f"  Cwd: {memory_cleanup.cwd}")
         print("  Note: Pegasus IA does not delete Pegasus Memory database, config, or cache paths directly.")
     if copilot_root is not None:
         print("\nGlobal VS Code/Copilot uninstall (--uninstall-copilot-global):")
@@ -1189,6 +1274,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.reset_memory_project and args.purge_memory:
         fail("--reset-memory-project and --purge-memory are mutually exclusive")
+    if args.memory_cli_command and not (args.reset_memory_project or args.purge_memory):
+        fail("--memory-cli-command can only be used with --reset-memory-project or --purge-memory")
     if (args.reset_memory_project or args.purge_memory) and not uninstall_workspace_requested:
         fail("memory cleanup flags can only be used with --uninstall or --uninstall-workspace")
 
@@ -1252,6 +1339,8 @@ def main(argv: list[str] | None = None) -> int:
                     reset_project=False,
                     purge=True,
                     dry_run=args.dry_run,
+                    target=target,
+                    memory_cli_command=args.memory_cli_command,
                 )
             else:
                 manifest = load_workspace_manifest(target)
@@ -1262,6 +1351,8 @@ def main(argv: list[str] | None = None) -> int:
                     reset_project=args.reset_memory_project,
                     purge=args.purge_memory,
                     dry_run=args.dry_run,
+                    target=target,
+                    memory_cli_command=args.memory_cli_command,
                 )
 
         copilot_root = None
@@ -1302,7 +1393,7 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         if memory_cleanup is not None:
-            ensure_memory_cleanup_cli_available()
+            ensure_memory_cleanup_cli_available(memory_cleanup)
 
         if uninstall_workspace_requested:
             if missing_workspace_manifest is not None:

@@ -101,7 +101,7 @@ case "$help_output" in
   *) printf 'expected help output to include uninstall lifecycle flags\n' >&2; exit 1 ;;
 esac
 case "$help_output" in
-  *"--uninstall"*"--reset-memory-project"*"--purge-memory"*) ;;
+  *"--uninstall"*"--reset-memory-project"*"--purge-memory"*"--memory-cli-command"*) ;;
   *) printf 'expected help output to include workspace uninstall and memory cleanup flags\n' >&2; exit 1 ;;
 esac
 case "$help_output" in
@@ -830,6 +830,71 @@ esac
 assert_file_contains "$missing_manifest_real_log" 'purge --all --yes-i-understand-this-deletes-data'
 assert_file_contains "$missing_manifest_real_target/user-file.txt" 'workspace user file'
 assert_file_contains "$missing_manifest_real_target/AGENTS.md" 'unowned agents'
+
+fake_node_bin="$TMP/fake-node-bin"
+mkdir -p "$fake_node_bin"
+cat > "$fake_node_bin/node" <<'SH'
+#!/bin/sh
+printf 'cwd=%s args=%s\n' "$PWD" "$*" >> "$PEGASUS_FAKE_NODE_LOG"
+SH
+chmod +x "$fake_node_bin/node"
+
+mcp_discovery_target="$TMP/mcp-discovery-target"
+mkdir -p "$mcp_discovery_target/.vscode" "$TMP/fake-memory-root/dist/bin"
+fake_memory_script="$TMP/fake-memory-root/dist/bin/pegasus-memory-mcp.js"
+printf '// fake memory cli\n' > "$fake_memory_script"
+cat > "$mcp_discovery_target/.vscode/mcp.json" <<JSON
+{
+  "servers": {
+    "pegasus-memory-mcp": {
+      "command": "node",
+      "cwd": "$TMP/fake-memory-root",
+      "args": ["$fake_memory_script"]
+    }
+  }
+}
+JSON
+mcp_discovery_dry_log="$TMP/mcp-discovery-dry.log"
+mcp_discovery_dry_output="$(PEGASUS_FAKE_NODE_LOG="$mcp_discovery_dry_log" PATH="$fake_node_bin" "$VENV/bin/python" "$CLI" --target-path "$mcp_discovery_target" --uninstall --purge-memory --dry-run)"
+case "$mcp_discovery_dry_output" in
+  *"Workspace uninstall skipped:"*"Pegasus Memory total purge (delegated):"*"Command: node $fake_memory_script purge --all --dry-run"*"Cwd: $TMP/fake-memory-root"*"Dry run only; no files were removed."*) ;;
+  *) printf 'expected mcp.json discovery dry-run to show resolved node command and cwd\n' >&2; exit 1 ;;
+esac
+[ ! -e "$mcp_discovery_dry_log" ] || { printf 'mcp.json discovery dry-run executed node\n' >&2; exit 1; }
+
+mcp_discovery_real_log="$TMP/mcp-discovery-real.log"
+mcp_discovery_real_output="$(PEGASUS_FAKE_NODE_LOG="$mcp_discovery_real_log" PATH="$fake_node_bin" "$VENV/bin/python" "$CLI" --target-path "$mcp_discovery_target" --uninstall --purge-memory)"
+case "$mcp_discovery_real_output" in
+  *"Skipped Pegasus workspace uninstall because the workspace manifest was not found."*"Completed delegated memory cleanup: node $fake_memory_script purge --all --yes-i-understand-this-deletes-data"*) ;;
+  *) printf 'expected mcp.json discovery real purge to execute resolved node command\n' >&2; exit 1 ;;
+esac
+assert_file_contains "$mcp_discovery_real_log" "cwd=$TMP/fake-memory-root args=$fake_memory_script purge --all --yes-i-understand-this-deletes-data"
+
+override_cli="$TMP/override-memory-cli"
+cat > "$override_cli" <<'SH'
+#!/bin/sh
+printf '%s\n' "$*" >> "$PEGASUS_OVERRIDE_MEMORY_LOG"
+SH
+chmod +x "$override_cli"
+override_target="$TMP/override-memory-target"
+printf 'yes\n' | "$PYTHON_BIN" "$CLI" --project-name override-memory --target-path "$override_target" >/dev/null
+override_log="$TMP/override-memory.log"
+override_output="$(PEGASUS_OVERRIDE_MEMORY_LOG="$override_log" PATH="/usr/bin:/bin" "$VENV/bin/python" "$CLI" --target-path "$override_target" --uninstall --reset-memory-project --memory-cli-command "$override_cli")"
+case "$override_output" in
+  *"Completed delegated memory cleanup: $override_cli reset --project override-memory --yes"*) ;;
+  *) printf 'expected explicit memory CLI override to run absolute command\n' >&2; exit 1 ;;
+esac
+assert_file_contains "$override_log" 'reset --project override-memory --yes'
+
+override_js_target="$TMP/override-js-memory-target"
+mkdir -p "$override_js_target"
+override_js="$TMP/override-memory.js"
+printf '// fake js entrypoint\n' > "$override_js"
+override_js_dry_output="$(PATH="$fake_node_bin" "$VENV/bin/python" "$CLI" --target-path "$override_js_target" --uninstall --purge-memory --memory-cli-command "$override_js" --dry-run)"
+case "$override_js_dry_output" in
+  *"Pegasus Memory total purge (delegated):"*"Command: node $override_js purge --all --dry-run"*) ;;
+  *) printf 'expected .js memory CLI override to be wrapped with node in dry-run\n' >&2; exit 1 ;;
+esac
 
 memory_reset_target="$TMP/memory-reset-uninstall-target"
 printf 'yes\n' | "$PYTHON_BIN" "$CLI" --project-name memory-reset-project --target-path "$memory_reset_target" >/dev/null
