@@ -752,12 +752,12 @@ def print_sync_plan(
     print("\nPreserved user artifacts:")
     for artifact in (
         "docs/pegasus/prd.md",
-        "proposal.md",
-        "spec.md",
-        "design.md",
-        "tasks.md",
-        "apply-progress.md",
-        "verify.md",
+        "docs/pegasus/proposal.md",
+        "docs/pegasus/spec.md",
+        "docs/pegasus/design.md",
+        "docs/pegasus/tasks.md",
+        "docs/pegasus/apply-progress.md",
+        "docs/pegasus/verify.md",
         "docs/pegasus/changes/**",
     ):
         print(f"  {target.root / artifact}")

@@ -363,8 +363,11 @@ assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "cal
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "call \`health\` before the first save"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Natural-language PRD intent"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "quiero armar un PRD para esta idea"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "If the idea lacks enough product detail, run one concise round of key product questions before drafting or finalizing the PRD."
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Tell the user the PRD file path (\`docs/pegasus/prd.md\`, or the full path when useful) and ask them to review it."
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Before editing or finalizing any PRD, identify open product/business decisions."
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "do not silently decide product scope"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'Run `git diff` only when the workspace has a `.git` directory'
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'If any required persistence call failed, say the PRD is file-only and include the reason.'
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Tell the user the PRD file path (\`docs/pegasus/prd.md\`, \`docs/pegasus/changes/<change-id>/prd.md\`, or the full path when useful) and ask them to review it."
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Wait for explicit user approval of the PRD before moving to proposal, spec, design, tasks, apply, or verify."
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "save PRD status, product decisions, questions/answers, and the artifact reference through MCP"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Do not implement code, create technical design, write tasks, or advance to proposal/spec/design/tasks/apply during PRD flow."
@@ -390,12 +393,18 @@ assert_file_contains "$target/.github/copilot-instructions.md" "call \`health\` 
 assert_file_contains "$target/.github/copilot-instructions.md" "proactively save durable decisions, bugfixes, discoveries/gotchas"
 assert_file_contains "$target/.github/copilot-instructions.md" "Keep consumer states distinct: \`not_found\`"
 assert_file_contains "$target/.github/copilot-instructions.md" "Natural-language PRD intent is enough to start PRD discovery."
+assert_file_contains "$target/.github/copilot-instructions.md" "never silently decide product scope"
+assert_file_contains "$target/.github/copilot-instructions.md" 'report whether `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation` succeeded'
+assert_file_contains "$target/.github/copilot-instructions.md" 'Run `git diff` only when the workspace has a `.git` directory'
 assert_file_contains "$target/.github/copilot-instructions.md" "wait for explicit PRD approval before proposal/spec/design/tasks/apply, and do not implement code during PRD flow"
 assert_file_contains "$target/.github/copilot-instructions.md" "ensure_project"
 assert_file_contains "$target/.github/copilot-instructions.md" "ensure_change"
 assert_file_contains "$target/.github/copilot-instructions.md" "project_not_found"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Natural-language product intent should trigger PRD discovery automatically."
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "tell the user the PRD file path and ask them to review it"
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "product decisions are open"
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'record_artifact`, and `record_observation` succeeded'
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'Run `git diff` only when the workspace has a `.git` directory'
 for memory_guided_agent in doc-designer sdd-proposal sdd-spec sdd-design sdd-tasks sdd-apply sdd-verify session-handoff memory-maintainer pegasus-orchestrator; do
   assert_file_contains "$target/.github/agents/$memory_guided_agent.agent.md" "pegasus-memory.instructions.md"
 done
@@ -643,8 +652,12 @@ manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
 PY
 sync_dry_output="$($PYTHON_BIN "$CLI" --target-path "$sync_target" --sync-workspace --dry-run)"
 case "$sync_dry_output" in
-  *"Pegasus workspace sync plan"*"Scope: current workspace only"*"Updates:"*"$sync_target/.vscode/mcp.json"*"Conflicts (skipped unless --overwrite-conflicts):"*"$sync_target/AGENTS.md"*"Obsolete managed files (report-only):"*"$sync_target/.cursor/rules/obsolete.mdc"*"Preserved user artifacts:"*"$sync_target/docs/pegasus/changes/**"*"Dry run only; no files were written."*) ;;
+  *"Pegasus workspace sync plan"*"Scope: current workspace only"*"Updates:"*"$sync_target/.vscode/mcp.json"*"Conflicts (skipped unless --overwrite-conflicts):"*"$sync_target/AGENTS.md"*"Obsolete managed files (report-only):"*"$sync_target/.cursor/rules/obsolete.mdc"*"Preserved user artifacts:"*"$sync_target/docs/pegasus/proposal.md"*"$sync_target/docs/pegasus/changes/**"*"Dry run only; no files were written."*) ;;
   *) printf 'expected workspace sync dry-run plan with updates, conflicts, obsolete files, and preserved artifacts\n' >&2; exit 1 ;;
+esac
+case "$sync_dry_output" in
+  *"Preserved user artifacts:"*"$sync_target/proposal.md"*) printf 'preserved artifacts should use docs/pegasus paths, not root proposal.md\n' >&2; exit 1 ;;
+  *) ;;
 esac
 sync_cwd_dry_output="$(cd "$sync_target" && "$PYTHON_BIN" "$CLI" --sync-workspace --dry-run)"
 case "$sync_cwd_dry_output" in
