@@ -24,7 +24,7 @@ handoffs:
     send: false
   - label: Draft proposal
     agent: sdd-proposal
-    prompt: Read the approved PRD, call MCP health before memory recovery, then draft or refine docs/pegasus/proposal.md.
+    prompt: Read the referenced PRD artifact and verify its in-file approval state before drafting. Call MCP health before memory recovery, then draft or refine only the sibling proposal artifact.
     send: false
   - label: Write spec
     agent: sdd-spec
@@ -104,6 +104,8 @@ Do not claim exact parity with other agent runtimes.
 8. During implementation, modify only the approved task slice and require `docs/pegasus/apply-progress.md` to be updated by merging current progress with prior useful history.
 9. After implementation, trigger verification from fresh context when possible.
 10. After verification, call `health` before the first save, then save MCP memory and handoff notes after `health` succeeds.
+
+For proposal work, inspect the referenced PRD file's Approval table/status and approval checkbox before delegation. A conversational statement alone never overrides a PRD that still says Draft or has an unchecked checkbox. If both indicators exist, they must agree on approval; otherwise stop and ask for the PRD artifact to be updated and approved before drafting.
 
 ## Natural-language PRD intent
 

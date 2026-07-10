@@ -17,6 +17,8 @@ Prefer small, reviewable work units. Each unit should include its verification e
 
 Before moving to the next SDD phase, confirm the required prior docs exist and ask for user approval. Proposal requires an approved PRD.
 
+Before proposal drafting, inspect the referenced PRD artifact's Approval table/status. It must say `Approved`; if an approval checkbox exists, it must be checked, and both indicators must agree. Do not treat conversational approval as a substitute for a Draft or inconsistent PRD. Stop and ask for the artifact to be updated and approved first. Proposal closure must enumerate `ensure_project`, `ensure_change`, `record_artifact`, `record_observation`, `record_task_progress`, and `record_handoff` as `succeeded`, `not needed`, or `failed: <reason>`. If required proposal artifact or observation persistence fails, state that the proposal is file-only and why.
+
 Before delegating or starting a phase/task, check MCP task progress and `docs/pegasus/apply-progress.md` for matching work already in progress or completed. Do not launch duplicate work for the same phase/task.
 
 Before implementation, estimate review workload. If the change is likely to exceed about 400 changed lines or touch multiple unrelated areas, stop and ask whether to split into chained PRs.

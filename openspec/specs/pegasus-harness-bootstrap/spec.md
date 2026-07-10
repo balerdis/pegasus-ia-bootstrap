@@ -335,7 +335,7 @@ The system MUST support global/user-level VS Code/Copilot asset installation onl
 
 ### Requirement: PRD and SDD document templates
 
-The system MUST create a PRD template and production-ready SDD templates under `docs/pegasus` or change-scoped `docs/pegasus/changes/<change-id>/` locations for proposal, spec, design, tasks, apply-progress, and verification, and Copilot prompts/instructions SHOULD reference those templates as the workflow source of truth. The guided SDD flow MUST be `request -> PRD -> proposal -> spec -> design -> tasks -> apply -> verify -> handoff`, and proposal work MUST require an approved PRD. PRD guidance MUST capture product discovery and explicit approval, while proposal guidance MUST stay proposal-only as a bridge from approved PRD to spec.
+The system MUST create a PRD template and production-ready SDD templates under `docs/pegasus` or change-scoped `docs/pegasus/changes/<change-id>/` locations for proposal, spec, design, tasks, apply-progress, and verification, and Copilot prompts/instructions SHOULD reference those templates as the workflow source of truth. The guided SDD flow MUST be `request -> PRD -> proposal -> spec -> design -> tasks -> apply -> verify -> handoff`, and proposal work MUST require an explicitly approved PRD artifact. PRD guidance MUST capture product discovery and explicit approval, while proposal guidance MUST stay proposal-only as a bridge from approved PRD to spec.
 
 #### Scenario: SDD templates available
 
@@ -349,6 +349,20 @@ The system MUST create a PRD template and production-ready SDD templates under `
 - GIVEN a future Copilot-guided project session
 - WHEN the user requests SDD proposal work
 - THEN the generated guidance requires the PRD artifact to exist and be approved first
+
+#### Scenario: Proposal validates in-file PRD approval
+
+- GIVEN a referenced PRD has an Approval table/status and an approval checkbox
+- WHEN proposal work is requested
+- THEN generated guidance reads the PRD artifact and requires `Approved` status plus a checked checkbox when both exist
+- AND it stops for a Draft, unchecked, or inconsistent artifact rather than accepting conversational approval
+
+#### Scenario: Proposal reports MCP persistence outcomes
+
+- GIVEN proposal work writes a proposal artifact after MCP health succeeds
+- WHEN the proposal phase closes
+- THEN generated guidance reports `ensure_project`, `ensure_change`, `record_artifact`, `record_observation`, `record_task_progress`, and `record_handoff` as `succeeded`, `not needed`, or `failed: <reason>`
+- AND it reports file-only status with the reason when required proposal artifact or observation persistence fails
 
 #### Scenario: PRD captures product discovery
 

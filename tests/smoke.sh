@@ -333,6 +333,9 @@ assert_file_contains "$target/.github/agents/doc-designer.agent.md" "PRD and dis
 assert_file_contains "$target/.github/agents/doc-designer.agent.md" "Do not write technical design"
 assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "Proposal-only contract"
 assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "Stop before spec, design, and tasks"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "Conversational approval does not override a PRD that still says Draft"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "record_task_progress"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "record_handoff"
 assert_file_contains "$target/docs/pegasus/prd.md" "Current Situation / Gap"
 assert_file_contains "$target/docs/pegasus/prd.md" "Approval Owner"
 assert_file_contains "$target/docs/pegasus/proposal.md" "PRD Source / Status"
@@ -376,6 +379,7 @@ assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'cal
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'Do not send nested `metadata`, arrays, decisions, questions/answers, or artifact summaries to `ensure_change`'
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Tell the user the PRD file path (\`docs/pegasus/prd.md\`, \`docs/pegasus/changes/<change-id>/prd.md\`, or the full path when useful) and ask them to review it."
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Wait for explicit user approval of the PRD before moving to proposal, spec, design, tasks, apply, or verify."
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "A conversational statement alone never overrides a PRD that still says Draft"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'save those details afterward with `record_observation` or `record_artifact`'
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Do not implement code, create technical design, write tasks, or advance to proposal/spec/design/tasks/apply during PRD flow."
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "ensure_project"
@@ -409,10 +413,12 @@ assert_file_contains "$target/.github/copilot-instructions.md" 'using only `proj
 assert_file_contains "$target/.github/copilot-instructions.md" 'before any git command first check for `.git` and never run `git diff`, `git status`, or other git validation in non-git workspaces; do not try git first and fall back'
 assert_file_contains "$target/.github/copilot-instructions.md" 'must not reset, delete, recreate, or overwrite the Pegasus Memory database'
 assert_file_contains "$target/.github/copilot-instructions.md" "wait for explicit PRD approval before proposal/spec/design/tasks/apply, and do not implement code during PRD flow"
+assert_file_contains "$target/.github/copilot-instructions.md" "Before proposal, inspect the referenced PRD file rather than relying on conversational approval."
 assert_file_contains "$target/.github/copilot-instructions.md" "ensure_project"
 assert_file_contains "$target/.github/copilot-instructions.md" "ensure_change"
 assert_file_contains "$target/.github/copilot-instructions.md" "project_not_found"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Natural-language product intent should trigger PRD discovery automatically."
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Before proposal drafting, inspect the referenced PRD artifact's Approval table/status."
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "tell the user the PRD file path and ask them to review it"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "product decisions are open"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'record_artifact`, and `record_observation` as `succeeded`, `not needed`, or `failed: <reason>`'
@@ -582,6 +588,7 @@ assert_file_contains "$target/.github/copilot-instructions.md" 'before any git c
 assert_file_contains "$target/.github/copilot-instructions.md" 'include a small MCP persistence summary marking `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation` as `succeeded`, `not needed`, or `failed: <reason>`'
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'before any git command first check for `.git` and never run `git diff`, `git status`, or other git validation in non-git workspaces'
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'For PRD closure, include a small MCP persistence summary with one line each for `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation`'
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'For proposal closure, also include one status line each for `ensure_project`, `ensure_change`, `record_artifact`, `record_observation`, `record_task_progress`, and `record_handoff`'
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'do not mention git validation as attempted'
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'The only acceptable database mutation is an explicit Pegasus Memory schema migration performed by Pegasus Memory itself'
 assert_file_contains "$target/.github/prompts/sdd-phases.prompt.md" "approved PRD and approved proposal"
