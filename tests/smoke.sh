@@ -365,8 +365,9 @@ assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Nat
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "quiero armar un PRD para esta idea"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Before editing or finalizing any PRD, identify open product/business decisions."
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "do not silently decide product scope"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'Run `git diff` only when the workspace has a `.git` directory'
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'If any required persistence call failed, say the PRD is file-only and include the reason.'
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'Before invoking any git command, first check whether the workspace root contains a `.git` directory.'
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'If `.git` is absent, never attempt `git diff`, `git status`, `git log`, or any other git validation; do not try and fall back.'
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'include a small MCP persistence summary with one line each for `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation`'
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Tell the user the PRD file path (\`docs/pegasus/prd.md\`, \`docs/pegasus/changes/<change-id>/prd.md\`, or the full path when useful) and ask them to review it."
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Wait for explicit user approval of the PRD before moving to proposal, spec, design, tasks, apply, or verify."
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "save PRD status, product decisions, questions/answers, and the artifact reference through MCP"
@@ -394,8 +395,9 @@ assert_file_contains "$target/.github/copilot-instructions.md" "proactively save
 assert_file_contains "$target/.github/copilot-instructions.md" "Keep consumer states distinct: \`not_found\`"
 assert_file_contains "$target/.github/copilot-instructions.md" "Natural-language PRD intent is enough to start PRD discovery."
 assert_file_contains "$target/.github/copilot-instructions.md" "never silently decide product scope"
-assert_file_contains "$target/.github/copilot-instructions.md" 'report whether `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation` succeeded'
-assert_file_contains "$target/.github/copilot-instructions.md" 'Run `git diff` only when the workspace has a `.git` directory'
+assert_file_contains "$target/.github/copilot-instructions.md" 'include a small MCP persistence summary marking `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation` as `succeeded`, `not needed`, or `failed: <reason>`'
+assert_file_contains "$target/.github/copilot-instructions.md" 'before any git command first check for `.git` and never run `git diff`, `git status`, or other git validation in non-git workspaces; do not try git first and fall back'
+assert_file_contains "$target/.github/copilot-instructions.md" 'must not reset, delete, recreate, or overwrite the Pegasus Memory database'
 assert_file_contains "$target/.github/copilot-instructions.md" "wait for explicit PRD approval before proposal/spec/design/tasks/apply, and do not implement code during PRD flow"
 assert_file_contains "$target/.github/copilot-instructions.md" "ensure_project"
 assert_file_contains "$target/.github/copilot-instructions.md" "ensure_change"
@@ -403,8 +405,11 @@ assert_file_contains "$target/.github/copilot-instructions.md" "project_not_foun
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Natural-language product intent should trigger PRD discovery automatically."
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "tell the user the PRD file path and ask them to review it"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "product decisions are open"
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'record_artifact`, and `record_observation` succeeded'
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'Run `git diff` only when the workspace has a `.git` directory'
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'record_artifact`, and `record_observation` as `succeeded`, `not needed`, or `failed: <reason>`'
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'before any git command first check for `.git` and never run `git diff`, `git status`, or other git validation in non-git workspaces; do not try git first and fall back'
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'The only allowed database mutation is an explicit Pegasus Memory schema migration performed by Pegasus Memory itself'
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'must not reset, delete, recreate, or overwrite the Pegasus Memory database'
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'Clean test memory must be created as explicit test setup, never as a sync side effect.'
 for memory_guided_agent in doc-designer sdd-proposal sdd-spec sdd-design sdd-tasks sdd-apply sdd-verify session-handoff memory-maintainer pegasus-orchestrator; do
   assert_file_contains "$target/.github/agents/$memory_guided_agent.agent.md" "pegasus-memory.instructions.md"
 done
@@ -558,6 +563,16 @@ assert_file_contains "$target/docs/pegasus/verify.md" "## Changed Files Reviewed
 assert_file_contains "$target/docs/pegasus/verify.md" "## Test Coverage / Manual Checks"
 assert_file_contains "$target/docs/pegasus/verify.md" "## Final Verdict"
 assert_file_contains "$target/docs/pegasus/verify.md" "Merge-not-overwrite instructions"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'Before invoking any git command, first check whether the workspace root contains a `.git` directory.'
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'If `.git` is absent, never attempt `git diff`, `git status`, `git log`, or any other git validation; do not try and fall back.'
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'include a small MCP persistence summary with one line each for `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation`'
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'marking every call as `succeeded`, `not needed`, or `failed: <reason>`'
+assert_file_contains "$target/.github/copilot-instructions.md" 'before any git command first check for `.git` and never run `git diff`, `git status`, or other git validation in non-git workspaces'
+assert_file_contains "$target/.github/copilot-instructions.md" 'include a small MCP persistence summary marking `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation` as `succeeded`, `not needed`, or `failed: <reason>`'
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'before any git command first check for `.git` and never run `git diff`, `git status`, or other git validation in non-git workspaces'
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'For PRD closure, include a small MCP persistence summary with one line each for `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation`'
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'do not mention git validation as attempted'
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'The only acceptable database mutation is an explicit Pegasus Memory schema migration performed by Pegasus Memory itself'
 assert_file_contains "$target/.github/prompts/sdd-phases.prompt.md" "approved PRD and approved proposal"
 assert_file_contains "$target/.github/prompts/sdd-phases.prompt.md" "Apply may record preliminary notes/evidence, but it does not replace the verify phase"
 assert_file_contains "$target/.github/prompts/sdd-phases.prompt.md" "Do not make unrelated implementation changes during verify"
@@ -693,6 +708,15 @@ assert_file_contains "$sync_target/proposal.md" 'root proposal'
 assert_file_contains "$sync_target/docs/pegasus/changes/change-a/spec.md" 'change spec'
 assert_file_contains "$sync_target/.github/agents/user.agent.md" 'user agent'
 assert_file_contains "$sync_target/.cursor/rules/obsolete.mdc" 'obsolete managed'
+memory_home="$TMP/memory-home"
+mkdir -p "$memory_home/.local/share/pegasus-memory-mcp"
+printf 'existing memory db\n' > "$memory_home/.local/share/pegasus-memory-mcp/memory.db"
+sync_memory_home_output="$(HOME="$memory_home" "$PYTHON_BIN" "$CLI" --target-path "$sync_target" --sync-workspace)"
+case "$sync_memory_home_output" in
+  *"Pegasus workspace sync plan"*"Completed Pegasus workspace sync."*) ;;
+  *) printf 'expected workspace sync with external memory HOME to succeed\n' >&2; exit 1 ;;
+esac
+assert_file_contains "$memory_home/.local/share/pegasus-memory-mcp/memory.db" 'existing memory db'
 "$PYTHON_BIN" - "$sync_target/.vscode/mcp.json" "$PEGASUS_MEMORY_MCP_ROOT" <<'PY'
 import json
 import sys

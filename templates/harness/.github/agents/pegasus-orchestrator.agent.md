@@ -115,11 +115,11 @@ For natural PRD intent:
 2. If `health` succeeds, recover/search existing MCP context relevant to the idea.
 3. Before editing or finalizing any PRD, identify open product/business decisions. If any decision is open, stop and ask one concise round of key product questions first; do not silently decide product scope. Focus only on users, problem, desired outcome, scope boundaries, constraints, success criteria, and approval owner.
 4. Draft or refine `docs/pegasus/prd.md` or `docs/pegasus/changes/<change-id>/prd.md` only after the current product decisions are answered or explicitly marked as assumptions.
-5. Validate the PRD artifact directly by reading it back. Run `git diff` only when the workspace has a `.git` directory; in non-git workspaces, do not run git validation and rely on direct artifact inspection.
+5. Validate the PRD artifact directly by reading it back. Before invoking any git command, first check whether the workspace root contains a `.git` directory. If `.git` is absent, never attempt `git diff`, `git status`, `git log`, or any other git validation; do not try and fall back. In non-git workspaces, validate only by reading the artifact directly and do not mention git validation as attempted.
 6. Tell the user the PRD file path (`docs/pegasus/prd.md`, `docs/pegasus/changes/<change-id>/prd.md`, or the full path when useful) and ask them to review it.
 7. Wait for explicit user approval of the PRD before moving to proposal, spec, design, tasks, apply, or verify.
 8. After `health` succeeds, ensure the project exists when recovery reports `project_not_found`; for a new change PRD under `docs/pegasus/changes/<change-id>/prd.md`, call `ensure_change`, then save PRD status, product decisions, questions/answers, and the artifact reference through MCP.
-9. In the PRD closure report, state whether `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation` succeeded, were not needed, or failed. If any required persistence call failed, say the PRD is file-only and include the reason.
+9. In the PRD closure report, include a small MCP persistence summary with one line each for `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation`, marking every call as `succeeded`, `not needed`, or `failed: <reason>`. If any required artifact or observation persistence failed, say the PRD is file-only and include the reason.
 10. Do not implement code, create technical design, write tasks, or advance to proposal/spec/design/tasks/apply during PRD flow.
 
 ## Phase gates
@@ -151,11 +151,11 @@ When updating apply-progress, MCP memory, verification, or handoff records, merg
 
 ## Memory state
 
-Call MCP `health` before the first recovery or save. If healthy, recover context at session start; when recovery reports `project_not_found`, call `ensure_project` before any write; when creating a change, call `ensure_change` before change-scoped artifact or observation writes. Then save decisions, discoveries, bugfixes, config changes, user constraints, artifact status, task progress, verification evidence, and handoff/session summaries through MCP. If unavailable, show the exact warning and continue only with project artifacts; never expose MCP recovery mechanics as user-facing requirements.
+Call MCP `health` before the first recovery or save. If healthy, recover context at session start; when recovery reports `project_not_found`, call `ensure_project` before any write; when creating a change, call `ensure_change` before change-scoped artifact or observation writes. Then save decisions, discoveries, bugfixes, config changes, user constraints, artifact status, task progress, verification evidence, and handoff/session summaries through MCP. If unavailable, show the exact warning and continue only with project artifacts; never expose MCP recovery mechanics as user-facing requirements. Pegasus IA upgrade/sync may update generated harness configuration, prompts, agents, and Pegasus Memory binary/config references, but it must not reset, delete, recreate, or overwrite the Pegasus Memory database. The only acceptable database mutation is an explicit Pegasus Memory schema migration performed by Pegasus Memory itself when that component detects or ships a newer schema version; clean test memory must be explicit test setup, never a sync side effect.
 
 ## Verification context
 
-Verification should be performed from fresh context when possible. Before judging completion, the verifier re-reads the PRD, proposal, spec, design, tasks, apply-progress, verify log, and changed files. Run `git diff` only when the workspace has a `.git` directory; in non-git workspaces, validate changed artifacts by reading them directly. This is an operational rule for reliable review; it is not a runtime guarantee.
+Verification should be performed from fresh context when possible. Before judging completion, the verifier re-reads the PRD, proposal, spec, design, tasks, apply-progress, verify log, and changed files. Before invoking any git command, first check whether the workspace root contains a `.git` directory. If `.git` is absent, never attempt `git diff`, `git status`, `git log`, or any other git validation; validate changed artifacts by reading them directly. This is an operational rule for reliable review; it is not a runtime guarantee.
 
 ## Model preference
 

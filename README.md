@@ -83,7 +83,7 @@ El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no
 
 Generated guidance requires agents to call MCP `health` before the first recovery or save and use `health.capabilities.parent_bootstrap` when available. If recovery returns `not_found` with `project_not_found`, agents call `ensure_project` before recording observations, artifacts, task progress, or handoffs. When creating a new change/PRD under `docs/pegasus/changes/<change-id>/`, agents call `ensure_change` before `record_artifact` or change-scoped observations. If MCP is unavailable, agents must not claim persistent-memory saves succeeded and must not fall back to `docs/pegasus/memory/`.
 
-Pegasus Memory MCP stores its database at `~/.local/share/pegasus-memory-mcp/memory.db` by default. If local install/build fails after `npm ci` and `npm config get ignore-scripts` returns `true`, rebuild the native SQLite dependency with:
+Pegasus Memory MCP stores its database at `~/.local/share/pegasus-memory-mcp/memory.db` by default. Workspace sync may update the generated `.vscode/mcp.json` and Pegasus Memory binary/config references when manifest checksums prove it is safe, but it does not delete, recreate, reset, or overwrite the MCP database. Only Pegasus Memory itself may mutate that database for an explicit schema migration when it detects or ships a newer schema version. If local install/build fails after `npm ci` and `npm config get ignore-scripts` returns `true`, rebuild the native SQLite dependency with:
 
 ```sh
 npm_config_ignore_scripts=false npm rebuild better-sqlite3 --foreground-scripts
