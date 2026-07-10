@@ -90,6 +90,12 @@ class SyncPlanItem:
     reason: str = ""
 
 
+@dataclass(frozen=True)
+class MemoryCleanupPlan:
+    label: str
+    command: list[str]
+
+
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="pegasus-harness-bootstrap",
@@ -135,9 +141,24 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="Plan the default Pegasus Memory MCP workspace stdio setup explicitly.",
     )
     parser.add_argument(
+        "--uninstall",
+        action="store_true",
+        help="Alias for --uninstall-workspace; remove Pegasus-managed workspace files recorded in the manifest.",
+    )
+    parser.add_argument(
         "--uninstall-workspace",
         action="store_true",
         help="Remove Pegasus-managed workspace files recorded in the manifest.",
+    )
+    parser.add_argument(
+        "--reset-memory-project",
+        action="store_true",
+        help="With workspace uninstall, delegate project memory reset to pegasus-memory-mcp.",
+    )
+    parser.add_argument(
+        "--purge-memory",
+        action="store_true",
+        help="With workspace uninstall, delegate total Pegasus Memory purge to pegasus-memory-mcp.",
     )
     parser.add_argument(
         "--sync-workspace",
@@ -315,6 +336,40 @@ def run_memory_mcp_command(command: list[str], cwd: Path) -> bool:
     except (OSError, subprocess.CalledProcessError):
         return False
     return True
+
+
+def memory_cleanup_plan(project_name: str, *, reset_project: bool, purge: bool, dry_run: bool) -> MemoryCleanupPlan | None:
+    if reset_project:
+        command = [MEMORY_MCP_PACKAGE, "reset", "--project", project_name]
+        command.append("--dry-run" if dry_run else "--yes")
+        return MemoryCleanupPlan("Pegasus Memory project reset", command)
+    if purge:
+        command = [MEMORY_MCP_PACKAGE, "purge", "--all"]
+        command.append("--dry-run" if dry_run else "--yes-i-understand-this-deletes-data")
+        return MemoryCleanupPlan("Pegasus Memory total purge", command)
+    return None
+
+
+def format_command(command: list[str]) -> str:
+    return " ".join(command)
+
+
+def ensure_memory_cleanup_cli_available() -> None:
+    if shutil.which(MEMORY_MCP_PACKAGE) is None:
+        fail(
+            f"{MEMORY_MCP_PACKAGE} is required for requested memory cleanup; "
+            "install it or remove the memory cleanup flag. Pegasus IA will not delete memory data directly."
+        )
+
+
+def run_memory_cleanup(plan: MemoryCleanupPlan) -> None:
+    ensure_memory_cleanup_cli_available()
+    try:
+        subprocess.run(plan.command, check=True)
+    except subprocess.CalledProcessError as exc:
+        fail(f"memory cleanup command failed with exit code {exc.returncode}: {format_command(plan.command)}")
+    except OSError as exc:
+        fail(f"memory cleanup command could not be executed: {exc}")
 
 
 def install_memory_mcp(default_root: Path) -> bool:
@@ -876,6 +931,12 @@ def workspace_uninstall_files(manifest: dict) -> list[tuple[Path, str]]:
     return sorted(set(files), key=lambda item: item[0].as_posix())
 
 
+def is_workspace_user_artifact(rel_path: Path) -> bool:
+    clean = Path(rel_path.as_posix())
+    docs_root = Path("docs/pegasus")
+    return clean == docs_root or docs_root in clean.parents
+
+
 def marker_block_bounds(text: str, rel_path: Path) -> tuple[int, int] | None:
     start = f"<!-- {OWNERSHIP_MARKER}:start path={rel_path.as_posix()}"
     end = f"<!-- {OWNERSHIP_MARKER}:end path={rel_path.as_posix()} -->"
@@ -910,6 +971,9 @@ def plan_workspace_uninstall(target: Path, manifest: dict) -> tuple[list[Path], 
         path = target / rel_path
         if not path.exists() or not path.is_file():
             continue
+        if is_workspace_user_artifact(rel_path):
+            preserve_files.append(path)
+            continue
         text = path.read_text(encoding="utf-8")
         stripped = remove_marker_block(text, rel_path)
         if stripped is None:
@@ -941,6 +1005,7 @@ def print_uninstall_plan(
     workspace_updates: list[Path],
     workspace_preserves: list[Path],
     workspace_dirs: list[Path],
+    memory_cleanup: MemoryCleanupPlan | None = None,
     copilot_root: Path | None = None,
     copilot_settings_path: Path | None = None,
     copilot_asset_removes: list[Path] | None = None,
@@ -958,13 +1023,17 @@ def print_uninstall_plan(
         for path in workspace_updates:
             print(f"  {path}")
     if workspace_preserves:
-        print("\nWorkspace files preserved (no Pegasus marker found):")
+        print("\nWorkspace files preserved (user artifacts or no Pegasus marker found):")
         for path in workspace_preserves:
             print(f"  {path}")
     if workspace_dirs:
         print("\nEmpty workspace directories to remove when possible:")
         for path in workspace_dirs:
             print(f"  {path}")
+    if memory_cleanup is not None:
+        print(f"\n{memory_cleanup.label} (delegated):")
+        print(f"  Command: {format_command(memory_cleanup.command)}")
+        print("  Note: Pegasus IA does not delete Pegasus Memory database, config, or cache paths directly.")
     if copilot_root is not None:
         print("\nGlobal VS Code/Copilot uninstall (--uninstall-copilot-global):")
         print(f"  Pegasus-managed root: {copilot_root}")
@@ -1107,7 +1176,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.overwrite_conflicts and not args.sync_workspace:
         fail("--overwrite-conflicts can only be used with --sync-workspace")
 
-    if args.project_name is None and not (args.sync_workspace or args.uninstall_workspace or args.uninstall_copilot_global):
+    uninstall_workspace_requested = args.uninstall or args.uninstall_workspace
+
+    if args.reset_memory_project and args.purge_memory:
+        fail("--reset-memory-project and --purge-memory are mutually exclusive")
+    if (args.reset_memory_project or args.purge_memory) and not uninstall_workspace_requested:
+        fail("memory cleanup flags can only be used with --uninstall or --uninstall-workspace")
+
+    if args.project_name is None and not (args.sync_workspace or uninstall_workspace_requested or args.uninstall_copilot_global):
         fail("--project-name is required unless --sync-workspace, --new-change, or an uninstall flag is used")
 
     if args.sync_workspace:
@@ -1151,14 +1227,22 @@ def main(argv: list[str] | None = None) -> int:
 
     target = target_path_for(args.project_name, args.target_path)
 
-    if args.uninstall_workspace or args.uninstall_copilot_global:
+    if uninstall_workspace_requested or args.uninstall_copilot_global:
         workspace_removes: list[Path] = []
         workspace_updates: list[Path] = []
         workspace_preserves: list[Path] = []
         workspace_dirs: list[Path] = []
-        if args.uninstall_workspace:
+        memory_cleanup = None
+        if uninstall_workspace_requested:
             manifest = load_workspace_manifest(target)
+            workspace_target = workspace_target_from_manifest(target, manifest)
             workspace_removes, workspace_updates, workspace_preserves, workspace_dirs = plan_workspace_uninstall(target, manifest)
+            memory_cleanup = memory_cleanup_plan(
+                workspace_target.project_name,
+                reset_project=args.reset_memory_project,
+                purge=args.purge_memory,
+                dry_run=args.dry_run,
+            )
 
         copilot_root = None
         copilot_settings = None
@@ -1184,6 +1268,7 @@ def main(argv: list[str] | None = None) -> int:
             workspace_updates,
             workspace_preserves,
             workspace_dirs,
+            memory_cleanup,
             copilot_root,
             copilot_settings,
             copilot_asset_removes,
@@ -1195,7 +1280,10 @@ def main(argv: list[str] | None = None) -> int:
             print("\nDry run only; no files were removed.")
             return 0
 
-        if args.uninstall_workspace:
+        if memory_cleanup is not None:
+            ensure_memory_cleanup_cli_available()
+
+        if uninstall_workspace_requested:
             removed_dirs, preserved_dirs = apply_workspace_uninstall(
                 target,
                 workspace_removes,
@@ -1207,6 +1295,10 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Removed empty directory: {directory}")
             for directory in preserved_dirs:
                 print(f"Preserved non-empty directory: {directory}")
+
+        if memory_cleanup is not None:
+            run_memory_cleanup(memory_cleanup)
+            print(f"Completed delegated memory cleanup: {format_command(memory_cleanup.command)}")
 
         if args.uninstall_copilot_global:
             assert copilot_settings is not None

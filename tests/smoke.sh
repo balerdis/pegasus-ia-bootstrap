@@ -101,6 +101,10 @@ case "$help_output" in
   *) printf 'expected help output to include uninstall lifecycle flags\n' >&2; exit 1 ;;
 esac
 case "$help_output" in
+  *"--uninstall"*"--reset-memory-project"*"--purge-memory"*) ;;
+  *) printf 'expected help output to include workspace uninstall and memory cleanup flags\n' >&2; exit 1 ;;
+esac
+case "$help_output" in
   *"--new-change"*) ;;
   *) printf 'expected help output to include new-change lifecycle flag\n' >&2; exit 1 ;;
 esac
@@ -777,8 +781,60 @@ esac
 [ ! -e "$uninstall_target/AGENTS.md" ] || { printf 'workspace uninstall preserved managed AGENTS.md\n' >&2; exit 1; }
 [ ! -e "$uninstall_target/.github/copilot-instructions.md" ] || { printf 'workspace uninstall preserved managed Copilot instructions\n' >&2; exit 1; }
 [ ! -e "$uninstall_target/.pegasus-bootstrap-ia/manifest.json" ] || { printf 'workspace uninstall preserved manifest\n' >&2; exit 1; }
+[ -f "$uninstall_target/docs/pegasus/prd.md" ] || { printf 'workspace uninstall removed generated PRD artifact\n' >&2; exit 1; }
+[ -f "$uninstall_target/docs/pegasus/proposal.md" ] || { printf 'workspace uninstall removed generated proposal artifact\n' >&2; exit 1; }
 [ -f "$uninstall_target/docs/pegasus/user-note.md" ] || { printf 'workspace uninstall removed user docs file\n' >&2; exit 1; }
 [ -f "$uninstall_target/.github/agents/user.agent.md" ] || { printf 'workspace uninstall removed user agent file\n' >&2; exit 1; }
+
+fake_bin="$TMP/fake-bin"
+mkdir -p "$fake_bin"
+cat > "$fake_bin/pegasus-memory-mcp" <<'SH'
+#!/usr/bin/env sh
+printf '%s\n' "$*" >> "$PEGASUS_FAKE_MEMORY_LOG"
+SH
+chmod +x "$fake_bin/pegasus-memory-mcp"
+
+memory_dry_target="$TMP/memory-dry-uninstall-target"
+printf 'yes\n' | "$PYTHON_BIN" "$CLI" --project-name memory-dry-project --target-path "$memory_dry_target" >/dev/null
+memory_dry_log="$TMP/memory-dry.log"
+memory_dry_output="$(PEGASUS_FAKE_MEMORY_LOG="$memory_dry_log" PATH="$fake_bin:$PATH" "$PYTHON_BIN" "$CLI" --target-path "$memory_dry_target" --uninstall --purge-memory --dry-run)"
+case "$memory_dry_output" in
+  *"Pegasus Memory total purge (delegated):"*"Command: pegasus-memory-mcp purge --all --dry-run"*"Dry run only; no files were removed."*) ;;
+  *) printf 'expected uninstall memory purge dry-run delegated command plan\n' >&2; exit 1 ;;
+esac
+[ -f "$memory_dry_target/AGENTS.md" ] || { printf 'memory cleanup dry-run removed workspace file\n' >&2; exit 1; }
+[ ! -e "$memory_dry_log" ] || { printf 'memory cleanup dry-run executed external CLI\n' >&2; exit 1; }
+
+memory_reset_target="$TMP/memory-reset-uninstall-target"
+printf 'yes\n' | "$PYTHON_BIN" "$CLI" --project-name memory-reset-project --target-path "$memory_reset_target" >/dev/null
+memory_reset_home="$TMP/memory-reset-home"
+mkdir -p "$memory_reset_home/.local/share/pegasus-memory-mcp"
+printf 'existing memory db\n' > "$memory_reset_home/.local/share/pegasus-memory-mcp/memory.db"
+memory_reset_log="$TMP/memory-reset.log"
+memory_reset_output="$(HOME="$memory_reset_home" PEGASUS_FAKE_MEMORY_LOG="$memory_reset_log" PATH="$fake_bin:$PATH" "$PYTHON_BIN" "$CLI" --target-path "$memory_reset_target" --uninstall --reset-memory-project)"
+case "$memory_reset_output" in
+  *"Completed Pegasus workspace uninstall."*"Completed delegated memory cleanup: pegasus-memory-mcp reset --project memory-reset-project --yes"*) ;;
+  *) printf 'expected workspace uninstall with delegated project memory reset\n' >&2; exit 1 ;;
+esac
+assert_file_contains "$memory_reset_log" 'reset --project memory-reset-project --yes'
+assert_file_contains "$memory_reset_home/.local/share/pegasus-memory-mcp/memory.db" 'existing memory db'
+
+if "$PYTHON_BIN" "$CLI" --target-path "$memory_dry_target" --uninstall --reset-memory-project --purge-memory --dry-run >/dev/null 2>&1; then
+  printf 'expected reset and purge memory flags to be mutually exclusive\n' >&2
+  exit 1
+fi
+
+memory_missing_target="$TMP/memory-missing-cli-target"
+printf 'yes\n' | "$PYTHON_BIN" "$CLI" --project-name memory-missing-cli --target-path "$memory_missing_target" >/dev/null
+if memory_missing_output="$(PATH="/nonexistent" "$VENV/bin/python" "$CLI" --target-path "$memory_missing_target" --uninstall --reset-memory-project 2>&1)"; then
+  printf 'expected requested memory cleanup to require pegasus-memory-mcp CLI\n' >&2
+  exit 1
+fi
+case "$memory_missing_output" in
+  *"pegasus-memory-mcp is required for requested memory cleanup"*) ;;
+  *) printf 'expected clear missing pegasus-memory-mcp error\n' >&2; exit 1 ;;
+esac
+[ -f "$memory_missing_target/AGENTS.md" ] || { printf 'missing memory CLI failure removed workspace file\n' >&2; exit 1; }
 
 uninstall_global_home="$TMP/uninstall-global-home"
 uninstall_global_xdg="$TMP/uninstall-global-xdg"

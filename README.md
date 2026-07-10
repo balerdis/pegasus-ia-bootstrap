@@ -89,6 +89,26 @@ Pegasus Memory MCP stores its database at `~/.local/share/pegasus-memory-mcp/mem
 npm_config_ignore_scripts=false npm rebuild better-sqlite3 --foreground-scripts
 ```
 
+## Safe uninstall and memory cleanup
+
+Use workspace uninstall to remove only Pegasus-managed harness assets recorded in the install manifest:
+
+```sh
+pegasus-harness-bootstrap --uninstall --target-path /path/to/workspace --dry-run
+pegasus-harness-bootstrap --uninstall --target-path /path/to/workspace
+```
+
+The uninstall preserves `docs/pegasus/**` artifacts such as PRDs, proposals, specs, designs, tasks, apply notes, verification notes, and change folders. It also preserves user-created files that are not manifest-owned or do not carry Pegasus ownership markers.
+
+Memory cleanup is explicit and delegated to the official Pegasus Memory CLI; plain uninstall never deletes Pegasus Memory data:
+
+```sh
+pegasus-harness-bootstrap --uninstall --target-path /path/to/workspace --reset-memory-project
+pegasus-harness-bootstrap --uninstall --target-path /path/to/workspace --purge-memory
+```
+
+`--reset-memory-project` runs `pegasus-memory-mcp reset --project <project-name> --yes`; `--purge-memory` runs `pegasus-memory-mcp purge --all --yes-i-understand-this-deletes-data`. With `--dry-run`, Pegasus IA prints the delegated command with `--dry-run` and does not call the external CLI. The two memory flags are mutually exclusive. If `pegasus-memory-mcp` is unavailable for a real cleanup request, Pegasus IA fails clearly and does not delete memory paths directly.
+
 ## Optional global VS Code/Copilot install
 
 Global/user-level Copilot setup is opt-in and never runs by default:
