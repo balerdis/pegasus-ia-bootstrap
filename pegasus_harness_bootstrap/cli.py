@@ -654,6 +654,17 @@ def workspace_target_for(project_name: str, target: Path) -> WorkspaceTarget:
     return WorkspaceTarget(project_name=project_name, root=target)
 
 
+def workspace_target_from_manifest(target: Path, manifest: dict) -> WorkspaceTarget:
+    workspace = manifest.get("workspace")
+    if not isinstance(workspace, dict):
+        fail(f"workspace manifest is missing workspace metadata: {target / MANIFEST_RELATIVE_PATH}")
+    project_name = workspace.get("project_name")
+    if not isinstance(project_name, str):
+        fail(f"workspace manifest is missing workspace.project_name: {target / MANIFEST_RELATIVE_PATH}")
+    validate_project_name(project_name)
+    return WorkspaceTarget(project_name=project_name, root=target)
+
+
 def sync_inventory_files(files: list[Path]) -> list[Path]:
     return sorted(path for path in workspace_inventory_files(files) if is_safe_sync_managed_path(path))
 
@@ -1096,14 +1107,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.overwrite_conflicts and not args.sync_workspace:
         fail("--overwrite-conflicts can only be used with --sync-workspace")
 
-    if args.project_name is None and not (args.uninstall_workspace or args.uninstall_copilot_global):
-        fail("--project-name is required unless --new-change or an uninstall flag is used")
+    if args.project_name is None and not (args.sync_workspace or args.uninstall_workspace or args.uninstall_copilot_global):
+        fail("--project-name is required unless --sync-workspace, --new-change, or an uninstall flag is used")
 
-    target = target_path_for(args.project_name, args.target_path)
     if args.sync_workspace:
-        assert args.project_name is not None
-        workspace_target = workspace_target_for(args.project_name, target)
-        manifest = load_workspace_manifest(workspace_target.root)
+        target = change_target_path_for(args.target_path)
+        manifest = load_workspace_manifest(target)
+        workspace_target = workspace_target_from_manifest(target, manifest)
         root = template_root()
         current_files = sync_inventory_files(template_files(root))
         memory_mcp = resolve_memory_mcp(allow_install=not args.dry_run)
@@ -1138,6 +1148,8 @@ def main(argv: list[str] | None = None) -> int:
         if obsolete:
             print("Obsolete Pegasus-managed files were reported only; none were deleted.")
         return 0
+
+    target = target_path_for(args.project_name, args.target_path)
 
     if args.uninstall_workspace or args.uninstall_copilot_global:
         workspace_removes: list[Path] = []

@@ -110,6 +110,23 @@ case "$help_output" in
 esac
 assert_file_contains "$ROOT/pegasus_harness_bootstrap/cli.py" 'MEMORY_MCP_BRANCH = "stable/0.1.1"'
 
+if initial_setup_without_project_output="$($PYTHON_BIN "$CLI" --target-path "$TMP/no-project-setup" --dry-run 2>&1)"; then
+  printf 'initial setup without --project-name should fail\n' >&2
+  exit 1
+fi
+case "$initial_setup_without_project_output" in
+  *"--project-name is required unless --sync-workspace, --new-change, or an uninstall flag is used"*) ;;
+  *) printf 'expected clear missing project-name setup error\n' >&2; exit 1 ;;
+esac
+if initial_setup_without_project_or_target_output="$($PYTHON_BIN "$CLI" --dry-run 2>&1)"; then
+  printf 'initial setup without --project-name or --target-path should fail\n' >&2
+  exit 1
+fi
+case "$initial_setup_without_project_or_target_output" in
+  *"--project-name is required unless --sync-workspace, --new-change, or an uninstall flag is used"*) ;;
+  *) printf 'expected clear missing project-name setup error without target path\n' >&2; exit 1 ;;
+esac
+
 default_plan="$($PYTHON_BIN "$CLI" --project-name default-project --dry-run)"
 case "$default_plan" in
   *"Target: /var/www/html/personal/default-project"*) ;;
@@ -624,12 +641,34 @@ manifest["install"]["files"].append(obsolete)
 manifest["ownership"]["files"].append(obsolete)
 manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
 PY
-sync_dry_output="$($PYTHON_BIN "$CLI" --project-name sync-project --target-path "$sync_target" --sync-workspace --dry-run)"
+sync_dry_output="$($PYTHON_BIN "$CLI" --target-path "$sync_target" --sync-workspace --dry-run)"
 case "$sync_dry_output" in
   *"Pegasus workspace sync plan"*"Scope: current workspace only"*"Updates:"*"$sync_target/.vscode/mcp.json"*"Conflicts (skipped unless --overwrite-conflicts):"*"$sync_target/AGENTS.md"*"Obsolete managed files (report-only):"*"$sync_target/.cursor/rules/obsolete.mdc"*"Preserved user artifacts:"*"$sync_target/docs/pegasus/changes/**"*"Dry run only; no files were written."*) ;;
   *) printf 'expected workspace sync dry-run plan with updates, conflicts, obsolete files, and preserved artifacts\n' >&2; exit 1 ;;
 esac
+sync_cwd_dry_output="$(cd "$sync_target" && "$PYTHON_BIN" "$CLI" --sync-workspace --dry-run)"
+case "$sync_cwd_dry_output" in
+  *"Pegasus workspace sync plan"*"Target: $sync_target"*"Manifest: $sync_target/.pegasus-bootstrap-ia/manifest.json"*"Dry run only; no files were written."*) ;;
+  *) printf 'expected workspace sync dry-run from cwd without project name or target path\n' >&2; exit 1 ;;
+esac
 assert_file_contains "$sync_target/.vscode/mcp.json" 'old mcp config'
+if sync_missing_manifest_output="$($PYTHON_BIN "$CLI" --target-path "$TMP/not-installed-sync" --sync-workspace --dry-run 2>&1)"; then
+  printf 'sync should require a Pegasus workspace manifest\n' >&2
+  exit 1
+fi
+case "$sync_missing_manifest_output" in
+  *"workspace manifest not found: $TMP/not-installed-sync/.pegasus-bootstrap-ia/manifest.json"*) ;;
+  *) printf 'expected sync missing manifest error with exact path\n' >&2; exit 1 ;;
+esac
+mkdir -p "$TMP/not-installed-sync-cwd"
+if sync_cwd_missing_manifest_output="$(cd "$TMP/not-installed-sync-cwd" && "$PYTHON_BIN" "$CLI" --sync-workspace --dry-run 2>&1)"; then
+  printf 'sync from cwd should require a Pegasus workspace manifest\n' >&2
+  exit 1
+fi
+case "$sync_cwd_missing_manifest_output" in
+  *"workspace manifest not found: $TMP/not-installed-sync-cwd/.pegasus-bootstrap-ia/manifest.json"*) ;;
+  *) printf 'expected sync cwd missing manifest error with exact path\n' >&2; exit 1 ;;
+esac
 sync_output="$($PYTHON_BIN "$CLI" --project-name sync-project --target-path "$sync_target" --sync-workspace)"
 case "$sync_output" in
   *"Completed Pegasus workspace sync."*"Updated: $sync_target/.vscode/mcp.json"*"Backup created: $sync_target/.pegasus-bootstrap-ia/backups/"*"Conflicting Pegasus-managed files were preserved"*"Obsolete Pegasus-managed files were reported only; none were deleted."*) ;;
