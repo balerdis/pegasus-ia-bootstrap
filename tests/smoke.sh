@@ -805,6 +805,32 @@ esac
 [ -f "$memory_dry_target/AGENTS.md" ] || { printf 'memory cleanup dry-run removed workspace file\n' >&2; exit 1; }
 [ ! -e "$memory_dry_log" ] || { printf 'memory cleanup dry-run executed external CLI\n' >&2; exit 1; }
 
+missing_manifest_dry_target="$TMP/missing-manifest-memory-dry-target"
+mkdir -p "$missing_manifest_dry_target"
+printf 'workspace user file\n' > "$missing_manifest_dry_target/user-file.txt"
+missing_manifest_dry_log="$TMP/missing-manifest-memory-dry.log"
+missing_manifest_dry_output="$(PEGASUS_FAKE_MEMORY_LOG="$missing_manifest_dry_log" PATH="$fake_bin:$PATH" "$PYTHON_BIN" "$CLI" --target-path "$missing_manifest_dry_target" --uninstall --purge-memory --dry-run)"
+case "$missing_manifest_dry_output" in
+  *"Workspace uninstall skipped:"*"No workspace manifest was found: $missing_manifest_dry_target/.pegasus-bootstrap-ia/manifest.json"*"Pegasus IA managed workspace assets cannot be planned or removed safely without the manifest."*"Pegasus Memory total purge (delegated):"*"Command: pegasus-memory-mcp purge --all --dry-run"*"Dry run only; no files were removed."*) ;;
+  *) printf 'expected missing-manifest purge dry-run to skip workspace planning and show delegated purge command\n' >&2; exit 1 ;;
+esac
+[ -f "$missing_manifest_dry_target/user-file.txt" ] || { printf 'missing-manifest purge dry-run removed workspace file\n' >&2; exit 1; }
+[ ! -e "$missing_manifest_dry_log" ] || { printf 'missing-manifest purge dry-run executed external CLI\n' >&2; exit 1; }
+
+missing_manifest_real_target="$TMP/missing-manifest-memory-real-target"
+mkdir -p "$missing_manifest_real_target/.github"
+printf 'workspace user file\n' > "$missing_manifest_real_target/user-file.txt"
+printf 'unowned agents\n' > "$missing_manifest_real_target/AGENTS.md"
+missing_manifest_real_log="$TMP/missing-manifest-memory-real.log"
+missing_manifest_real_output="$(PEGASUS_FAKE_MEMORY_LOG="$missing_manifest_real_log" PATH="$fake_bin:$PATH" "$PYTHON_BIN" "$CLI" --target-path "$missing_manifest_real_target" --uninstall --purge-memory)"
+case "$missing_manifest_real_output" in
+  *"Workspace uninstall skipped:"*"Skipped Pegasus workspace uninstall because the workspace manifest was not found."*"No workspace files were removed by Pegasus IA."*"Completed delegated memory cleanup: pegasus-memory-mcp purge --all --yes-i-understand-this-deletes-data"*) ;;
+  *) printf 'expected missing-manifest real purge to skip workspace removal and run delegated purge\n' >&2; exit 1 ;;
+esac
+assert_file_contains "$missing_manifest_real_log" 'purge --all --yes-i-understand-this-deletes-data'
+assert_file_contains "$missing_manifest_real_target/user-file.txt" 'workspace user file'
+assert_file_contains "$missing_manifest_real_target/AGENTS.md" 'unowned agents'
+
 memory_reset_target="$TMP/memory-reset-uninstall-target"
 printf 'yes\n' | "$PYTHON_BIN" "$CLI" --project-name memory-reset-project --target-path "$memory_reset_target" >/dev/null
 memory_reset_home="$TMP/memory-reset-home"

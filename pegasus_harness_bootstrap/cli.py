@@ -705,6 +705,10 @@ def load_workspace_manifest(target: Path) -> dict:
     return manifest
 
 
+def workspace_manifest_path(target: Path) -> Path:
+    return target / MANIFEST_RELATIVE_PATH
+
+
 def workspace_target_for(project_name: str, target: Path) -> WorkspaceTarget:
     return WorkspaceTarget(project_name=project_name, root=target)
 
@@ -1005,6 +1009,7 @@ def print_uninstall_plan(
     workspace_updates: list[Path],
     workspace_preserves: list[Path],
     workspace_dirs: list[Path],
+    missing_workspace_manifest: Path | None = None,
     memory_cleanup: MemoryCleanupPlan | None = None,
     copilot_root: Path | None = None,
     copilot_settings_path: Path | None = None,
@@ -1014,6 +1019,10 @@ def print_uninstall_plan(
 ) -> None:
     print("Pegasus uninstall plan")
     print(f"Target: {target}")
+    if missing_workspace_manifest is not None:
+        print("\nWorkspace uninstall skipped:")
+        print(f"  No workspace manifest was found: {missing_workspace_manifest}")
+        print("  Pegasus IA managed workspace assets cannot be planned or removed safely without the manifest.")
     if workspace_removes:
         print("\nWorkspace file removals:")
         for path in workspace_removes:
@@ -1232,17 +1241,28 @@ def main(argv: list[str] | None = None) -> int:
         workspace_updates: list[Path] = []
         workspace_preserves: list[Path] = []
         workspace_dirs: list[Path] = []
+        missing_workspace_manifest: Path | None = None
         memory_cleanup = None
         if uninstall_workspace_requested:
-            manifest = load_workspace_manifest(target)
-            workspace_target = workspace_target_from_manifest(target, manifest)
-            workspace_removes, workspace_updates, workspace_preserves, workspace_dirs = plan_workspace_uninstall(target, manifest)
-            memory_cleanup = memory_cleanup_plan(
-                workspace_target.project_name,
-                reset_project=args.reset_memory_project,
-                purge=args.purge_memory,
-                dry_run=args.dry_run,
-            )
+            manifest_path = workspace_manifest_path(target)
+            if args.purge_memory and not manifest_path.exists():
+                missing_workspace_manifest = manifest_path
+                memory_cleanup = memory_cleanup_plan(
+                    args.project_name or "",
+                    reset_project=False,
+                    purge=True,
+                    dry_run=args.dry_run,
+                )
+            else:
+                manifest = load_workspace_manifest(target)
+                workspace_target = workspace_target_from_manifest(target, manifest)
+                workspace_removes, workspace_updates, workspace_preserves, workspace_dirs = plan_workspace_uninstall(target, manifest)
+                memory_cleanup = memory_cleanup_plan(
+                    workspace_target.project_name,
+                    reset_project=args.reset_memory_project,
+                    purge=args.purge_memory,
+                    dry_run=args.dry_run,
+                )
 
         copilot_root = None
         copilot_settings = None
@@ -1268,6 +1288,7 @@ def main(argv: list[str] | None = None) -> int:
             workspace_updates,
             workspace_preserves,
             workspace_dirs,
+            missing_workspace_manifest,
             memory_cleanup,
             copilot_root,
             copilot_settings,
@@ -1284,17 +1305,21 @@ def main(argv: list[str] | None = None) -> int:
             ensure_memory_cleanup_cli_available()
 
         if uninstall_workspace_requested:
-            removed_dirs, preserved_dirs = apply_workspace_uninstall(
-                target,
-                workspace_removes,
-                workspace_updates,
-                workspace_dirs,
-            )
-            print("\nCompleted Pegasus workspace uninstall.")
-            for directory in removed_dirs:
-                print(f"Removed empty directory: {directory}")
-            for directory in preserved_dirs:
-                print(f"Preserved non-empty directory: {directory}")
+            if missing_workspace_manifest is not None:
+                print("\nSkipped Pegasus workspace uninstall because the workspace manifest was not found.")
+                print("No workspace files were removed by Pegasus IA.")
+            else:
+                removed_dirs, preserved_dirs = apply_workspace_uninstall(
+                    target,
+                    workspace_removes,
+                    workspace_updates,
+                    workspace_dirs,
+                )
+                print("\nCompleted Pegasus workspace uninstall.")
+                for directory in removed_dirs:
+                    print(f"Removed empty directory: {directory}")
+                for directory in preserved_dirs:
+                    print(f"Preserved non-empty directory: {directory}")
 
         if memory_cleanup is not None:
             run_memory_cleanup(memory_cleanup)

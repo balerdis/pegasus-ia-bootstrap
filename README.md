@@ -109,6 +109,8 @@ pegasus-harness-bootstrap --uninstall --target-path /path/to/workspace --purge-m
 
 `--reset-memory-project` runs `pegasus-memory-mcp reset --project <project-name> --yes`; `--purge-memory` runs `pegasus-memory-mcp purge --all --yes-i-understand-this-deletes-data`. With `--dry-run`, Pegasus IA prints the delegated command with `--dry-run` and does not call the external CLI. The two memory flags are mutually exclusive. If `pegasus-memory-mcp` is unavailable for a real cleanup request, Pegasus IA fails clearly and does not delete memory paths directly.
 
+If the workspace manifest is missing, plain workspace uninstall still fails because Pegasus IA cannot prove which workspace files it owns. `--uninstall --purge-memory` is the only no-manifest cleanup path: it skips workspace file removal, reports that managed workspace assets cannot be planned safely, and delegates only the global Pegasus Memory purge command.
+
 ## Optional global VS Code/Copilot install
 
 Global/user-level Copilot setup is opt-in and never runs by default:
