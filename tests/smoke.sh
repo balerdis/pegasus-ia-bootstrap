@@ -85,11 +85,11 @@ esac
 "$PYTHON_BIN" "$CLI" --help >/dev/null
 version_output="$($PYTHON_BIN "$CLI" --version)"
 case "$version_output" in
-  "Pegasus Harness Bootstrap 0.3.1") ;;
+  "Pegasus Harness Bootstrap 0.3.2") ;;
   *) printf 'expected clear Pegasus product version output\n' >&2; exit 1 ;;
 esac
-assert_file_contains "$ROOT/pyproject.toml" 'version = "0.3.1"'
-assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.3.1"'
+assert_file_contains "$ROOT/pyproject.toml" 'version = "0.3.2"'
+assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.3.2"'
 help_output="$($PYTHON_BIN "$CLI" --help)"
 case "$help_output" in
   *"--install-cursor-global"*) ;;
@@ -144,7 +144,7 @@ case "$default_plan" in
   *) printf 'expected default target path in dry-run output\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
-  *"Installed CLI version: 0.3.1"*"Source template version: 0.3.1"*) ;;
+  *"Installed CLI version: 0.3.2"*"Source template version: 0.3.2"*) ;;
   *) printf 'expected bootstrap plan version evidence\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
@@ -452,7 +452,8 @@ assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "do 
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'Before invoking any git command, first check whether the workspace root contains a `.git` directory.'
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'If `.git` is absent, never attempt `git diff`, `git status`, `git log`, or any other git validation; do not try and fall back.'
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'include a small MCP persistence summary with one line each for `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation`'
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'call `ensure_change` with a minimal compatible payload only: `project_id`, `change_id`, and documented flat fields such as `key`, `title`, `status`, `kind`/`type`, or `description`'
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'call `ensure_change` by default with only `project_id` and `change_id`'
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'never send `type` or both `kind` and `type`, even if equal'
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'Do not send nested `metadata`, arrays, decisions, questions/answers, or artifact summaries to `ensure_change`'
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Tell the user the PRD file path (\`docs/pegasus/prd.md\`, \`docs/pegasus/changes/<change-id>/prd.md\`, or the full path when useful) and ask them to review it."
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Wait for explicit user approval of the PRD before moving to proposal, spec, design, tasks, apply, or verify."
@@ -475,7 +476,8 @@ assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.m
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "ensure_project"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "ensure_change"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'Use minimal compatible ensure payloads.'
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'ensure_change({ project_id: <project-id>, change_id: <change-id>, key: <change-id>, title: <short title>, status: "draft", kind: "prd" })'
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'By default, call `ensure_change({ project_id: <project-id>, change_id: <change-id> })`'
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'Never send `type`, and never send both `kind` and `type`, even with equal values'
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'Do not send nested `metadata`, arrays, product decisions, questions/answers, artifact summaries, or arbitrary extra fields to `ensure_change`'
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "project_not_found"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "foreign-key failures"
@@ -486,7 +488,8 @@ assert_file_contains "$target/.github/copilot-instructions.md" "Keep consumer st
 assert_file_contains "$target/.github/copilot-instructions.md" "Natural-language PRD intent is enough to start PRD discovery."
 assert_file_contains "$target/.github/copilot-instructions.md" "never silently decide product scope"
 assert_file_contains "$target/.github/copilot-instructions.md" 'include a small MCP persistence summary marking `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation` as `succeeded`, `not needed`, or `failed: <reason>`'
-assert_file_contains "$target/.github/copilot-instructions.md" 'using only `project_id`, `change_id`, and documented flat fields (`key`, `title`, `status`, `kind`/`type`, `description`); never send nested `metadata`, arrays, decisions, questions, or artifact summaries to `ensure_change`'
+assert_file_contains "$target/.github/copilot-instructions.md" 'using only `project_id` and `change_id` by default; add `key`, `title`, `status`, or `description` only when needed, and use `kind` only if classification is needed'
+assert_file_contains "$target/.github/copilot-instructions.md" 'Never send `type` or both `kind` and `type`, even if equal'
 assert_file_contains "$target/.github/copilot-instructions.md" 'before any git command first check for `.git` and never run `git diff`, `git status`, or other git validation in non-git workspaces; do not try git first and fall back'
 assert_file_contains "$target/.github/copilot-instructions.md" 'must not reset, delete, recreate, or overwrite the Pegasus Memory database'
 assert_file_contains "$target/.github/copilot-instructions.md" "wait for explicit PRD approval before proposal/spec/design/tasks/apply, and do not implement code during PRD flow"
@@ -511,7 +514,8 @@ assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "tell the user the PRD file path and ask them to review it"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "product decisions are open"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'record_artifact`, and `record_observation` as `succeeded`, `not needed`, or `failed: <reason>`'
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'using only `project_id`, `change_id`, and documented flat fields (`key`, `title`, `status`, `kind`/`type`, `description`); never send nested `metadata`, arrays, decisions, questions, or artifact summaries to `ensure_change`'
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'using only `project_id` and `change_id` by default; add `key`, `title`, `status`, or `description` only when needed, and use `kind` only if classification is needed'
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'Never send `type` or both `kind` and `type`, even if equal'
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'before any git command first check for `.git` and never run `git diff`, `git status`, or other git validation in non-git workspaces; do not try git first and fall back'
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'The only allowed database mutation is an explicit Pegasus Memory schema migration performed by Pegasus Memory itself'
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'must not reset, delete, recreate, or overwrite the Pegasus Memory database'
@@ -719,6 +723,26 @@ for path in payload_guidance:
     assert "status `ready-for-review`" not in text, path
     assert "status `completed-as-draft`" not in text, path
 PY
+"$PYTHON_BIN" - "$target" <<'PY'
+import sys
+from pathlib import Path
+
+target = Path(sys.argv[1])
+guidance = (
+    target / ".github/agents/pegasus-orchestrator.agent.md",
+    target / ".github/agents/memory-maintainer.agent.md",
+    target / ".github/instructions/pegasus-memory.instructions.md",
+    target / ".github/instructions/pegasus-workflow.instructions.md",
+    target / ".github/copilot-instructions.md",
+)
+legacy_alias_guidance = ("`kind`/`type`", "`kind` or `type`")
+for path in guidance:
+    text = path.read_text()
+    assert "project_id" in text and "change_id" in text, path
+    assert "kind" in text and "never send `type`" in text.lower(), path
+    assert all(pattern not in text for pattern in legacy_alias_guidance), path
+    assert "record_observation" in text and "record_artifact" in text, path
+PY
 for mcp_status in ensure_project ensure_change record_artifact record_observation record_task_progress record_handoff; do
   assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "$mcp_status: <succeeded|not needed|failed: reason>"
 done
@@ -919,7 +943,7 @@ esac
 cmp "$TMP/recovery-manifest-before.json" "$recovery_target/.pegasus-bootstrap-ia/manifest.json" || { printf 'normal bootstrap rewrote historical manifest metadata\n' >&2; exit 1; }
 recovery_dry_output="$($PYTHON_BIN "$CLI" --target-path "$recovery_target" --sync-workspace --dry-run)"
 case "$recovery_dry_output" in
-  *"Installed CLI version: 0.3.1"*"Source template version: 0.3.1"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
+  *"Installed CLI version: 0.3.2"*"Source template version: 0.3.2"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
   *) printf 'expected empty-manifest dry-run recovery and version evidence\n' >&2; exit 1 ;;
 esac
 assert_file_contains "$recovery_target/.github/agents/sdd-spec.agent.md" 'STALE PEGASUS SPEC AGENT'
@@ -940,8 +964,8 @@ from pathlib import Path
 
 manifest = json.loads(Path(sys.argv[1]).read_text())
 records = {record["path"]: record for record in manifest["ownership"]["files"]}
-assert manifest["template_version"] == "0.3.1"
-assert manifest["package_version"] == "0.3.1"
+assert manifest["template_version"] == "0.3.2"
+assert manifest["package_version"] == "0.3.2"
 assert records[".github/agents/sdd-spec.agent.md"]["action"] == "recovered"
 assert not any(path.startswith("docs/pegasus/") for path in records)
 PY

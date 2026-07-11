@@ -16,7 +16,7 @@ Check the installed product release at any time:
 
 ```sh
 pegasus-harness-bootstrap --version
-# Pegasus Harness Bootstrap 0.3.1
+# Pegasus Harness Bootstrap 0.3.2
 ```
 
 For everyday use from outside this checkout, install the CLI with `pipx`:
@@ -90,7 +90,7 @@ If MCP cannot be prepared, the bootstrap keeps file-only harness setup available
 El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente
 ```
 
-Generated guidance requires agents to call MCP `health` before the first recovery or save and use `health.capabilities.parent_bootstrap` when available. If recovery returns `not_found` with `project_not_found`, agents call `ensure_project` before recording observations, artifacts, task progress, or handoffs. When creating a new change/PRD under `docs/pegasus/changes/<change-id>/`, agents call `ensure_change` before `record_artifact` or change-scoped observations. Generated guidance keeps `ensure_change` inputs minimal and compatible with `pegasus-memory-mcp` `stable/0.1.1`: `project_id`, `change_id`, and optional flat fields `key`, `title`, `status`, `kind`/`type`, or `description`; PRD decisions, questions, and artifact summaries are recorded with `record_observation` or `record_artifact`, not as arbitrary `ensure_change` metadata. If MCP is unavailable, agents must not claim persistent-memory saves succeeded and must not fall back to `docs/pegasus/memory/`.
+Generated guidance requires agents to call MCP `health` before the first recovery or save and use `health.capabilities.parent_bootstrap` when available. If recovery returns `not_found` with `project_not_found`, agents call `ensure_project` before recording observations, artifacts, task progress, or handoffs. When creating a new change/PRD under `docs/pegasus/changes/<change-id>/`, agents call `ensure_change` before `record_artifact` or change-scoped observations. Generated guidance uses the minimal compatible `ensure_change` payload by default: `project_id` and `change_id`; add optional flat `key`, `title`, `status`, or `description` only when needed. For classification, use `kind` only when needed; never send `type`, and never send both `kind` and `type`, even if their values match. PRD decisions, questions, and artifact summaries are recorded with `record_observation` or `record_artifact`, not as arbitrary `ensure_change` metadata. If MCP is unavailable, agents must not claim persistent-memory saves succeeded and must not fall back to `docs/pegasus/memory/`.
 
 Pegasus Memory MCP stores its database at `~/.local/share/pegasus-memory-mcp/memory.db` by default. Workspace sync may update the generated `.vscode/mcp.json` and Pegasus Memory binary/config references when manifest checksums prove it is safe, but it does not delete, recreate, reset, or overwrite the MCP database. Only Pegasus Memory itself may mutate that database for an explicit schema migration when it detects or ships a newer schema version. If local install/build fails after `npm ci` and `npm config get ignore-scripts` returns `true`, rebuild the native SQLite dependency with:
 

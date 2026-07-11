@@ -206,7 +206,7 @@ The generated harness MUST use Pegasus Memory, served by `pegasus-memory-mcp`, a
 
 ### Requirement: Memory unavailable behavior
 
-The generated harness MUST call `health` before the first recovery or save attempt and MUST detect unavailable memory before relying on persistence. If `pegasus-memory-mcp` is unavailable, the user-facing warning MUST be exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Pegasus MAY continue project/change artifact work, but it MUST NOT claim persistent memory was saved and MUST NOT fall back to Markdown memory. It MUST distinguish `not_found`, `ambiguous`, `read_error`, and `persistence_error` from true unavailability. When recovery returns `not_found` with `project_not_found`, generated guidance MUST call `ensure_project` before recording observations, artifacts, task progress, or handoff records. When creating a new change/PRD, generated guidance MUST call `ensure_change` before `record_artifact` or change-scoped observations. Generated guidance MUST keep `ensure_change` payloads minimal and compatible with documented `pegasus-memory-mcp` fields: required `project_id` and `change_id`, plus optional flat `key`, `title`, `status`, `kind`/`type`, or `description` only. Product decisions, questions, artifact summaries, and other details MUST be written with `record_observation` or `record_artifact`, not arbitrary `ensure_change` metadata. `persistence_error` or foreign-key write failures MUST be reported as write-flow precondition failures, not MCP unavailability.
+The generated harness MUST call `health` before the first recovery or save attempt and MUST detect unavailable memory before relying on persistence. If `pegasus-memory-mcp` is unavailable, the user-facing warning MUST be exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Pegasus MAY continue project/change artifact work, but it MUST NOT claim persistent memory was saved and MUST NOT fall back to Markdown memory. It MUST distinguish `not_found`, `ambiguous`, `read_error`, and `persistence_error` from true unavailability. When recovery returns `not_found` with `project_not_found`, generated guidance MUST call `ensure_project` before recording observations, artifacts, task progress, or handoff records. When creating a new change/PRD, generated guidance MUST call `ensure_change` before `record_artifact` or change-scoped observations. Generated guidance MUST use the minimal compatible `ensure_change` payload by default: required `project_id` and `change_id`; optional flat `key`, `title`, `status`, or `description` only when needed. If classification is needed, it MUST use `kind` only; it MUST NOT send `type` or both aliases, even with equal values. Product decisions, questions, artifact summaries, and other details MUST be written with `record_observation` or `record_artifact`, not arbitrary `ensure_change` metadata. `persistence_error` or foreign-key write failures MUST be reported as write-flow precondition failures, not MCP unavailability.
 
 #### Scenario: MCP missing or unreachable
 
@@ -234,7 +234,10 @@ The generated harness MUST call `health` before the first recovery or save attem
 - GIVEN MCP is running and Pegasus creates a new PRD/change under `docs/pegasus/changes/<change-id>/prd.md`
 - WHEN it records the artifact or change-scoped observations
 - THEN it calls `ensure_change` before `record_artifact` or change-scoped observation writes
-- AND the `ensure_change` payload uses only documented flat fields instead of arbitrary metadata
+- AND its default payload contains only `project_id` and `change_id`
+- AND it adds optional flat fields only when needed and uses `kind` as the sole classification alias
+- AND it never sends `type` or simultaneous `kind` and `type` fields
+- AND product decisions and artifact details are recorded separately
 
 #### Scenario: Read and persistence errors are not availability failures
 
