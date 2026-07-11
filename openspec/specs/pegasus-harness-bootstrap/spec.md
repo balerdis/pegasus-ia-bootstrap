@@ -490,7 +490,8 @@ The system MUST create a PRD template and production-ready SDD templates under `
 - THEN it MUST preserve or create exact `docs/pegasus/changes/<change-id>/spec.md` managed start and end markers and reread them first
 - AND it MUST repair and reread invalid markers before Pegasus Memory persistence
 - AND, if repair and reread still fail validation, it MUST block Pegasus Memory persistence and success, report a file-only failure, and stop the phase
-- AND, after marker validation and whenever Pegasus Memory is healthy, it MUST call or attempt `record_task_progress` before `record_handoff`, recording phase `spec`, status `ready-for-review` or `completed-as-draft`, artifact path, open gaps/blockers, and next action `review` or `approval`
+- AND, after marker validation and whenever Pegasus Memory is healthy, it MUST call or attempt `record_task_progress` before `record_handoff`; for a successfully drafted spec ready for user review, its first attempt MUST use supported status `completed` and record phase `spec`, artifact path, `ready for review` / draft complete, open gaps/blockers, and next action `user review/approval` in descriptive fields or notes
+- AND it MUST use only the supported status enum `pending`, `in_progress`, `blocked`, `completed`: `blocked` for blocked work, `in_progress` for active work, and `pending` for work not yet started; it MUST NOT send unsupported review-state aliases as status values
 - AND it MUST not return a final response until all six Pegasus Memory operations have a terminal status
 - AND it MUST provide the exact `Pegasus Memory persistence summary:` heading and six status lines, each using only `succeeded`, `not needed`, or `failed: <reason>`, even when Pegasus Memory is unavailable
 - AND it MUST NOT claim `succeeded` for a call that was omitted; it MUST attempt the call or report a truthful failed/not-needed status

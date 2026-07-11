@@ -75,7 +75,7 @@ record_task_progress: <succeeded|not needed|failed: reason>
 record_handoff: <succeeded|not needed|failed: reason>
 ```
 
-After marker validation, when Pegasus Memory is healthy, call or attempt `record_task_progress` before `record_handoff`. The task-progress record MUST identify phase `spec`, status `ready-for-review` or `completed-as-draft` as applicable, the spec artifact path, open gaps/blockers, and next action `review` or `approval`.
+After marker validation, when Pegasus Memory is healthy, call or attempt `record_task_progress` before `record_handoff`. For a successfully drafted spec ready for user review, use status `completed` on the first attempt. The supported status enum is exactly `pending`, `in_progress`, `blocked`, `completed`: use `blocked` when blocked, `in_progress` for active work, and `pending` for work not yet started. The task-progress record MUST identify phase `spec`, the spec artifact path, `ready for review` / draft complete in its descriptive fields or notes, open gaps/blockers, and next action `user review/approval`. Never send unsupported review-state aliases as a status.
 
 Do not return the final response until all six Pegasus Memory operations have a terminal status in the block. A `succeeded` status requires the actual call to have succeeded; never invent it for an omitted call. Attempt an accidentally omitted required call before closing, or report its truthful `failed: <reason>` or `not needed` status.
 

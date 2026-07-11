@@ -85,11 +85,11 @@ esac
 "$PYTHON_BIN" "$CLI" --help >/dev/null
 version_output="$($PYTHON_BIN "$CLI" --version)"
 case "$version_output" in
-  "Pegasus Harness Bootstrap 0.3.0") ;;
+  "Pegasus Harness Bootstrap 0.3.1") ;;
   *) printf 'expected clear Pegasus product version output\n' >&2; exit 1 ;;
 esac
-assert_file_contains "$ROOT/pyproject.toml" 'version = "0.3.0"'
-assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.3.0"'
+assert_file_contains "$ROOT/pyproject.toml" 'version = "0.3.1"'
+assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.3.1"'
 help_output="$($PYTHON_BIN "$CLI" --help)"
 case "$help_output" in
   *"--install-cursor-global"*) ;;
@@ -144,7 +144,7 @@ case "$default_plan" in
   *) printf 'expected default target path in dry-run output\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
-  *"Installed CLI version: 0.3.0"*"Source template version: 0.3.0"*) ;;
+  *"Installed CLI version: 0.3.1"*"Source template version: 0.3.1"*) ;;
   *) printf 'expected bootstrap plan version evidence\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
@@ -653,7 +653,9 @@ assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Preserve target
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Spec persistence: file-only"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Pegasus Memory persistence summary:"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "call or attempt \`record_task_progress\` before \`record_handoff\`"
-assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "status \`ready-for-review\` or \`completed-as-draft\`"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "use status \`completed\` on the first attempt"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "supported status enum is exactly \`pending\`, \`in_progress\`, \`blocked\`, \`completed\`"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "ready for review\` / draft complete in its descriptive fields or notes"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Do not return the final response until all six Pegasus Memory operations have a terminal status"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "never invent it for an omitted call"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "If \`record_artifact\` or \`record_observation\` fails"
@@ -680,8 +682,11 @@ text = Path(sys.argv[1]).read_text()
 assert text.index("record_task_progress` before `record_handoff") < text.index("Do not return the final response until all six Pegasus Memory operations")
 assert "MCP persistence summary:" not in text
 payload = next(line for line in text.splitlines() if "The task-progress record MUST identify" in line)
-for required in ("phase `spec`", "status `ready-for-review` or `completed-as-draft`", "spec artifact path", "open gaps/blockers", "next action `review` or `approval`"):
+for required in ("phase `spec`", "status `completed` on the first attempt", "spec artifact path", "ready for review` / draft complete", "open gaps/blockers", "next action `user review/approval`"):
     assert required in payload
+assert "supported status enum is exactly `pending`, `in_progress`, `blocked`, `completed`" in text
+assert "status `ready-for-review`" not in text
+assert "status `completed-as-draft`" not in text
 assert "Spec persistence: file-only — <reason>" in text
 assert "Pegasus Memory persistence incomplete/partial — <failed operation>: <reason>" in text
 assert "MUST prevent claiming full durable completion or Pegasus Memory success" in text
@@ -694,6 +699,25 @@ for operation in (
     "record_handoff: <succeeded|not needed|failed: reason>",
 ):
     assert operation in text
+PY
+"$PYTHON_BIN" - "$target" <<'PY'
+import sys
+from pathlib import Path
+
+target = Path(sys.argv[1])
+payload_guidance = (
+    target / ".github/agents/sdd-spec.agent.md",
+    target / ".github/agents/pegasus-orchestrator.agent.md",
+    target / ".github/instructions/pegasus-memory.instructions.md",
+    target / ".github/instructions/pegasus-workflow.instructions.md",
+    target / ".github/copilot-instructions.md",
+)
+supported = "`pending`, `in_progress`, `blocked`, `completed`"
+for path in payload_guidance:
+    text = path.read_text()
+    assert supported in text, path
+    assert "status `ready-for-review`" not in text, path
+    assert "status `completed-as-draft`" not in text, path
 PY
 for mcp_status in ensure_project ensure_change record_artifact record_observation record_task_progress record_handoff; do
   assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "$mcp_status: <succeeded|not needed|failed: reason>"
@@ -895,7 +919,7 @@ esac
 cmp "$TMP/recovery-manifest-before.json" "$recovery_target/.pegasus-bootstrap-ia/manifest.json" || { printf 'normal bootstrap rewrote historical manifest metadata\n' >&2; exit 1; }
 recovery_dry_output="$($PYTHON_BIN "$CLI" --target-path "$recovery_target" --sync-workspace --dry-run)"
 case "$recovery_dry_output" in
-  *"Installed CLI version: 0.3.0"*"Source template version: 0.3.0"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
+  *"Installed CLI version: 0.3.1"*"Source template version: 0.3.1"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
   *) printf 'expected empty-manifest dry-run recovery and version evidence\n' >&2; exit 1 ;;
 esac
 assert_file_contains "$recovery_target/.github/agents/sdd-spec.agent.md" 'STALE PEGASUS SPEC AGENT'
@@ -916,8 +940,8 @@ from pathlib import Path
 
 manifest = json.loads(Path(sys.argv[1]).read_text())
 records = {record["path"]: record for record in manifest["ownership"]["files"]}
-assert manifest["template_version"] == "0.3.0"
-assert manifest["package_version"] == "0.3.0"
+assert manifest["template_version"] == "0.3.1"
+assert manifest["package_version"] == "0.3.1"
 assert records[".github/agents/sdd-spec.agent.md"]["action"] == "recovered"
 assert not any(path.startswith("docs/pegasus/") for path in records)
 PY
