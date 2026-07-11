@@ -20,7 +20,7 @@ pegasus-harness-bootstrap --project-name gestor-solicitudes-mvp --dry-run
 ```
 
 By default, the target workspace path is `/var/www/html/personal/<project-name>`.
-Use `--target-path <path>` for an explicit target and `--force` only when replacing known harness files is intended.
+Use `--target-path <path>` for an explicit target. For an existing Pegasus workspace (one with `.pegasus-bootstrap-ia/manifest.json`), update managed files safely with `--sync-workspace --dry-run` first, then `--sync-workspace`; the project is inferred from the manifest. Use `--force` only for intentional aggressive full replacement because it may overwrite managed-file customizations and conflicts.
 
 After a successful run, open the target workspace in VS Code with GitHub Copilot and start from the Pegasus orchestrator custom agent at `.github/agents/pegasus-orchestrator.agent.md`.
 

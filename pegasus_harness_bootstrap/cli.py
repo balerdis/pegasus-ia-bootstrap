@@ -119,7 +119,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Replace existing known harness files.",
+        help="Intentionally replace known harness files; may overwrite managed-file customizations and conflicts.",
     )
     parser.add_argument(
         "--install-copilot-global",
@@ -598,6 +598,16 @@ def print_plan(
         print("\nConflicts (skipped unless --force):")
         for path in conflicts:
             print(f"  {path}")
+        sync_command = ["pegasus-harness-bootstrap", "--target-path", str(target), "--sync-workspace"]
+        if (target / MANIFEST_RELATIVE_PATH).exists():
+            print("\nExisting Pegasus workspace detected (manifest found).")
+            print("Use manifest-aware sync for a normal update; the project is inferred from the manifest:")
+            print(f"  {format_command([*sync_command, '--dry-run'])}")
+            print(f"  {format_command(sync_command)}")
+            print("Use --force only for intentional aggressive full replacement; it may overwrite managed-file customizations and conflicts.")
+        else:
+            print("\nExisting non-Pegasus conflicts were preserved.")
+            print("Use --force only to intentionally replace known conflicting harness files.")
 
     if global_rules_dir is not None:
         print("\nLegacy global Cursor rules (--install-cursor-global):")
@@ -1508,7 +1518,6 @@ def main(argv: list[str] | None = None) -> int:
         skipped_rel_paths = {path.relative_to(target) for path in conflicts}
         paths_to_write = paths_to_write.difference(skipped_rel_paths)
         print("\nExisting generated paths were preserved; skipped conflicting writes.")
-        print("Run with --force to replace known harness files.")
     if memory_mcp.warning is not None:
         print(memory_mcp.warning)
     written_files = write_files(root, target, sorted(paths_to_write), args.project_name, memory_mcp.script_path, memory_mcp.cwd)

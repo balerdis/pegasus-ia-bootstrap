@@ -803,8 +803,12 @@ printf 'custom copilot instructions\n' > "$target/.github/copilot-instructions.m
 rm "$target/.github/agents/doc-designer.agent.md"
 conflict_output="$($PYTHON_BIN "$CLI" --project-name sample-project --target-path "$target")"
 case "$conflict_output" in
-  *"Conflicts (skipped unless --force):"*"$target/AGENTS.md"*"Existing generated paths were preserved; skipped conflicting writes."*) ;;
-  *) printf 'expected no-force conflicts to be reported and skipped\n' >&2; exit 1 ;;
+  *"Conflicts (skipped unless --force):"*"$target/AGENTS.md"*"Existing Pegasus workspace detected (manifest found)."*) ;;
+  *) printf 'expected existing Pegasus workspace conflicts to recommend manifest-aware sync\n' >&2; exit 1 ;;
+esac
+case "$conflict_output" in
+  *"pegasus-harness-bootstrap --target-path $target --sync-workspace --dry-run"*"pegasus-harness-bootstrap --target-path $target --sync-workspace"*"Use --force only for intentional aggressive full replacement; it may overwrite managed-file customizations and conflicts."*) ;;
+  *) printf 'expected existing Pegasus workspace conflict output to recommend safe sync before force\n' >&2; exit 1 ;;
 esac
 assert_file_contains "$target/AGENTS.md" "user content"
 assert_file_contains "$target/docs/pegasus/apply-progress.md" "custom apply progress"
@@ -832,6 +836,20 @@ assert_file_contains "$target/docs/pegasus/apply-progress.md" "Current In-Progre
 [ ! -e "$target/docs/pegasus/memory" ] || { printf 'force run should not create docs/pegasus/memory\n' >&2; exit 1; }
 assert_no_banned_markdown_memory_persistence_refs "$target"
 [ ! -e "$target/.git" ] || { printf 'bootstrap created git metadata\n' >&2; exit 1; }
+
+non_pegasus_target="$TMP/non-pegasus-conflicts"
+mkdir -p "$non_pegasus_target"
+printf 'non-Pegasus content\n' > "$non_pegasus_target/AGENTS.md"
+non_pegasus_conflict_output="$($PYTHON_BIN "$CLI" --project-name non-pegasus --target-path "$non_pegasus_target")"
+case "$non_pegasus_conflict_output" in
+  *"Conflicts (skipped unless --force):"*"$non_pegasus_target/AGENTS.md"*"Existing non-Pegasus conflicts were preserved."*"Use --force only to intentionally replace known conflicting harness files."*) ;;
+  *) printf 'expected non-Pegasus conflicts to retain an explicit, guarded force option\n' >&2; exit 1 ;;
+esac
+case "$non_pegasus_conflict_output" in
+  *"--sync-workspace --dry-run"*) printf 'non-Pegasus conflict output should not recommend workspace sync\n' >&2; exit 1 ;;
+  *) ;;
+esac
+assert_file_contains "$non_pegasus_target/AGENTS.md" 'non-Pegasus content'
 
 sync_target="$TMP/sync-target"
 printf 'yes\n' | "$PYTHON_BIN" "$CLI" --project-name sync-project --target-path "$sync_target" >/dev/null
