@@ -622,6 +622,27 @@ done
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "approved PRD and approved proposal"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" 'GIVEN` / `WHEN` / `THEN'
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Do not design architecture"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Conversational approval never overrides"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "approval table, status, or checkbox"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "only default product and requirements sources"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Do not search, read, inspect, or reuse neighboring or unrelated change artifacts"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Related Change Traceability"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "not used as an implicit scope source"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Every normative requirement MUST trace"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "An ambiguous MCP response never resolves a material gap"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "owner, impact, next step, and needed-by gate"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "For a blocking gap, ask one concise question and stop before finalizing"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" '<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/spec.md ownership=full-file -->'
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" '<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/spec.md -->'
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Before any MCP persistence call, read the artifact back"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "repair the artifact, reread, and validate again"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "If repair and reread still fail validation, block MCP persistence and success"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Spec persistence: file-only — marker validation failed"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Preserve target-language standard orthography and diacritics"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Spec persistence: file-only"
+for mcp_status in ensure_project ensure_change record_artifact record_observation record_task_progress record_handoff; do
+  assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "$mcp_status: <succeeded|not needed|failed: reason>"
+done
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Decisions, tradeoffs, and alternatives considered"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Do not implement code"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Decision needed before apply: Yes|No"
@@ -639,6 +660,42 @@ assert_file_contains "$target/docs/pegasus/spec.md" "## Source Status"
 assert_file_contains "$target/docs/pegasus/spec.md" "## Acceptance Edge Cases"
 assert_file_contains "$target/docs/pegasus/spec.md" "## Non-Goals / Out of Scope"
 assert_file_contains "$target/docs/pegasus/spec.md" "## Traceability"
+assert_file_contains "$target/docs/pegasus/spec.md" "## Source Isolation"
+assert_file_contains "$target/docs/pegasus/spec.md" "## Related Change Traceability"
+assert_file_contains "$target/docs/pegasus/spec.md" "## Open Questions / Material Gaps"
+assert_file_contains "$target/docs/pegasus/spec.md" "Every normative requirement MUST link"
+assert_file_contains "$target/docs/pegasus/spec.md" "An ambiguous MCP response never resolves a gap"
+assert_file_contains "$target/docs/pegasus/spec.md" "Replace each placeholder with behavior explicitly supported"
+if grep -Fq "reject duplicate apply work" "$target/docs/pegasus/spec.md"; then
+  printf 'spec template contains unrelated duplicate-apply behavior\n' >&2
+  exit 1
+fi
+if grep -Fq "Duplicate apply slice is already complete" "$target/docs/pegasus/spec.md"; then
+  printf 'spec template contains an unrelated duplicate-apply scenario\n' >&2
+  exit 1
+fi
+assert_file_contains "$ROOT/templates/harness/docs/pegasus/spec.md" '<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/spec.md ownership=full-file -->'
+assert_file_contains "$ROOT/templates/harness/docs/pegasus/spec.md" '<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/spec.md -->'
+"$PYTHON_BIN" - "$ROOT/templates/harness/docs/pegasus/spec.md" <<'PY'
+import sys
+from pathlib import Path
+
+lines = Path(sys.argv[1]).read_text().splitlines()
+assert lines[0] == "<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/spec.md ownership=full-file -->"
+assert lines[-1] == "<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/spec.md -->"
+PY
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "For spec work, inspect the current change's PRD and proposal directly"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Spec persistence: file-only"
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Before spec drafting, inspect the current change PRD and proposal artifacts"
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Spec stays acceptance-only"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "For spec closure"
+assert_file_contains "$target/.github/copilot-instructions.md" "Before spec, inspect the current change's PRD and proposal"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" 'scenarios in `docs/pegasus/changes/<change-id>/spec.md`'
+if grep -Fq 'scenarios in `docs/pegasus/spec.md`' "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md"; then
+  printf 'stable spec contains contradictory root spec path for change-scoped flow\n' >&2
+  exit 1
+fi
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "if repair and reread still fail validation, it MUST block MCP persistence and success"
 assert_file_contains "$target/docs/pegasus/design.md" "## Inputs"
 assert_file_contains "$target/docs/pegasus/design.md" "## Design Goals / Non-Goals"
 assert_file_contains "$target/docs/pegasus/design.md" "## Alternatives Considered"

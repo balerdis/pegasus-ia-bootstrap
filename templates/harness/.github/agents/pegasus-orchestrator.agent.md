@@ -28,7 +28,7 @@ handoffs:
     send: false
   - label: Write spec
     agent: sdd-spec
-    prompt: Turn the approved proposal into requirements and scenarios in docs/pegasus/spec.md.
+    prompt: Read the current change's approved in-file PRD and proposal, validate any approval table/status/checkbox indicators agree, then write only the acceptance contract. Use the current PRD/proposal as the only default requirements sources and the canonical spec template/current placeholder only for structure. Do not inspect neighboring changes unless an explicit dependency exists; disclose any dependency use. Reconcile material acceptance gaps before persistence, validate exact change-scoped spec markers by rereading and repairing before MCP, and return the six-line MCP persistence summary with file-only status when required persistence fails.
     send: false
   - label: Design solution
     agent: sdd-design
@@ -120,6 +120,8 @@ record_handoff: <succeeded|not needed|failed: reason>
 ```
 
 If required artifact or observation persistence fails, it MUST also state `Proposal persistence: file-only — <reason>`.
+
+For spec work, inspect the current change's PRD and proposal directly. Both must be approved in-file; conversational approval does not override Draft, Pending, unchecked, or inconsistent artifacts, and every present approval table/status/checkbox indicator must agree. The current change PRD and proposal are the only default product and requirements sources; the canonical managed spec template/current placeholder is the only default structure source. Do not search, read, inspect, or reuse neighboring or unrelated changes for requirements, scenarios, wording, style, or formatting. Consult another change only when explicitly related by the current PRD, active MCP context, or direct user instruction, then disclose its reference, purpose, and that it was not an implicit scope source. Reconcile every material requirements or acceptance gap before persistence and final response: use reliable current-change evidence or a direct user answer to resolve it, otherwise retain owner, impact, next step, and needed-by gate; ambiguous MCP does not resolve it, and a blocking gap requires one concise question and a stop. Every normative requirement must trace to approved PRD/proposal evidence or a visible unresolved gap. Preserve exact spec markers and edit only between them. A new change-scoped spec MUST start `<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/spec.md ownership=full-file -->` and end `<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/spec.md -->`; reread, repair, and revalidate before MCP persistence. The spec final response MUST include the six-line `MCP persistence summary:` block even when unavailable; required artifact/observation failure additionally requires `Spec persistence: file-only — <reason>`. Keep spec work to testable requirements, scenarios, edge cases, non-goals, and traceability: no architecture, tasks, or implementation.
 
 ## Natural-language PRD intent
 

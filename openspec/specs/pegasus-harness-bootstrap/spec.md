@@ -454,9 +454,51 @@ The system MUST create a PRD template and production-ready SDD templates under `
 
 - GIVEN an approved PRD and approved proposal
 - WHEN the spec phase is run
-- THEN generated guidance requires requirements and OpenSpec-style `GIVEN` / `WHEN` / `THEN` scenarios in `docs/pegasus/spec.md`
+- THEN generated guidance requires requirements and OpenSpec-style `GIVEN` / `WHEN` / `THEN` scenarios in `docs/pegasus/changes/<change-id>/spec.md`
 - AND it records PRD/proposal source status, edge cases, non-goals, and traceability
 - AND it excludes architecture, implementation details, task checklists, and code changes
+
+#### Scenario: Spec validates approved current-change sources
+
+- GIVEN spec work is requested for a current change
+- WHEN the PRD or proposal is Draft, Pending, unchecked, or has inconsistent in-file approval indicators
+- THEN generated guidance MUST stop before finalizing the spec
+- AND it MUST NOT treat conversational approval as overriding the artifact
+
+#### Scenario: Spec isolates unrelated changes
+
+- GIVEN the current change has an approved PRD and proposal and neighboring changes exist
+- WHEN generated guidance writes the spec
+- THEN it MUST use only the current change PRD and proposal as default product and requirements sources
+- AND it MUST NOT inspect or reuse neighboring requirements, scenarios, wording, style, or formatting
+- AND a permitted explicit dependency MUST be disclosed with its reference, purpose, and non-implicit-scope statement
+
+#### Scenario: Spec reconciles material acceptance gaps
+
+- GIVEN current-change evidence leaves a material requirements or acceptance gap
+- WHEN spec guidance prepares finalization
+- THEN it MUST resolve the gap only with reliable current-change evidence or a direct user answer
+- OR it MUST retain owner, impact, next step, and needed-by gate visibly
+- AND an ambiguous MCP response MUST NOT resolve the gap
+- AND a blocking gap MUST ask one concise question and stop before finalization
+
+#### Scenario: Spec validates markers and reports persistence state
+
+- GIVEN a change-scoped spec is written or refined
+- WHEN the agent prepares MCP persistence
+- THEN it MUST preserve or create exact `docs/pegasus/changes/<change-id>/spec.md` managed start and end markers and reread them first
+- AND it MUST repair and reread invalid markers before MCP persistence
+- AND, if repair and reread still fail validation, it MUST block MCP persistence and success, report a file-only failure, and stop the phase
+- AND it MUST provide six `MCP persistence summary:` status lines even when MCP is unavailable
+- AND required artifact or observation persistence failure MUST report `Spec persistence: file-only — <reason>`
+
+#### Scenario: Spec preserves language and phase boundary
+
+- GIVEN spec prose is written in a target language
+- WHEN the acceptance contract is generated
+- THEN it MUST preserve standard orthography and diacritics
+- AND each normative requirement MUST trace to approved PRD/proposal evidence or a visible unresolved gap
+- AND it MUST NOT create architecture, task, or implementation content
 
 #### Scenario: Design captures technical approach only
 
