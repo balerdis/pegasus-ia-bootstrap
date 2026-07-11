@@ -371,6 +371,38 @@ The system MUST create a PRD template and production-ready SDD templates under `
 - THEN it MUST NOT invent a default or call the omitted detail a preserved PRD assumption
 - AND it MUST ask for clarification before finalizing or record the exact unresolved gap and impact
 
+#### Scenario: Proposal gives every material gap a terminal disposition
+
+- GIVEN an approved PRD or current-change evidence leaves a material gap about scope, user-visible behavior, acceptance, risk, or a phase gate
+- WHEN generated guidance drafts or finalizes a proposal
+- THEN it MUST reconcile that gap before marker validation and MCP persistence to exactly one terminal disposition
+- AND it MUST resolve the gap only with explicit reliable current-change evidence or a direct user answer, recording that evidence
+- AND it MUST record resolved evidence, including a blocking gap resolved before writing, in `Open Decisions / Material Gaps`
+- OR it MUST retain a visible unresolved entry in `Open Decisions / Material Gaps` with owner, impact, next step, and needed-by gate
+- AND it MUST NOT leave the gap implicit, duplicated, or as an unqualified `TBD`
+
+#### Scenario: Blocking material gap stops proposal work
+
+- GIVEN a material gap prevents safe proposal scope, acceptance, or a proposal-phase gate
+- WHEN generated guidance identifies the gap before proposal writing or finalization
+- THEN it MUST ask one concise question and stop before writing or finalizing the proposal
+- AND it MUST NOT validate proposal markers or make MCP persistence calls
+
+#### Scenario: Non-blocking material gap remains visible
+
+- GIVEN a material gap does not prevent safe proposal scope, acceptance, or a proposal-phase gate
+- WHEN generated guidance writes the proposal
+- THEN it MUST record the gap in the dedicated `Open Decisions / Material Gaps` section
+- AND the entry MUST name its owner, impact, next step, and needed-by gate
+- AND the final response MUST summarize it as unresolved rather than claiming no open questions
+
+#### Scenario: Ambiguous MCP does not resolve a material gap
+
+- GIVEN MCP active-context recovery is `ambiguous` while a material gap remains
+- WHEN generated guidance reconciles proposal gaps
+- THEN it MUST NOT treat the ambiguous MCP response as reliable current-change evidence or as a resolution
+- AND it MUST continue from reliable current-change artifacts and retain the gap as unresolved unless a direct user answer or explicit reliable evidence resolves it
+
 #### Scenario: Change-scoped proposal is managed and closes explicitly
 
 - GIVEN generated guidance creates `docs/pegasus/changes/<change-id>/proposal.md`

@@ -63,13 +63,23 @@ Summarize the product/workflow direction at a high level. Do not include archite
 
 Use `.github/agents/pegasus-orchestrator.agent.md` as the primary VS Code/Copilot entry point for guided work. Keep `AGENTS.md` and `docs/pegasus/` as portable sources of truth.
 
-## Assumptions / Decision Gaps
+## Assumptions
 
-| Assumption or Gap | Impact | Owner / Next Step |
-|-------------------|--------|-------------------|
-| TBD | TBD | TBD |
+| Assumption | Explicit PRD Source | Status |
+|------------|---------------------|--------|
+| TBD | TBD | Traceable |
 
-Record only assumptions explicitly stated in the approved PRD. Record every material detail absent from the PRD as an unresolved gap with its impact; do not invent a default or state that the PRD preserved it.
+Record only assumptions explicitly stated in the approved PRD. Do not turn an unstated detail into a preserved PRD assumption.
+
+## Open Decisions / Material Gaps
+
+Reconcile every material gap before proposal finalization. A material gap is a missing, contradictory, or unverified detail that can change scope, user-visible behavior, acceptance, risk, or a phase gate. Each row has exactly one terminal disposition: resolved only by explicit reliable current-change evidence or a direct user answer, or unresolved with all required fields below. An ambiguous MCP response never resolves a material gap.
+
+| Material Gap | Status | Resolution Evidence / Source | Owner | Impact | Next Step | Needed-by Gate |
+|--------------|--------|------------------------------|-------|--------|-----------|----------------|
+| _No material gaps identified; remove this row before recording a gap._ | No gaps identified | Verified against the approved PRD | N/A | N/A | N/A | Proposal finalization |
+
+Classify gaps before writing. For a blocking gap, ask one concise question and stop before writing or finalizing the proposal; after an explicit reliable answer resolves it, record the resolved evidence in this section before proceeding. Record non-blocking unresolved gaps visibly in this section; do not invent a default. Reconcile this section again before marker validation and MCP persistence. The final response must summarize resolved and unresolved material gaps and must not claim no open questions when unresolved entries remain.
 
 ## PRD Traceability
 

@@ -28,7 +28,9 @@ The proposal is a bridge between the approved PRD and the future spec. It is not
 
 - Every product claim, scope item, user, rule, assumption described as preserved, and acceptance statement MUST be traceable to explicit PRD text. Do not infer a product detail from context or common defaults.
 - Do not label an unstated detail as an assumption preserved from the PRD. Record it as an unresolved decision gap instead.
-- When a missing decision materially changes scope or acceptance (for example, how many planets to show), ask one concise question before finalizing. If the user cannot answer in this phase, record the exact unresolved gap, its impact, and the owner/next step; do not invent a default.
+- A material gap is any missing, contradictory, or unverified detail that can change scope, user-visible behavior, acceptance, risk, or a phase gate (for example, how many planets to show). Before finalization, reconcile every material gap to exactly one terminal disposition: (1) resolved by an explicit, reliable current-change artifact or direct user answer, with that evidence recorded in `Open Decisions / Material Gaps`, including a blocking gap resolved before writing; or (2) an unresolved entry in that section with owner, impact, next step, and needed-by gate. Do not leave a material gap implicit, duplicated, or labeled `TBD` without a disposition.
+- MCP is supporting context, not product-decision evidence. An `ambiguous` MCP response never resolves a material gap; continue from reliable current-change artifacts and keep the gap unresolved unless explicit reliable evidence or a direct user answer resolves it.
+- Classify each material gap before writing: blocking if it prevents a safe proposal scope, acceptance, or proposal-phase gate; otherwise non-blocking. For a blocking gap, ask one concise question and stop before writing or finalizing the proposal. For a non-blocking gap, write it only in the dedicated `Open Decisions / Material Gaps` section; do not invent a default.
 
 ## What to include
 
@@ -37,7 +39,7 @@ The proposal is a bridge between the approved PRD and the future spec. It is not
 - Related Change Traceability: omitted when no related change was consulted; otherwise state the reference/change, exact purpose/dependency, and that it was not used as an implicit scope source.
 - Intent, scope, users, and situations from the approved PRD.
 - Lightweight approach: a short product/workflow direction only, with no architecture or implementation design.
-- Assumptions and decision gaps that need confirmation before or during spec.
+- Assumptions explicitly supported by the PRD, plus the dedicated `Open Decisions / Material Gaps` section for non-blocking material gaps.
 - Risks and rollback at a product/workflow level.
 - Acceptance: how a reviewer will know the proposal is ready for spec.
 - Handoff to spec: what the spec writer should turn into requirements and scenarios.
@@ -52,7 +54,7 @@ The proposal is a bridge between the approved PRD and the future spec. It is not
 
 ## Required final output contract
 
-After writing, reread the proposal before any MCP persistence call. Verify that a change-scoped proposal's exact first line is its required start marker and its exact final line is its required end marker. If either marker is missing, wrong, moved, or altered, repair the artifact by preserving or restoring both markers and editing only the content between them, then reread and validate both exact first/last lines again. Do not make any MCP persistence call or report success until marker validation passes. If validation cannot pass, stop with a file-only failure and do not advance the phase.
+After writing, reread the proposal and reconcile every material gap before marker validation and before any MCP persistence call. Confirm each gap has exactly one terminal disposition, resolved entries cite explicit reliable current-change evidence or a direct user answer, and every unresolved entry visibly states its owner, impact, next step, and needed-by gate. If reconciliation finds a blocking gap, ask and stop; do not validate markers, persist, or report proposal success. Then verify that a change-scoped proposal's exact first line is its required start marker and its exact final line is its required end marker. If either marker is missing, wrong, moved, or altered, repair the artifact by preserving or restoring both markers and editing only the content between them, then reread and validate both exact first/last lines again. Do not make any MCP persistence call or report success until marker validation passes. If validation cannot pass, stop with a file-only failure and do not advance the phase.
 
 Only after successful marker validation, the user-facing final response MUST contain this exact block with all six lines. Do not finish with prose only, including when MCP is unavailable:
 
@@ -67,3 +69,5 @@ record_handoff: <succeeded|not needed|failed: reason>
 ```
 
 Use `failed: MCP unavailable` when `health` prevents a required call; use `not needed` only when the call was genuinely unnecessary. When required `record_artifact` or `record_observation` persistence fails, append exactly `Proposal persistence: file-only — <reason>` after the block. Do not advance to spec, design, tasks, or implementation.
+
+The final response MUST summarize resolved and unresolved material gaps. It MUST NOT say `no open questions`, `no open decisions`, or equivalent when any unresolved material gap remains; name those unresolved gaps and their needed-by gates instead.

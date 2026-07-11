@@ -357,6 +357,12 @@ assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "current PRD
 assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "Related Change Traceability entry"
 assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "it was not used as an implicit scope source"
 assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "Never implicitly inherit scope, decisions, assumptions, wording, or style"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "exactly one terminal disposition"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" 'An `ambiguous` MCP response never resolves a material gap'
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "For a blocking gap, ask one concise question and stop before writing or finalizing the proposal"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" 'dedicated `Open Decisions / Material Gaps` section'
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "reconcile every material gap before marker validation and before any MCP persistence call"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" 'MUST NOT say `no open questions`, `no open decisions`, or equivalent'
 assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "ensure_project: <succeeded|not needed|failed: reason>"
 assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "ensure_change: <succeeded|not needed|failed: reason>"
 assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "record_artifact: <succeeded|not needed|failed: reason>"
@@ -375,6 +381,17 @@ assert_file_contains "$target/docs/pegasus/proposal.md" "The current change PRD 
 assert_file_contains "$target/docs/pegasus/proposal.md" "Consult another change only when the current PRD, active MCP context, or direct user instruction explicitly declares a dependency/relation"
 assert_file_contains "$target/docs/pegasus/proposal.md" "Not an Implicit Scope Source"
 assert_file_contains "$target/docs/pegasus/proposal.md" "were not inherited implicitly"
+assert_file_contains "$target/docs/pegasus/proposal.md" "## Open Decisions / Material Gaps"
+assert_file_contains "$target/docs/pegasus/proposal.md" "Resolution Evidence / Source"
+assert_file_contains "$target/docs/pegasus/proposal.md" "Needed-by Gate"
+assert_file_contains "$target/docs/pegasus/proposal.md" "An ambiguous MCP response never resolves a material gap"
+assert_file_contains "$target/docs/pegasus/proposal.md" "For a blocking gap, ask one concise question and stop before writing or finalizing the proposal"
+assert_file_contains "$target/docs/pegasus/proposal.md" "after an explicit reliable answer resolves it, record the resolved evidence in this section before proceeding"
+assert_file_contains "$target/docs/pegasus/proposal.md" "No gaps identified"
+if grep -Fq '| None identified, or TBD | TBD | TBD | TBD | TBD | TBD |' "$target/docs/pegasus/proposal.md"; then
+  printf 'proposal template contains a contradictory unresolved TBD material-gap row\n' >&2
+  exit 1
+fi
 assert_file_contains "$target/docs/pegasus/apply-progress.md" "Current In-Progress Work"
 assert_file_contains "$target/docs/pegasus/apply-progress.md" "Merge updates into the existing useful history"
 assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "Verify from fresh context when possible"
@@ -389,6 +406,10 @@ assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "The
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Do not search, read, inspect, or reuse neighboring or unrelated change artifacts"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "When that happens, disclose in Related Change Traceability"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "that it was not an implicit scope source"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "A blocking material gap requires one concise user question and a stop before proposal writing/finalization"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "An ambiguous MCP response never resolves a material gap"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Require reconciliation of every material gap before marker validation and MCP persistence"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "without claiming no open questions while any unresolved gap remains"
 assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" 'Record operational memory through `pegasus-memory-mcp`'
 assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "Before the first recovery or save attempt, call the MCP \`health\` tool"
 assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "do not claim persistent memory was saved"
@@ -472,6 +493,10 @@ assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Do not search, read, inspect, or reuse neighboring or unrelated change artifacts"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Consult another change only when the current PRD, active MCP context, or direct user instruction explicitly declares a dependency/relation"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "that it was not used as an implicit scope source"
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Reconcile every material gap before finalization"
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "An ambiguous MCP response never resolves a material gap"
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "for a blocking gap, ask one concise question and stop before writing/finalizing"
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "The final response must summarize resolved and unresolved gaps"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "tell the user the PRD file path and ask them to review it"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "product decisions are open"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'record_artifact`, and `record_observation` as `succeeded`, `not needed`, or `failed: <reason>`'
