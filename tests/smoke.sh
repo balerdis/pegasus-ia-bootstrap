@@ -83,6 +83,13 @@ esac
 
 "$CLI" --help >/dev/null
 "$PYTHON_BIN" "$CLI" --help >/dev/null
+version_output="$($PYTHON_BIN "$CLI" --version)"
+case "$version_output" in
+  "Pegasus Harness Bootstrap 0.3.0") ;;
+  *) printf 'expected clear Pegasus product version output\n' >&2; exit 1 ;;
+esac
+assert_file_contains "$ROOT/pyproject.toml" 'version = "0.3.0"'
+assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.3.0"'
 help_output="$($PYTHON_BIN "$CLI" --help)"
 case "$help_output" in
   *"--install-cursor-global"*) ;;
@@ -135,6 +142,10 @@ default_plan="$($PYTHON_BIN "$CLI" --project-name default-project --dry-run)"
 case "$default_plan" in
   *"Target: /var/www/html/personal/default-project"*) ;;
   *) printf 'expected default target path in dry-run output\n' >&2; exit 1 ;;
+esac
+case "$default_plan" in
+  *"Installed CLI version: 0.3.0"*"Source template version: 0.3.0"*) ;;
+  *) printf 'expected bootstrap plan version evidence\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
   *"Primary IDE: VS Code with GitHub Copilot"*".github/copilot-instructions.md"*"AGENTS.md"*"docs/pegasus"*".cursor"*) ;;
@@ -801,27 +812,25 @@ printf 'custom apply progress\n' > "$target/docs/pegasus/apply-progress.md"
 mkdir -p "$target/.github"
 printf 'custom copilot instructions\n' > "$target/.github/copilot-instructions.md"
 rm "$target/.github/agents/doc-designer.agent.md"
-conflict_output="$($PYTHON_BIN "$CLI" --project-name sample-project --target-path "$target")"
+if conflict_output="$($PYTHON_BIN "$CLI" --project-name sample-project --target-path "$target" 2>&1)"; then
+  printf 'normal bootstrap should refuse a manifest-backed workspace\n' >&2
+  exit 1
+fi
 case "$conflict_output" in
-  *"Conflicts (skipped unless --force):"*"$target/AGENTS.md"*"Existing Pegasus workspace detected (manifest found)."*) ;;
-  *) printf 'expected existing Pegasus workspace conflicts to recommend manifest-aware sync\n' >&2; exit 1 ;;
-esac
-case "$conflict_output" in
-  *"pegasus-harness-bootstrap --target-path $target --sync-workspace --dry-run"*"pegasus-harness-bootstrap --target-path $target --sync-workspace"*"Use --force only for intentional aggressive full replacement; it may overwrite managed-file customizations and conflicts."*) ;;
-  *) printf 'expected existing Pegasus workspace conflict output to recommend safe sync before force\n' >&2; exit 1 ;;
+  *"existing Pegasus workspace manifest found; normal bootstrap will not replace lifecycle metadata."*"Run --sync-workspace --dry-run, then --sync-workspace."*) ;;
+  *) printf 'expected manifest-backed bootstrap refusal to recommend safe sync\n' >&2; exit 1 ;;
 esac
 assert_file_contains "$target/AGENTS.md" "user content"
 assert_file_contains "$target/docs/pegasus/apply-progress.md" "custom apply progress"
 assert_file_contains "$target/.github/copilot-instructions.md" "custom copilot instructions"
-[ -f "$target/.github/agents/doc-designer.agent.md" ] || { printf 'expected no-force run to create missing non-conflicting file\n' >&2; exit 1; }
+[ ! -e "$target/.github/agents/doc-designer.agent.md" ] || { printf 'manifest-backed bootstrap unexpectedly wrote a missing harness file\n' >&2; exit 1; }
 "$PYTHON_BIN" - "$target/.pegasus-bootstrap-ia/manifest.json" <<'PY'
 import json
 import sys
 from pathlib import Path
 
 manifest = json.loads(Path(sys.argv[1]).read_text())
-assert "AGENTS.md" in manifest["install"]["skipped_conflicts"]
-assert ".github/copilot-instructions.md" in manifest["install"]["skipped_conflicts"]
+assert manifest["install"]["skipped_conflicts"] == []
 paths = {record["path"] for record in manifest["install"]["files"]}
 assert ".github/agents/doc-designer.agent.md" in paths
 PY
@@ -850,6 +859,74 @@ case "$non_pegasus_conflict_output" in
   *) ;;
 esac
 assert_file_contains "$non_pegasus_target/AGENTS.md" 'non-Pegasus content'
+
+recovery_target="$TMP/recovery-target"
+printf 'yes\n' | "$PYTHON_BIN" "$CLI" --project-name recovery-project --target-path "$recovery_target" >/dev/null
+printf 'user PRD artifact\n' > "$recovery_target/docs/pegasus/prd.md"
+printf 'user MCP config\n' > "$recovery_target/.vscode/mcp.json"
+cat > "$recovery_target/.github/agents/sdd-spec.agent.md" <<'MARKERS'
+<!-- pegasus-harness:start path=.github/agents/sdd-spec.agent.md ownership=full-file -->
+STALE PEGASUS SPEC AGENT
+<!-- pegasus-harness:end path=.github/agents/sdd-spec.agent.md -->
+MARKERS
+"$PYTHON_BIN" - "$recovery_target/.pegasus-bootstrap-ia/manifest.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+manifest_path = Path(sys.argv[1])
+manifest = json.loads(manifest_path.read_text())
+manifest["template_version"] = "1"
+manifest.pop("package_version", None)
+manifest["install"]["files"] = []
+manifest["ownership"]["files"] = []
+manifest["update"] = {"last_run_at": "historic", "overwrite_conflicts": ["historic"]}
+manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+PY
+cp "$recovery_target/.pegasus-bootstrap-ia/manifest.json" "$TMP/recovery-manifest-before.json"
+if recovery_bootstrap_output="$($PYTHON_BIN "$CLI" --project-name recovery-project --target-path "$recovery_target" 2>&1)"; then
+  printf 'normal bootstrap should not rewrite an empty manifest-backed workspace\n' >&2
+  exit 1
+fi
+case "$recovery_bootstrap_output" in
+  *"normal bootstrap will not replace lifecycle metadata"*) ;;
+  *) printf 'expected empty-manifest bootstrap refusal\n' >&2; exit 1 ;;
+esac
+cmp "$TMP/recovery-manifest-before.json" "$recovery_target/.pegasus-bootstrap-ia/manifest.json" || { printf 'normal bootstrap rewrote historical manifest metadata\n' >&2; exit 1; }
+recovery_dry_output="$($PYTHON_BIN "$CLI" --target-path "$recovery_target" --sync-workspace --dry-run)"
+case "$recovery_dry_output" in
+  *"Installed CLI version: 0.3.0"*"Source template version: 0.3.0"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
+  *) printf 'expected empty-manifest dry-run recovery and version evidence\n' >&2; exit 1 ;;
+esac
+assert_file_contains "$recovery_target/.github/agents/sdd-spec.agent.md" 'STALE PEGASUS SPEC AGENT'
+assert_file_contains "$recovery_target/docs/pegasus/prd.md" 'user PRD artifact'
+assert_file_contains "$recovery_target/.vscode/mcp.json" 'user MCP config'
+recovery_sync_output="$($PYTHON_BIN "$CLI" --target-path "$recovery_target" --sync-workspace)"
+case "$recovery_sync_output" in
+  *"Completed Pegasus workspace sync."*"Updated: $recovery_target/.github/agents/sdd-spec.agent.md"*"Recovered managed ownership: $recovery_target/.github/agents/sdd-spec.agent.md"*) ;;
+  *) printf 'expected recovered managed agent to be updated and reported\n' >&2; exit 1 ;;
+esac
+assert_file_contains "$recovery_target/.github/agents/sdd-spec.agent.md" 'Pegasus Memory closure contract'
+assert_file_contains "$recovery_target/docs/pegasus/prd.md" 'user PRD artifact'
+assert_file_contains "$recovery_target/.vscode/mcp.json" 'user MCP config'
+"$PYTHON_BIN" - "$recovery_target/.pegasus-bootstrap-ia/manifest.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+manifest = json.loads(Path(sys.argv[1]).read_text())
+records = {record["path"]: record for record in manifest["ownership"]["files"]}
+assert manifest["template_version"] == "0.3.0"
+assert manifest["package_version"] == "0.3.0"
+assert records[".github/agents/sdd-spec.agent.md"]["action"] == "recovered"
+assert not any(path.startswith("docs/pegasus/") for path in records)
+PY
+recovery_repeat_output="$($PYTHON_BIN "$CLI" --target-path "$recovery_target" --sync-workspace)"
+case "$recovery_repeat_output" in
+  *"Recovered managed ownership:"*) printf 'ownership recovery should be idempotent\n' >&2; exit 1 ;;
+  *"Completed Pegasus workspace sync."*) ;;
+  *) printf 'expected idempotent recovery sync completion\n' >&2; exit 1 ;;
+esac
 
 sync_target="$TMP/sync-target"
 printf 'yes\n' | "$PYTHON_BIN" "$CLI" --project-name sync-project --target-path "$sync_target" >/dev/null

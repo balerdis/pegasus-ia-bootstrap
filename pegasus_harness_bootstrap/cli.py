@@ -22,12 +22,14 @@ from pegasus_harness_bootstrap.manifest import (
     build_manifest,
     classify_manifest_path,
     file_record,
+    has_exact_ownership_marker,
     is_safe_sync_managed_path,
     manifest_file_records,
     render_workspace_content,
     update_manifest_for_sync,
     write_manifest,
 )
+from pegasus_harness_bootstrap import __version__
 
 
 DEFAULT_ROOT = Path("/var/www/html/personal")
@@ -81,7 +83,7 @@ class WorkspaceTarget:
     root: Path
 
 
-SyncState = Literal["create", "updateable", "conflict", "untouched", "obsolete"]
+SyncState = Literal["create", "updateable", "conflict", "recovered", "untouched", "obsolete"]
 
 
 @dataclass(frozen=True)
@@ -102,6 +104,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="pegasus-harness-bootstrap",
         description="Configure a local Pegasus VS Code/Copilot harness in a target workspace.",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"Pegasus Harness Bootstrap {__version__}",
+        help="Show the Pegasus Harness Bootstrap product and package version.",
     )
     parser.add_argument(
         "--project-name",
@@ -566,6 +574,8 @@ def print_plan(
     print(f"Project: {project_name}")
     print(f"Target: {target}")
     print(f"Template root: {root}")
+    print(f"Installed CLI version: {__version__}")
+    print(f"Source template version: {__version__}")
     print("Primary IDE: VS Code with GitHub Copilot")
     print(f"Manifest: {target / MANIFEST_RELATIVE_PATH}")
 
@@ -839,10 +849,17 @@ def plan_workspace_sync(target: WorkspaceTarget, manifest: dict, current_files: 
     plan: list[SyncPlanItem] = []
 
     for rel_path in sorted(current):
-        state = classify_manifest_path(target.root, rel_path, records.get(rel_path))
+        record = records.get(rel_path)
+        destination = target.root / rel_path
+        if record is None and has_exact_ownership_marker(destination, rel_path):
+            state = "recovered"
+        else:
+            state = classify_manifest_path(target.root, rel_path, record)
         reason = "current generated file missing" if state == "create" else "manifest checksum matched"
         if state == "conflict":
             reason = "current file differs from manifest checksum"
+        elif state == "recovered":
+            reason = "exact Pegasus ownership marker recovered missing manifest ownership"
         elif state == "untouched":
             reason = "existing file is not manifest-owned"
         plan.append(SyncPlanItem(rel_path, state, reason))
@@ -871,16 +888,21 @@ def print_sync_plan(
     plan: list[SyncPlanItem],
     backup_root: Path,
     overwrite_conflicts: bool,
+    manifest: dict,
 ) -> None:
     print("Pegasus workspace sync plan")
     print(f"Project: {target.project_name}")
     print(f"Target: {target.root}")
     print(f"Template root: {root}")
     print(f"Manifest: {target.root / MANIFEST_RELATIVE_PATH}")
+    print(f"Installed CLI version: {__version__}")
+    print(f"Source template version: {__version__}")
+    print(f"Manifest template version: {manifest.get('template_version', 'unknown')}")
     print("Scope: current workspace only")
 
     sections = (
         ("Creates:", "create"),
+        ("Recovered managed files (will update):", "recovered"),
         ("Updates:", "updateable"),
         ("Conflicts (skipped unless --overwrite-conflicts):", "conflict"),
         ("User-created files preserved:", "untouched"),
@@ -894,7 +916,11 @@ def print_sync_plan(
         for item in items:
             print(f"  {target.root / item.rel_path} ({item.reason})")
 
-    backup_items = [item for item in plan if item.state == "updateable" or (item.state == "conflict" and overwrite_conflicts)]
+    backup_items = [
+        item
+        for item in plan
+        if item.state in {"updateable", "recovered"} or (item.state == "conflict" and overwrite_conflicts)
+    ]
     if backup_items:
         print("\nBackups before replacement:")
         for item in backup_items:
@@ -924,7 +950,11 @@ def apply_workspace_sync(
     overwrite_conflicts: bool,
     backup_root: Path,
 ) -> tuple[list[Path], list[Path], Path | None]:
-    writable = [item for item in plan if item.state in {"create", "updateable"} or (item.state == "conflict" and overwrite_conflicts)]
+    writable = [
+        item
+        for item in plan
+        if item.state in {"create", "updateable", "recovered"} or (item.state == "conflict" and overwrite_conflicts)
+    ]
     active_backup_root = backup_root if any((target.root / item.rel_path).exists() for item in writable) else None
     written_records: list[dict] = []
     written_paths: list[Path] = []
@@ -941,15 +971,14 @@ def apply_workspace_sync(
         destination.parent.mkdir(parents=True, exist_ok=True)
         rendered = rendered_workspace_file(root, item.rel_path, target, memory_mcp)
         destination.write_text(rendered + "\n", encoding="utf-8")
-        action = "created" if item.state == "create" else "updated"
+        action = "created" if item.state == "create" else "recovered" if item.state == "recovered" else "updated"
         written_records.append(file_record(item.rel_path, rendered, action))
         written_paths.append(destination)
 
-    if written_records:
-        write_manifest(
-            target.root,
-            update_manifest_for_sync(manifest, updated_records=written_records, overwritten_conflicts=overwritten_conflicts),
-        )
+    write_manifest(
+        target.root,
+        update_manifest_for_sync(manifest, updated_records=written_records, overwritten_conflicts=overwritten_conflicts),
+    )
     return written_paths, backups, active_backup_root
 
 
@@ -1301,7 +1330,7 @@ def main(argv: list[str] | None = None) -> int:
         memory_mcp = resolve_memory_mcp(allow_install=not args.dry_run)
         sync_plan = plan_workspace_sync(workspace_target, manifest, current_files)
         plan_backup_root = sync_backup_root(workspace_target)
-        print_sync_plan(workspace_target, root, sync_plan, plan_backup_root, args.overwrite_conflicts)
+        print_sync_plan(workspace_target, root, sync_plan, plan_backup_root, args.overwrite_conflicts, manifest)
 
         if args.dry_run:
             print("\nDry run only; no files were written.")
@@ -1323,6 +1352,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Updated: {path}")
         for backup in backup_paths:
             print(f"Backup created: {backup}")
+        for item in sync_plan:
+            if item.state == "recovered":
+                print(f"Recovered managed ownership: {workspace_target.root / item.rel_path}")
+        print(f"Applied manifest template version: {__version__}")
         conflicts = [item for item in sync_plan if item.state == "conflict"]
         if conflicts and not args.overwrite_conflicts:
             print("Conflicting Pegasus-managed files were preserved; rerun with --overwrite-conflicts to back up and replace them.")
@@ -1446,6 +1479,14 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     root = template_root()
+    existing_manifest_path = workspace_manifest_path(target)
+    if existing_manifest_path.exists() and not args.force:
+        existing_manifest = load_workspace_manifest(target)
+        workspace_target_from_manifest(target, existing_manifest)
+        fail(
+            "existing Pegasus workspace manifest found; normal bootstrap will not replace lifecycle metadata. "
+            "Run --sync-workspace --dry-run, then --sync-workspace. Use --force only for intentional full replacement."
+        )
     files = template_files(root)
     workspace_files = workspace_inventory_files(files)
     creates, overwrites, conflicts = build_plan(target, workspace_files, args.force)
@@ -1549,6 +1590,7 @@ def main(argv: list[str] | None = None) -> int:
         write_global_files(global_root, global_rules_dir, global_files, global_backups)
 
     print("\nCompleted Pegasus VS Code/Copilot harness bootstrap.")
+    print(f"Pegasus Harness Bootstrap version: {__version__}")
     print(f"Open the target workspace in VS Code with Copilot: {target}")
     print(f"Portable agent guidance: {target / 'AGENTS.md'}")
     print("Primary Copilot entry point: .github/agents/pegasus-orchestrator.agent.md")

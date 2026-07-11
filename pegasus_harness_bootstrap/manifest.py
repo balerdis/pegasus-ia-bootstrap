@@ -8,11 +8,13 @@ import json
 from pathlib import Path
 from typing import Any
 
+from pegasus_harness_bootstrap import __version__
+
 
 MANIFEST_RELATIVE_PATH = Path(".pegasus-bootstrap-ia/manifest.json")
 MANAGED_BY = "pegasus-harness-bootstrap"
 MANIFEST_SCHEMA_VERSION = 1
-TEMPLATE_VERSION = "1"
+TEMPLATE_VERSION = __version__
 OWNERSHIP_MARKER = "pegasus-harness"
 
 FORBIDDEN_POINTER_KEYS = (
@@ -66,6 +68,22 @@ def checksum_file(path: Path) -> str:
 def is_safe_sync_managed_path(rel_path: Path) -> bool:
     clean = Path(rel_path.as_posix())
     return clean in SYNC_MANAGED_FILES or any(clean == prefix or prefix in clean.parents for prefix in SYNC_MANAGED_PREFIXES)
+
+
+def has_exact_ownership_marker(path: Path, rel_path: Path) -> bool:
+    """Return whether a managed text file proves its own Pegasus ownership."""
+    if rel_path.suffix == ".json" or not path.is_file():
+        return False
+    try:
+        content = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        return False
+    rel = rel_path.as_posix()
+    mode = ownership_mode(rel_path)
+    return (
+        f"<!-- {OWNERSHIP_MARKER}:start path={rel} ownership={mode} -->" in content
+        and f"<!-- {OWNERSHIP_MARKER}:end path={rel} -->" in content
+    )
 
 
 def manifest_file_records(manifest: dict[str, Any]) -> dict[Path, dict[str, Any]]:
@@ -122,6 +140,12 @@ def update_manifest_for_sync(
     ownership["files"] = records
     next_manifest["ownership"] = ownership
 
+    # Old manifests used template version "1" and did not identify the CLI
+    # package. Upgrade only on an explicit sync; normal bootstrap never rewrites
+    # a manifest-backed workspace.
+    next_manifest["template_version"] = TEMPLATE_VERSION
+    next_manifest["package_version"] = __version__
+
     update = dict(next_manifest.get("update", {})) if isinstance(next_manifest.get("update"), dict) else {}
     update["last_run_at"] = now
     update["overwrite_conflicts"] = [path.as_posix() for path in overwritten_conflicts]
@@ -151,6 +175,7 @@ def file_record(rel_path: Path, content: str, action: str) -> dict[str, Any]:
         "ownership": ownership_mode(rel_path),
         "managed_by": MANAGED_BY,
         "template_version": TEMPLATE_VERSION,
+        "package_version": __version__,
         "checksum_sha256": checksum_text(content),
         "action": action,
     }

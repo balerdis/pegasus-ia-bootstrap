@@ -12,6 +12,13 @@ pegasus-harness-bootstrap --project-name gestor-solicitudes-mvp --dry-run
 pegasus-harness-bootstrap --project-name gestor-solicitudes-mvp
 ```
 
+Check the installed product release at any time:
+
+```sh
+pegasus-harness-bootstrap --version
+# Pegasus Harness Bootstrap 0.3.0
+```
+
 For everyday use from outside this checkout, install the CLI with `pipx`:
 
 ```sh
@@ -20,7 +27,9 @@ pegasus-harness-bootstrap --project-name gestor-solicitudes-mvp --dry-run
 ```
 
 By default, the target workspace path is `/var/www/html/personal/<project-name>`.
-Use `--target-path <path>` for an explicit target. For an existing Pegasus workspace (one with `.pegasus-bootstrap-ia/manifest.json`), update managed files safely with `--sync-workspace --dry-run` first, then `--sync-workspace`; the project is inferred from the manifest. Use `--force` only for intentional aggressive full replacement because it may overwrite managed-file customizations and conflicts.
+Use `--target-path <path>` for an explicit target. For an existing Pegasus workspace (one with `.pegasus-bootstrap-ia/manifest.json`), normal bootstrap refuses to replace its lifecycle manifest. Update managed files safely with `--sync-workspace --dry-run` first, then `--sync-workspace`; the project is inferred from the manifest. Sync reports the installed CLI version, source template version, and workspace manifest version. Use `--force` only for intentional aggressive full replacement because it may overwrite managed-file customizations and conflicts.
+
+If a historical interrupted bootstrap left a valid manifest with empty ownership records, sync recovers only current managed harness text files with their exact Pegasus marker (path and ownership mode). It never adopts `docs/pegasus/**`, change artifacts, `.vscode/mcp.json`, or unmarked files.
 
 After a successful run, open the target workspace in VS Code with GitHub Copilot and start from the Pegasus orchestrator custom agent at `.github/agents/pegasus-orchestrator.agent.md`.
 
