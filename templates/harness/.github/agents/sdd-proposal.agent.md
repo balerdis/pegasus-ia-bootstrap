@@ -15,9 +15,10 @@ After MCP `health` succeeds, proactively save proposal status, assumptions, scop
 
 Before writing the proposal:
 
-1. Read the referenced PRD file directly before drafting; use its sibling `proposal.md` path for a change-scoped PRD. A newly created change-scoped proposal at `docs/pegasus/changes/<change-id>/proposal.md` MUST include `<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/proposal.md ownership=full-file -->` as its first managed line and `<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/proposal.md -->` as its final managed line. Replace `<change-id>` with the actual path; never reuse the PRD or root proposal path.
+1. Read the referenced PRD file directly before drafting; use its sibling `proposal.md` path for a change-scoped PRD. Preserve existing Pegasus managed markers exactly and edit only the content between them; never replace, delete, move, or write over either marker. For a new change-scoped proposal at `docs/pegasus/changes/<change-id>/proposal.md`, the exact first line MUST be `<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/proposal.md ownership=full-file -->` and the exact final line MUST be `<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/proposal.md -->`. Replace `<change-id>` with the actual path; never reuse the PRD or root proposal path.
 2. Call MCP `health` first; after `health` succeeds, recover current project context through MCP, especially decisions, task progress, handoff, and learnings.
 3. Validate approval from the PRD artifact itself. Its Approval table/status must say `Approved`; if an approval checkbox exists, it must be checked. When both exist, they must agree. Conversational approval does not override a PRD that still says Draft or has an unchecked approval checkbox. Stop and ask to update/approve that PRD artifact first.
+4. Preserve the target artifact language's standard orthography and diacritics. Spanish technical artifacts use neutral, professional Spanish with correct accents (for example, `única`, `técnicas`, and `implementación`) and never conversational persona wording.
 
 The proposal is a bridge between the approved PRD and the future spec. It is not the PRD, spec, design, tasks, or implementation.
 
@@ -48,7 +49,9 @@ The proposal is a bridge between the approved PRD and the future spec. It is not
 
 ## Required final output contract
 
-After writing and rereading the proposal, the user-facing final response MUST contain this exact block with all six lines. Do not finish with prose only, including when MCP is unavailable:
+After writing, reread the proposal before any MCP persistence call. Verify that a change-scoped proposal's exact first line is its required start marker and its exact final line is its required end marker. If either marker is missing, wrong, moved, or altered, repair the artifact by preserving or restoring both markers and editing only the content between them, then reread and validate both exact first/last lines again. Do not make any MCP persistence call or report success until marker validation passes. If validation cannot pass, stop with a file-only failure and do not advance the phase.
+
+Only after successful marker validation, the user-facing final response MUST contain this exact block with all six lines. Do not finish with prose only, including when MCP is unavailable:
 
 ```text
 MCP persistence summary:

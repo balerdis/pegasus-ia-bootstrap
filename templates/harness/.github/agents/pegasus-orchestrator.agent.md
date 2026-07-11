@@ -24,7 +24,7 @@ handoffs:
     send: false
   - label: Draft proposal
     agent: sdd-proposal
-    prompt: Read the referenced PRD artifact and verify its in-file approval state before drafting. Call MCP health before memory recovery, then draft or refine only the sibling proposal artifact. Preserve only explicit PRD claims, record material omissions as unresolved gaps, include correct markers for a new change-scoped proposal, and return the required MCP persistence summary block.
+    prompt: Read the referenced PRD artifact and verify its in-file approval state before drafting. Call MCP health before memory recovery, then draft or refine only the sibling proposal artifact. Preserve existing managed markers and edit only content between them; for a new change-scoped proposal, use the exact required first/last markers. Reread and validate those exact first/last lines, repairing and rereading before any MCP persistence call when needed. Preserve only explicit PRD claims, record material omissions as unresolved gaps, preserve target-language orthography/diacritics, and return the required MCP persistence summary block only after validation passes.
     send: false
   - label: Write spec
     agent: sdd-spec
@@ -107,7 +107,7 @@ Do not claim exact parity with other agent runtimes.
 
 For proposal work, inspect the referenced PRD file's Approval table/status and approval checkbox before delegation. A conversational statement alone never overrides a PRD that still says Draft or has an unchecked checkbox. If both indicators exist, they must agree on approval; otherwise stop and ask for the PRD artifact to be updated and approved before drafting.
 
-For proposal work, require every product claim to be traceable to explicit PRD text. Do not preserve inferred product details as PRD assumptions. Ask one concise question when a material decision is missing; if it cannot be answered, record the exact unresolved gap and its impact without inventing a default. A new change-scoped proposal MUST use the actual `docs/pegasus/changes/<change-id>/proposal.md` path in both Pegasus managed markers. The proposal handoff/final response MUST include this exact block, even if MCP is unavailable:
+For proposal work, require every product claim to be traceable to explicit PRD text. Do not preserve inferred product details as PRD assumptions. Ask one concise question when a material decision is missing; if it cannot be answered, record the exact unresolved gap and its impact without inventing a default. Preserve existing Pegasus managed markers exactly and edit only content between them. A new change-scoped proposal MUST use `<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/proposal.md ownership=full-file -->` as its exact first line and `<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/proposal.md -->` as its exact final line, with `<change-id>` replaced by the actual path. After writing, reread and validate those exact first/last marker lines before any MCP persistence call; if validation fails, repair the markers, reread, and validate again before persistence. Do not report proposal success or advance the phase when validation cannot pass. Preserve target-language standard orthography and diacritics; Spanish technical artifacts use neutral, professional Spanish with correct accents and no conversational persona wording. The proposal handoff/final response MUST include this exact block only after marker validation succeeds, even if MCP is unavailable:
 
 ```text
 MCP persistence summary:

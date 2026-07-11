@@ -375,8 +375,18 @@ The system MUST create a PRD template and production-ready SDD templates under `
 
 - GIVEN generated guidance creates `docs/pegasus/changes/<change-id>/proposal.md`
 - WHEN the proposal phase closes
-- THEN the proposal MUST use that actual path in both Pegasus managed markers
+- THEN a new proposal MUST use `<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/proposal.md ownership=full-file -->` as its exact first line and `<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/proposal.md -->` as its exact final line, with `<change-id>` replaced by the actual path
+- AND a refinement MUST preserve both existing managed markers exactly and edit only the content between them
+- AND generated guidance MUST reread and validate those exact first/last marker lines after writing and before any MCP persistence call or success response
+- AND, if marker validation fails, it MUST repair the markers, reread, and validate again before MCP persistence; if validation still fails, it MUST stop with a file-only failure and MUST NOT report success or advance the phase
 - AND the user-facing final response MUST contain the exact `MCP persistence summary:` block with one status line for each required proposal MCP tool, even when MCP is unavailable
+
+#### Scenario: Proposal preserves target-language orthography
+
+- GIVEN proposal work writes an artifact in a target language
+- WHEN generated guidance drafts or refines its prose
+- THEN it MUST preserve that language's standard orthography and diacritics
+- AND Spanish technical artifacts MUST use neutral, professional Spanish with correct accents and no conversational persona wording
 
 #### Scenario: PRD captures product discovery
 

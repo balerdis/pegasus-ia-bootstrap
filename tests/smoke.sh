@@ -339,8 +339,17 @@ assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "record_hand
 assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "Every product claim, scope item, user, rule"
 assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "MCP persistence summary:"
 assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "Proposal persistence: file-only"
-assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "pegasus-harness:start path=docs/pegasus/changes/<change-id>/proposal.md"
-assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "pegasus-harness:end path=docs/pegasus/changes/<change-id>/proposal.md"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" '<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/proposal.md ownership=full-file -->'
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" '<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/proposal.md -->'
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "Preserve existing Pegasus managed markers exactly and edit only the content between them"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "the exact first line MUST be"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "the exact final line MUST be"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "before any MCP persistence call"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "repair the artifact by preserving or restoring both markers"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "Do not make any MCP persistence call or report success until marker validation passes"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "Preserve the target artifact language's standard orthography and diacritics"
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" '`única`, `técnicas`, and `implementación`'
+assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "never conversational persona wording"
 assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "ensure_project: <succeeded|not needed|failed: reason>"
 assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "ensure_change: <succeeded|not needed|failed: reason>"
 assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "record_artifact: <succeeded|not needed|failed: reason>"
@@ -360,6 +369,10 @@ assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "Verify from f
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Launch deduplication"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "MCP persistence summary:"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "ensure_project: <succeeded|not needed|failed: reason>"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Preserve existing Pegasus managed markers exactly and edit only content between them"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "reread and validate those exact first/last marker lines before any MCP persistence call"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "if validation fails, repair the markers, reread, and validate again before persistence"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Preserve target-language standard orthography and diacritics"
 assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" 'Record operational memory through `pegasus-memory-mcp`'
 assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "Before the first recovery or save attempt, call the MCP \`health\` tool"
 assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "do not claim persistent memory was saved"
