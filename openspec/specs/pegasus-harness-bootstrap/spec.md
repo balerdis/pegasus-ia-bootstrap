@@ -171,9 +171,9 @@ The system MUST create a portable `AGENTS.md` that explains the Pegasus IA workf
 - THEN it describes Pegasus IA workflow usage and VS Code/Copilot entry points
 - AND it directs sessions to use MCP-first memory with the approved unavailable-memory warning
 
-### Requirement: MCP-first operational memory
+### Requirement: Pegasus Memory operational persistence
 
-The generated harness MUST use the `pegasus-memory-mcp` MCP tool contract as the operational memory interface for recovery, search, persistence, and availability checks. It MUST configure memory by default, MUST support `--install-memory-mcp` as the explicit install/config flag, MUST resolve the executable from PATH first and then the default local install path, and MUST generate VS Code workspace stdio config that launches `node` with the absolute built script path and sets `cwd` to the resolved MCP root. The clone/build fallback MUST use the published `stable/0.1.1` branch. Generated guidance MUST recognize `health.capabilities.parent_bootstrap` when present. It MUST NOT require users or agents to write operational memory to `docs/pegasus/memory/`, and it MUST NOT depend on MCP server internals, SQLite details, database paths, or source modules.
+The generated harness MUST use Pegasus Memory, served by `pegasus-memory-mcp`, as the operational persistence interface for recovery, search, persistence, and availability checks. It MUST configure the server by default, MUST support `--install-memory-mcp` as the explicit install/config flag, MUST resolve the executable from PATH first and then the default local install path, and MUST generate VS Code workspace stdio config that launches `node` with the absolute built script path and sets `cwd` to the resolved Pegasus Memory root. The clone/build fallback MUST use the published `stable/0.1.1` branch. Generated guidance MUST recognize `health.capabilities.parent_bootstrap` when present. It MUST NOT require users or agents to write operational memory to `docs/pegasus/memory/`, and it MUST NOT depend on Pegasus Memory internals, SQLite details, database paths, or source modules.
 
 #### Scenario: Session starts with memory available
 
@@ -194,13 +194,14 @@ The generated harness MUST use the `pegasus-memory-mcp` MCP tool contract as the
 
 - GIVEN work changes project state
 - WHEN observations, decisions, handoffs, artifacts, task progress, or active change context are created or updated
-- THEN the harness guidance requires saving those records through MCP
+- THEN the harness guidance requires saving those records through Pegasus Memory
 
-#### Scenario: MCP contract only
+#### Scenario: Pegasus Memory responsibility boundary
 
-- GIVEN MCP-backed memory is configured
-- WHEN generated guidance describes memory behavior
-- THEN it names MCP capabilities and tool outcomes only
+- GIVEN Pegasus Memory is configured and other MCP servers may also be connected
+- WHEN generated guidance describes operational persistence
+- THEN it identifies Pegasus Memory or `pegasus-memory-mcp` as responsible for project/change records, artifacts, observations, task progress, and handoffs
+- AND it does not treat another MCP server as a substitute for Pegasus Memory persistence
 - AND it does not mention tables, SQLite schema, internal modules, or private implementation files
 
 ### Requirement: Memory unavailable behavior
@@ -482,15 +483,20 @@ The system MUST create a PRD template and production-ready SDD templates under `
 - AND an ambiguous MCP response MUST NOT resolve the gap
 - AND a blocking gap MUST ask one concise question and stop before finalization
 
-#### Scenario: Spec validates markers and reports persistence state
+#### Scenario: Spec validates markers and reports Pegasus Memory persistence state
 
 - GIVEN a change-scoped spec is written or refined
-- WHEN the agent prepares MCP persistence
+- WHEN the agent prepares Pegasus Memory persistence
 - THEN it MUST preserve or create exact `docs/pegasus/changes/<change-id>/spec.md` managed start and end markers and reread them first
-- AND it MUST repair and reread invalid markers before MCP persistence
-- AND, if repair and reread still fail validation, it MUST block MCP persistence and success, report a file-only failure, and stop the phase
-- AND it MUST provide six `MCP persistence summary:` status lines even when MCP is unavailable
-- AND required artifact or observation persistence failure MUST report `Spec persistence: file-only — <reason>`
+- AND it MUST repair and reread invalid markers before Pegasus Memory persistence
+- AND, if repair and reread still fail validation, it MUST block Pegasus Memory persistence and success, report a file-only failure, and stop the phase
+- AND, after marker validation and whenever Pegasus Memory is healthy, it MUST call or attempt `record_task_progress` before `record_handoff`, recording phase `spec`, status `ready-for-review` or `completed-as-draft`, artifact path, open gaps/blockers, and next action `review` or `approval`
+- AND it MUST not return a final response until all six Pegasus Memory operations have a terminal status
+- AND it MUST provide the exact `Pegasus Memory persistence summary:` heading and six status lines, each using only `succeeded`, `not needed`, or `failed: <reason>`, even when Pegasus Memory is unavailable
+- AND it MUST NOT claim `succeeded` for a call that was omitted; it MUST attempt the call or report a truthful failed/not-needed status
+- AND `record_artifact` or `record_observation` failure MUST report `Spec persistence: file-only — <reason>`
+- AND, when both artifact and observation persistence succeeded, `record_task_progress` or `record_handoff` failure MUST report `Pegasus Memory persistence incomplete/partial — <failed operation>: <reason>`
+- AND every failed required closure operation MUST prevent a full durable-completion or Pegasus Memory-success claim
 
 #### Scenario: Spec preserves language and phase boundary
 

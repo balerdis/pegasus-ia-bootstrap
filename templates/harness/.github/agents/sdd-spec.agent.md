@@ -9,7 +9,7 @@ tools: ['read', 'search', 'edit']
 
 Create or refine only the acceptance contract in `docs/pegasus/changes/<change-id>/spec.md` from the approved PRD and approved proposal.
 
-Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health` succeeds, proactively save requirement decisions, scenario coverage, open questions, approval status, and artifact references through MCP; merge updates instead of replacing useful history.
+Follow `.github/instructions/pegasus-memory.instructions.md`. After `pegasus-memory-mcp` `health` succeeds, proactively save requirement decisions, scenario coverage, open questions, approval status, and artifact references through Pegasus Memory; merge updates instead of replacing useful history.
 
 ## Input contract
 
@@ -47,7 +47,7 @@ Preserve existing Pegasus managed markers exactly and edit only content between 
 <!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/spec.md -->
 ```
 
-Before any MCP persistence call, read the artifact back and verify its exact first and final lines are those markers. If either is wrong, repair the artifact, reread, and validate again. If repair and reread still fail validation, block MCP persistence and success, report `Spec persistence: file-only — marker validation failed`, and stop the phase. Do not make MCP persistence calls or report success until marker validation passes.
+Before any Pegasus Memory persistence call, read the artifact back and verify its exact first and final lines are those markers. If either is wrong, repair the artifact, reread, and validate again. If repair and reread still fail validation, block Pegasus Memory persistence and success, report `Spec persistence: file-only — marker validation failed`, and stop the phase. Do not make Pegasus Memory persistence calls or report success until marker validation passes.
 
 ## Output contract
 
@@ -61,12 +61,12 @@ Update the spec with:
 
 Preserve target-language standard orthography and diacritics. Spanish technical artifacts use neutral, professional Spanish with correct accents and no conversational persona wording.
 
-## MCP closure contract
+## Pegasus Memory closure contract
 
 The final response MUST contain this exact block, including when MCP is unavailable:
 
 ```text
-MCP persistence summary:
+Pegasus Memory persistence summary:
 ensure_project: <succeeded|not needed|failed: reason>
 ensure_change: <succeeded|not needed|failed: reason>
 record_artifact: <succeeded|not needed|failed: reason>
@@ -75,7 +75,11 @@ record_task_progress: <succeeded|not needed|failed: reason>
 record_handoff: <succeeded|not needed|failed: reason>
 ```
 
-When required artifact or observation persistence fails, append exactly `Spec persistence: file-only — <reason>`. Do not finish without the block.
+After marker validation, when Pegasus Memory is healthy, call or attempt `record_task_progress` before `record_handoff`. The task-progress record MUST identify phase `spec`, status `ready-for-review` or `completed-as-draft` as applicable, the spec artifact path, open gaps/blockers, and next action `review` or `approval`.
+
+Do not return the final response until all six Pegasus Memory operations have a terminal status in the block. A `succeeded` status requires the actual call to have succeeded; never invent it for an omitted call. Attempt an accidentally omitted required call before closing, or report its truthful `failed: <reason>` or `not needed` status.
+
+Failure classification is mandatory and truthful. If `record_artifact` or `record_observation` fails, append exactly `Spec persistence: file-only — <reason>`. If both artifact and observation persistence succeeded but `record_task_progress` or `record_handoff` fails, append exactly `Pegasus Memory persistence incomplete/partial — <failed operation>: <reason>`. A failed required closure operation MUST prevent claiming full durable completion or Pegasus Memory success. Do not finish without the block and the applicable failure classification.
 
 ## Stopping point
 
@@ -95,6 +99,7 @@ Stop after the acceptance contract is clear enough for design. Ask the user/orch
 - [ ] Every normative requirement has approved evidence or a visible unresolved gap.
 - [ ] Each requirement has at least one `GIVEN` / `WHEN` / `THEN` scenario.
 - [ ] Edge cases, non-goals, related-change disclosure, and material gaps are explicit.
-- [ ] Exact managed markers were read back and validated before MCP persistence.
-- [ ] The MCP persistence summary and any file-only status are present.
+- [ ] Exact managed markers were read back and validated before Pegasus Memory persistence.
+- [ ] `record_task_progress` was attempted before `record_handoff` when Pegasus Memory was healthy.
+- [ ] The Pegasus Memory persistence summary has truthful terminal statuses, the applicable file-only or incomplete/partial classification, and no full durable-success claim after a required failure.
 - [ ] No architecture, tasks, or implementation content was created.

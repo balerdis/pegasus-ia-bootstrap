@@ -3,9 +3,11 @@ description: MCP-first operational memory rules
 applyTo: "**"
 ---
 
-# MCP-first memory
+# Pegasus Memory operational persistence
 
-Use `pegasus-memory-mcp` as the project continuity layer. Call the MCP `health` tool before the first recovery or save attempt. If `health` succeeds, recover, search, and save operational memory through MCP tools. Use `health.capabilities.parent_bootstrap` when present as confirmation that project/change bootstrap preconditions are supported.
+Use Pegasus Memory, provided by `pegasus-memory-mcp`, as the project continuity and operational persistence layer. Call its `health` tool before the first recovery or save attempt. If `health` succeeds, recover, search, and save operational memory through Pegasus Memory. Use `health.capabilities.parent_bootstrap` when present as confirmation that project/change bootstrap preconditions are supported.
+
+`pegasus-memory-mcp` owns project/change operational persistence: artifacts, observations, task progress, and handoffs. Other MCP servers may coexist for other capabilities, but they are not substitutes for Pegasus Memory persistence and must not receive or stand in for these records.
 
 At session start, call `health` first, then recover active project/change context through MCP when healthy. Search MCP for prior decisions, observations, task progress, blockers, handoffs, artifact references, and learnings. Before applying or verifying work, also read `docs/pegasus/apply-progress.md`.
 
@@ -19,7 +21,7 @@ Save proactively after important changes. Call `health` before the first save an
 
 For proposal closure, the final response MUST contain this exact block even when MCP is unavailable: `MCP persistence summary:` followed by one line each for `ensure_project`, `ensure_change`, `record_artifact`, `record_observation`, `record_task_progress`, and `record_handoff`, using only `succeeded`, `not needed`, or `failed: <reason>`. If required proposal artifact or observation persistence fails, append exactly `Proposal persistence: file-only — <reason>`.
 
-For spec closure, the final response MUST contain this exact block even when MCP is unavailable: `MCP persistence summary:` followed by one line each for `ensure_project`, `ensure_change`, `record_artifact`, `record_observation`, `record_task_progress`, and `record_handoff`, using only `succeeded`, `not needed`, or `failed: <reason>`. If required spec artifact or observation persistence fails, append exactly `Spec persistence: file-only — <reason>`.
+For spec closure, the final response MUST contain this exact block even when Pegasus Memory is unavailable: `Pegasus Memory persistence summary:` followed by one line each for `ensure_project`, `ensure_change`, `record_artifact`, `record_observation`, `record_task_progress`, and `record_handoff`, using only `succeeded`, `not needed`, or `failed: <reason>`. After marker validation, when Pegasus Memory is healthy, call or attempt `record_task_progress` before `record_handoff`; the complete task-progress payload records phase `spec`, status `ready-for-review` or `completed-as-draft`, artifact path, open gaps/blockers, and next action `review` or `approval`. Do not return until every operation has a terminal status. Never mark an omitted call as `succeeded`: attempt it before closing, or report its truthful `failed: <reason>` or `not needed` status. If `record_artifact` or `record_observation` fails, append exactly `Spec persistence: file-only — <reason>`. If both succeeded but `record_task_progress` or `record_handoff` fails, append exactly `Pegasus Memory persistence incomplete/partial — <failed operation>: <reason>`. Any failed required closure operation prevents a full durable-completion or Pegasus Memory-success claim.
 
 Use minimal compatible ensure payloads. `ensure_project` requires `project_id` and may include only documented flat fields: `key`, `name`, `workspace_root`, and `description`. `ensure_change` requires `project_id` plus `change_id` and may include only documented flat fields: `key`, `title`, `status`, `kind` or `type`, and `description`. For a new PRD/change, prefer `ensure_change({ project_id: <project-id>, change_id: <change-id>, key: <change-id>, title: <short title>, status: "draft", kind: "prd" })` when those values are known. Do not send nested `metadata`, arrays, product decisions, questions/answers, artifact summaries, or arbitrary extra fields to `ensure_change`; put those details in `record_observation` or `record_artifact` after the ensure call succeeds.
 

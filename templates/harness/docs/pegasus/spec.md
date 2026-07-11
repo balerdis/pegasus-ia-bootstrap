@@ -1,7 +1,7 @@
 <!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/spec.md ownership=full-file -->
 # Specification: {{PROJECT_NAME}}
 
-Use this template inside `docs/pegasus/changes/<change-id>/spec.md` for change-specific SDD work. The spec file is the acceptance source of truth; MCP memory may summarize requirements, status, and artifact paths only. Preserve the managed markers exactly and edit only between them.
+Use this template inside `docs/pegasus/changes/<change-id>/spec.md` for change-specific SDD work. The spec file is the acceptance source of truth; Pegasus Memory (`pegasus-memory-mcp`) may summarize requirements, status, and artifact paths only. Preserve the managed markers exactly and edit only between them.
 
 ## Purpose
 
@@ -20,7 +20,7 @@ Spec work requires an approved in-file PRD and approved in-file proposal. Conver
 
 ## Source Isolation
 
-The current change PRD and proposal are the only default product and requirements sources. Do not inspect or reuse neighboring or unrelated changes for requirements, scenarios, wording, style, or formatting. Use this canonical managed template/current placeholder only for structure. Consult another change only when the current PRD, active MCP context, or direct user instruction explicitly declares a dependency/relation; disclose the reference, purpose, and that it was not an implicit scope source.
+The current change PRD and proposal are the only default product and requirements sources. Do not inspect or reuse neighboring or unrelated changes for requirements, scenarios, wording, style, or formatting. Use this canonical managed template/current placeholder only for structure. Consult another change only when the current PRD, active Pegasus Memory context, or direct user instruction explicitly declares a dependency/relation; disclose the reference, purpose, and that it was not an implicit scope source.
 
 ## Requirements
 
@@ -72,7 +72,7 @@ Every normative requirement MUST link to explicit approved PRD/proposal evidence
 
 ## Open Questions / Material Gaps
 
-Reconcile every material requirements or acceptance gap before persistence and final response. Resolve it only with reliable current-change evidence or a direct user answer, or retain it visibly with owner, impact, next step, and needed-by gate. An ambiguous MCP response never resolves a gap. A blocking gap requires one concise question and a stop before finalizing.
+Reconcile every material requirements or acceptance gap before persistence and final response. Resolve it only with reliable current-change evidence or a direct user answer, or retain it visibly with owner, impact, next step, and needed-by gate. An ambiguous Pegasus Memory response never resolves a gap. A blocking gap requires one concise question and a stop before finalizing.
 
 | Material Gap | Status | Resolution Evidence / Source | Owner | Impact | Next Step | Needed-by Gate |
 |--------------|--------|------------------------------|-------|--------|-----------|----------------|

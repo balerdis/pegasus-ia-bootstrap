@@ -429,7 +429,7 @@ assert_file_contains "$target/.cursor/rules/pegasus-memory.mdc" "Recover active 
 assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "secondary legacy Cursor compatibility guidance"
 assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "do not fall back to Markdown memory"
 assert_file_contains "$target/AGENTS.md" 'El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente'
-assert_file_contains "$target/AGENTS.md" "MCP-first operational memory"
+assert_file_contains "$target/AGENTS.md" "Pegasus Memory operational persistence"
 assert_file_contains "$target/AGENTS.md" "pegasus-harness:start path=AGENTS.md ownership=marker-managed"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "pegasus-harness:start path=.github/agents/pegasus-orchestrator.agent.md ownership=full-file"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "call the \`pegasus-memory-mcp\` \`health\` tool before the first recovery attempt"
@@ -451,8 +451,8 @@ assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Do 
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "ensure_project"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "ensure_change"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "project_not_found"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "# MCP-first memory"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Call the MCP \`health\` tool before the first recovery or save attempt"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "# Pegasus Memory operational persistence"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Call its \`health\` tool before the first recovery or save attempt"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Save proactively after important changes"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "bugfixes, root causes, and remediation notes"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "verification commands, evidence, deviations, verdicts, and remediation needs"
@@ -634,12 +634,56 @@ assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "owner, impact, 
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "For a blocking gap, ask one concise question and stop before finalizing"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" '<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/spec.md ownership=full-file -->'
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" '<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/spec.md -->'
-assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Before any MCP persistence call, read the artifact back"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Before any Pegasus Memory persistence call, read the artifact back"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "repair the artifact, reread, and validate again"
-assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "If repair and reread still fail validation, block MCP persistence and success"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "If repair and reread still fail validation, block Pegasus Memory persistence and success"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Spec persistence: file-only — marker validation failed"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Preserve target-language standard orthography and diacritics"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Spec persistence: file-only"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Pegasus Memory persistence summary:"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "call or attempt \`record_task_progress\` before \`record_handoff\`"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "status \`ready-for-review\` or \`completed-as-draft\`"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Do not return the final response until all six Pegasus Memory operations have a terminal status"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "never invent it for an omitted call"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "If \`record_artifact\` or \`record_observation\` fails"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Spec persistence: file-only — <reason>"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Pegasus Memory persistence incomplete/partial — <failed operation>: <reason>"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "MUST prevent claiming full durable completion or Pegasus Memory success"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Other MCP servers may coexist"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "not substitutes for Pegasus Memory persistence"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "For spec closure"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Pegasus Memory persistence summary:"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "complete task-progress payload records phase \`spec\`"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Pegasus Memory persistence incomplete/partial — <failed operation>: <reason>"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "prevents a full durable-completion or Pegasus Memory-success claim"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "call or attempt \`record_task_progress\` for phase \`spec\` before \`record_handoff\`"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "truthful terminal statuses for all six operations"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "never invent \`succeeded\` for an omitted call"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Pegasus Memory persistence incomplete/partial — <failed operation>: <reason>"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "forbids any full durable-completion or Pegasus Memory-success claim"
+"$PYTHON_BIN" - "$target/.github/agents/sdd-spec.agent.md" <<'PY'
+import sys
+from pathlib import Path
+
+text = Path(sys.argv[1]).read_text()
+assert text.index("record_task_progress` before `record_handoff") < text.index("Do not return the final response until all six Pegasus Memory operations")
+assert "MCP persistence summary:" not in text
+payload = next(line for line in text.splitlines() if "The task-progress record MUST identify" in line)
+for required in ("phase `spec`", "status `ready-for-review` or `completed-as-draft`", "spec artifact path", "open gaps/blockers", "next action `review` or `approval`"):
+    assert required in payload
+assert "Spec persistence: file-only — <reason>" in text
+assert "Pegasus Memory persistence incomplete/partial — <failed operation>: <reason>" in text
+assert "MUST prevent claiming full durable completion or Pegasus Memory success" in text
+for operation in (
+    "ensure_project: <succeeded|not needed|failed: reason>",
+    "ensure_change: <succeeded|not needed|failed: reason>",
+    "record_artifact: <succeeded|not needed|failed: reason>",
+    "record_observation: <succeeded|not needed|failed: reason>",
+    "record_task_progress: <succeeded|not needed|failed: reason>",
+    "record_handoff: <succeeded|not needed|failed: reason>",
+):
+    assert operation in text
+PY
 for mcp_status in ensure_project ensure_change record_artifact record_observation record_task_progress record_handoff; do
   assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "$mcp_status: <succeeded|not needed|failed: reason>"
 done
@@ -664,7 +708,7 @@ assert_file_contains "$target/docs/pegasus/spec.md" "## Source Isolation"
 assert_file_contains "$target/docs/pegasus/spec.md" "## Related Change Traceability"
 assert_file_contains "$target/docs/pegasus/spec.md" "## Open Questions / Material Gaps"
 assert_file_contains "$target/docs/pegasus/spec.md" "Every normative requirement MUST link"
-assert_file_contains "$target/docs/pegasus/spec.md" "An ambiguous MCP response never resolves a gap"
+assert_file_contains "$target/docs/pegasus/spec.md" "An ambiguous Pegasus Memory response never resolves a gap"
 assert_file_contains "$target/docs/pegasus/spec.md" "Replace each placeholder with behavior explicitly supported"
 if grep -Fq "reject duplicate apply work" "$target/docs/pegasus/spec.md"; then
   printf 'spec template contains unrelated duplicate-apply behavior\n' >&2
@@ -695,7 +739,14 @@ if grep -Fq 'scenarios in `docs/pegasus/spec.md`' "$ROOT/openspec/specs/pegasus-
   printf 'stable spec contains contradictory root spec path for change-scoped flow\n' >&2
   exit 1
 fi
-assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "if repair and reread still fail validation, it MUST block MCP persistence and success"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "if repair and reread still fail validation, it MUST block Pegasus Memory persistence and success"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "Pegasus Memory persistence summary:"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" 'record_task_progress` before `record_handoff`'
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" 'MUST NOT claim `succeeded` for a call that was omitted'
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "other MCP servers may also be connected"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "Spec persistence: file-only — <reason>"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "Pegasus Memory persistence incomplete/partial — <failed operation>: <reason>"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "prevent a full durable-completion or Pegasus Memory-success claim"
 assert_file_contains "$target/docs/pegasus/design.md" "## Inputs"
 assert_file_contains "$target/docs/pegasus/design.md" "## Design Goals / Non-Goals"
 assert_file_contains "$target/docs/pegasus/design.md" "## Alternatives Considered"
