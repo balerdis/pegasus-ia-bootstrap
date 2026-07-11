@@ -16,9 +16,11 @@ After MCP `health` succeeds, proactively save proposal status, assumptions, scop
 Before writing the proposal:
 
 1. Read the referenced PRD file directly before drafting; use its sibling `proposal.md` path for a change-scoped PRD. Preserve existing Pegasus managed markers exactly and edit only the content between them; never replace, delete, move, or write over either marker. For a new change-scoped proposal at `docs/pegasus/changes/<change-id>/proposal.md`, the exact first line MUST be `<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/proposal.md ownership=full-file -->` and the exact final line MUST be `<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/proposal.md -->`. Replace `<change-id>` with the actual path; never reuse the PRD or root proposal path.
-2. Call MCP `health` first; after `health` succeeds, recover current project context through MCP, especially decisions, task progress, handoff, and learnings.
-3. Validate approval from the PRD artifact itself. Its Approval table/status must say `Approved`; if an approval checkbox exists, it must be checked. When both exist, they must agree. Conversational approval does not override a PRD that still says Draft or has an unchecked approval checkbox. Stop and ask to update/approve that PRD artifact first.
-4. Preserve the target artifact language's standard orthography and diacritics. Spanish technical artifacts use neutral, professional Spanish with correct accents (for example, `única`, `técnicas`, and `implementación`) and never conversational persona wording.
+2. Use the current change PRD as the only default product-content source. Use this managed proposal template and the current change placeholder as the only default structure/format source. Do not search, read, inspect, or reuse neighboring or unrelated change artifacts for content, scope, decisions, assumptions, wording, style, or formatting; isolated changes must not read neighboring proposals.
+3. A different change artifact may be consulted only when the current PRD, active MCP context, or a direct user instruction explicitly declares its dependency or relation. If consulted, add a Related Change Traceability entry naming the reference/change, its exact purpose or dependency, and that it was not used as an implicit scope source. Never implicitly inherit scope, decisions, assumptions, wording, or style from another change.
+4. Call MCP `health` first; after `health` succeeds, recover current project context through MCP, especially decisions, task progress, handoff, and learnings. Treat related-change context as consultable only under the explicit-relation rule.
+5. Validate approval from the PRD artifact itself. Its Approval table/status must say `Approved`; if an approval checkbox exists, it must be checked. When both exist, they must agree. Conversational approval does not override a PRD that still says Draft or has an unchecked approval checkbox. Stop and ask to update/approve that PRD artifact first.
+6. Preserve the target artifact language's standard orthography and diacritics. Spanish technical artifacts use neutral, professional Spanish with correct accents (for example, `única`, `técnicas`, and `implementación`) and never conversational persona wording.
 
 The proposal is a bridge between the approved PRD and the future spec. It is not the PRD, spec, design, tasks, or implementation.
 
@@ -32,6 +34,7 @@ The proposal is a bridge between the approved PRD and the future spec. It is not
 
 - PRD source and approval status.
 - Project context consulted.
+- Related Change Traceability: omitted when no related change was consulted; otherwise state the reference/change, exact purpose/dependency, and that it was not used as an implicit scope source.
 - Intent, scope, users, and situations from the approved PRD.
 - Lightweight approach: a short product/workflow direction only, with no architecture or implementation design.
 - Assumptions and decision gaps that need confirmation before or during spec.

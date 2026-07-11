@@ -29,6 +29,16 @@ Proposal work requires an approved `docs/pegasus/changes/<change-id>/prd.md`. If
 
 If MCP memory is unavailable, continue from file artifacts and do not claim persistent memory was recovered or saved.
 
+## Related Change Traceability
+
+Do not search, read, or reuse neighboring or unrelated change artifacts by default. The current change PRD is the only product-content source; this canonical managed template and the current change placeholder are the only structure/format source. Consult another change only when the current PRD, active MCP context, or direct user instruction explicitly declares a dependency/relation.
+
+| Reference / Change Consulted | Exact Purpose / Dependency | Not an Implicit Scope Source |
+|------------------------------|----------------------------|------------------------------|
+| None by default | N/A | Yes |
+
+When a related change is consulted, replace the default row and state explicitly that its scope, decisions, assumptions, wording, and style were not inherited implicitly.
+
 ## Scope
 
 ### In Scope

@@ -388,6 +388,22 @@ The system MUST create a PRD template and production-ready SDD templates under `
 - THEN it MUST preserve that language's standard orthography and diacritics
 - AND Spanish technical artifacts MUST use neutral, professional Spanish with correct accents and no conversational persona wording
 
+#### Scenario: Proposal isolates unrelated changes by default
+
+- GIVEN an approved PRD for the current change and unrelated neighboring change artifacts
+- WHEN generated guidance drafts or refines the proposal
+- THEN it MUST use the current change PRD as the only default product-content source
+- AND it MUST use the canonical managed proposal template and current change placeholder as the only default structure/format source
+- AND it MUST NOT search, read, inspect, or reuse unrelated change artifacts for content, scope, decisions, assumptions, wording, style, or formatting
+
+#### Scenario: Proposal consults an explicitly related change with disclosure
+
+- GIVEN the current PRD, active MCP context, or a direct user instruction explicitly declares a dependency or relation to another change
+- WHEN generated guidance consults that related change artifact
+- THEN the proposal artifact or final report MUST disclose the reference/change consulted and its exact purpose/dependency
+- AND it MUST explicitly state that the related artifact was not used as an implicit scope source
+- AND it MUST NOT implicitly inherit scope, decisions, assumptions, wording, or style from that related change
+
 #### Scenario: PRD captures product discovery
 
 - GIVEN a future Copilot-guided project session
