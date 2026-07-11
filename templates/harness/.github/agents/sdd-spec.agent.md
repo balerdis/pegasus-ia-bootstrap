@@ -49,6 +49,14 @@ Preserve existing Pegasus managed markers exactly and edit only content between 
 
 Before any Pegasus Memory persistence call, read the artifact back and verify its exact first and final lines are those markers. If either is wrong, repair the artifact, reread, and validate again. If repair and reread still fail validation, block Pegasus Memory persistence and success, report `Spec persistence: file-only — marker validation failed`, and stop the phase. Do not make Pegasus Memory persistence calls or report success until marker validation passes.
 
+## Artifact language and quality gate
+
+Before writing, select exactly one artifact language: an explicit user artifact-language request wins; otherwise use the dominant language of the approved current-change PRD and proposal. The chat or persona language never overrides this artifact contract. Default to English only when neither approved source establishes another language.
+
+Keep headings, table labels, and body prose consistently in the selected language. Immutable managed markers, identifiers, RFC 2119 keywords when deliberately standardized, code, paths, and tool names may remain unchanged. When approved sources establish Spanish, translate the complete human-readable template structure as one coherent artifact; use neutral, professional Spanish, including correct diacritics and terminology, with no persona slang.
+
+After marker validation and before any Pegasus Memory persistence, run a separate language and terminology validation over the reread artifact. It MUST verify the selected language is consistent; canonical-template headings and labels are translated; diacritics are correct; malformed or near-match terms such as `Especificacion`, `aceptacion`, `version`, and `contractacion` are absent; and terminology agrees with the approved PRD/proposal. For Spanish repairs, use `Especificación`, `aceptación`, `versión`, and `contratación` where those concepts apply. If it finds issues, repair only the affected language blocks, reread the whole artifact, revalidate markers, and rerun the language gate. If any issue remains, stop without Pegasus Memory persistence or a success claim, report every unresolved issue exactly, and append `Spec persistence: file-only — language validation failed: <exact issues>`.
+
 ## Output contract
 
 Update the spec with:
@@ -63,7 +71,7 @@ Preserve target-language standard orthography and diacritics. Spanish technical 
 
 ## Pegasus Memory closure contract
 
-The final response MUST contain this exact block, including when MCP is unavailable:
+Before this exact block, the final response MUST state `Artifact language: <selected language>` and `Language gate: <passed|blocked: exact unresolved issues>`. The final response MUST contain this exact block, including when MCP is unavailable:
 
 ```text
 Pegasus Memory persistence summary:
@@ -100,6 +108,9 @@ Stop after the acceptance contract is clear enough for design. Ask the user/orch
 - [ ] Each requirement has at least one `GIVEN` / `WHEN` / `THEN` scenario.
 - [ ] Edge cases, non-goals, related-change disclosure, and material gaps are explicit.
 - [ ] Exact managed markers were read back and validated before Pegasus Memory persistence.
+- [ ] One artifact language was selected from explicit user request or dominant approved source language; chat/persona language did not override it.
+- [ ] Language and terminology validation ran after marker validation; any repair was reread and revalidated before Pegasus Memory persistence.
+- [ ] The final response reports the selected artifact language and language-gate result before the exact Pegasus Memory persistence summary.
 - [ ] `record_task_progress` was attempted before `record_handoff` when Pegasus Memory was healthy.
 - [ ] The Pegasus Memory persistence summary has truthful terminal statuses, the applicable file-only or incomplete/partial classification, and no full durable-success claim after a required failure.
 - [ ] No architecture, tasks, or implementation content was created.

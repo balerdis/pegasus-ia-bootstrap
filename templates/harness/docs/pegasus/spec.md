@@ -9,6 +9,12 @@ Define acceptance-level requirements and scenarios for approved SDD work.
 
 Use this file as the acceptance contract for Copilot-guided work. Prompts and agents under `.github/` should reference these requirements rather than inventing behavior.
 
+## Artifact Language
+
+Select one artifact language before writing: an explicit user artifact-language request takes precedence; otherwise use the dominant language of the approved PRD and proposal. Chat or persona language does not override this contract. English is the default only when approved sources establish no other language.
+
+The template is written in English by default. When the selected language is Spanish, translate every human-readable heading, table label, and body-prose block coherently into neutral, professional Spanish with correct diacritics and approved-source terminology. Leave only immutable managed markers, identifiers, deliberately standardized normative keywords, code, paths, and tool names unchanged. Do not mix English template headings with Spanish prose.
+
 ## Source Status
 
 | Source | Path | Owner/Date | Status | Notes |

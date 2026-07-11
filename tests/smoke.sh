@@ -85,11 +85,12 @@ esac
 "$PYTHON_BIN" "$CLI" --help >/dev/null
 version_output="$($PYTHON_BIN "$CLI" --version)"
 case "$version_output" in
-  "Pegasus Harness Bootstrap 0.3.2") ;;
+  "Pegasus Harness Bootstrap 0.3.3") ;;
   *) printf 'expected clear Pegasus product version output\n' >&2; exit 1 ;;
 esac
-assert_file_contains "$ROOT/pyproject.toml" 'version = "0.3.2"'
-assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.3.2"'
+assert_file_contains "$ROOT/pyproject.toml" 'version = "0.3.3"'
+assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.3.3"'
+assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.3.3'
 help_output="$($PYTHON_BIN "$CLI" --help)"
 case "$help_output" in
   *"--install-cursor-global"*) ;;
@@ -144,7 +145,7 @@ case "$default_plan" in
   *) printf 'expected default target path in dry-run output\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
-  *"Installed CLI version: 0.3.2"*"Source template version: 0.3.2"*) ;;
+  *"Installed CLI version: 0.3.3"*"Source template version: 0.3.3"*) ;;
   *) printf 'expected bootstrap plan version evidence\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
@@ -654,6 +655,21 @@ assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "repair the arti
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "If repair and reread still fail validation, block Pegasus Memory persistence and success"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Spec persistence: file-only — marker validation failed"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Preserve target-language standard orthography and diacritics"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "an explicit user artifact-language request wins"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "otherwise use the dominant language of the approved current-change PRD and proposal"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "chat or persona language never overrides this artifact contract"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "neutral, professional Spanish"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "with no persona slang"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Keep headings, table labels, and body prose consistently in the selected language"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Immutable managed markers, identifiers, RFC 2119 keywords when deliberately standardized, code, paths, and tool names may remain unchanged"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "canonical-template headings and labels are translated"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" '`Especificacion`, `aceptacion`, `version`, and `contractacion` are absent'
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" '`Especificación`, `aceptación`, `versión`, and `contratación`'
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "repair only the affected language blocks, reread the whole artifact, revalidate markers, and rerun the language gate"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "stop without Pegasus Memory persistence or a success claim"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Spec persistence: file-only — language validation failed: <exact issues>"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Artifact language: <selected language>"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Language gate: <passed|blocked: exact unresolved issues>"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Spec persistence: file-only"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Pegasus Memory persistence summary:"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "call or attempt \`record_task_progress\` before \`record_handoff\`"
@@ -703,6 +719,15 @@ for operation in (
     "record_handoff: <succeeded|not needed|failed: reason>",
 ):
     assert operation in text
+PY
+"$PYTHON_BIN" - "$target/.github/agents/sdd-spec.agent.md" <<'PY'
+import sys
+from pathlib import Path
+
+text = Path(sys.argv[1]).read_text()
+assert text.index("After marker validation and before any Pegasus Memory persistence") < text.index("## Pegasus Memory closure contract")
+assert text.index("repair only the affected language blocks") < text.index("If any issue remains, stop without Pegasus Memory persistence")
+assert text.index("Artifact language: <selected language>") < text.index("Pegasus Memory persistence summary:")
 PY
 "$PYTHON_BIN" - "$target" <<'PY'
 import sys
@@ -769,6 +794,9 @@ assert_file_contains "$target/docs/pegasus/spec.md" "## Open Questions / Materia
 assert_file_contains "$target/docs/pegasus/spec.md" "Every normative requirement MUST link"
 assert_file_contains "$target/docs/pegasus/spec.md" "An ambiguous Pegasus Memory response never resolves a gap"
 assert_file_contains "$target/docs/pegasus/spec.md" "Replace each placeholder with behavior explicitly supported"
+assert_file_contains "$target/docs/pegasus/spec.md" "## Artifact Language"
+assert_file_contains "$target/docs/pegasus/spec.md" "explicit user artifact-language request takes precedence"
+assert_file_contains "$target/docs/pegasus/spec.md" "Do not mix English template headings with Spanish prose"
 if grep -Fq "reject duplicate apply work" "$target/docs/pegasus/spec.md"; then
   printf 'spec template contains unrelated duplicate-apply behavior\n' >&2
   exit 1
@@ -789,6 +817,14 @@ assert lines[-1] == "<!-- pegasus-harness:end path=docs/pegasus/changes/<change-
 PY
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "For spec work, inspect the current change's PRD and proposal directly"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Spec persistence: file-only"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "## Spec language quality gate"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "an explicit user artifact-language request wins"
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "make no Pegasus Memory persistence call or success claim"
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "For spec work, select one artifact language before writing"
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Repair only affected language blocks, reread the entire artifact, revalidate markers, and rerun the gate"
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Spec persistence: file-only — language validation failed: <exact issues>"
+assert_file_contains "$target/.github/copilot-instructions.md" "For spec work, select one artifact language before writing"
+assert_file_contains "$target/.github/copilot-instructions.md" 'State `Artifact language: <selected language>` and `Language gate: <passed|blocked: exact unresolved issues>`'
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Before spec drafting, inspect the current change PRD and proposal artifacts"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Spec stays acceptance-only"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "For spec closure"
@@ -806,6 +842,13 @@ assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "o
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "Spec persistence: file-only — <reason>"
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "Pegasus Memory persistence incomplete/partial — <failed operation>: <reason>"
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "prevent a full durable-completion or Pegasus Memory-success claim"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "explicit user artifact-language request takes precedence"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "chat/persona language MUST NOT override"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "untranslated canonical headings/labels"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "malformed or near-match terms"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "repair only affected language blocks, reread the complete artifact, revalidate markers, and rerun"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "MUST NOT persist or claim success"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "Language gate: <passed|blocked: exact unresolved issues>"
 assert_file_contains "$target/docs/pegasus/design.md" "## Inputs"
 assert_file_contains "$target/docs/pegasus/design.md" "## Design Goals / Non-Goals"
 assert_file_contains "$target/docs/pegasus/design.md" "## Alternatives Considered"
@@ -943,7 +986,7 @@ esac
 cmp "$TMP/recovery-manifest-before.json" "$recovery_target/.pegasus-bootstrap-ia/manifest.json" || { printf 'normal bootstrap rewrote historical manifest metadata\n' >&2; exit 1; }
 recovery_dry_output="$($PYTHON_BIN "$CLI" --target-path "$recovery_target" --sync-workspace --dry-run)"
 case "$recovery_dry_output" in
-  *"Installed CLI version: 0.3.2"*"Source template version: 0.3.2"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
+  *"Installed CLI version: 0.3.3"*"Source template version: 0.3.3"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
   *) printf 'expected empty-manifest dry-run recovery and version evidence\n' >&2; exit 1 ;;
 esac
 assert_file_contains "$recovery_target/.github/agents/sdd-spec.agent.md" 'STALE PEGASUS SPEC AGENT'
@@ -964,8 +1007,8 @@ from pathlib import Path
 
 manifest = json.loads(Path(sys.argv[1]).read_text())
 records = {record["path"]: record for record in manifest["ownership"]["files"]}
-assert manifest["template_version"] == "0.3.2"
-assert manifest["package_version"] == "0.3.2"
+assert manifest["template_version"] == "0.3.3"
+assert manifest["package_version"] == "0.3.3"
 assert records[".github/agents/sdd-spec.agent.md"]["action"] == "recovered"
 assert not any(path.startswith("docs/pegasus/") for path in records)
 PY
