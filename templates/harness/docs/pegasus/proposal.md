@@ -3,6 +3,8 @@
 Created: `{{DATE}}`  
 Target: `{{TARGET_PATH}}`
 
+When this artifact is rendered in Spanish, use `Creado:` and `Destino:`. Keep the default English labels for an English artifact.
+
 Use this template inside `docs/pegasus/changes/<change-id>/proposal.md` for change-specific SDD work. The proposal file is the source of truth for scope and approach; MCP memory may store summaries, status, artifact references, and recovery notes only.
 
 ## Intent

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pegasus-ia-bootstrap"
-version = "0.3.3"
+version = "0.3.4"
 description = "Local bootstrap tooling for configuring a Pegasus VS Code/Copilot harness."
 readme = "README.md"
 requires-python = ">=3.10"

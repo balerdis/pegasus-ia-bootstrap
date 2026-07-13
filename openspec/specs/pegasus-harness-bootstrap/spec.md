@@ -508,11 +508,14 @@ The system MUST create a PRD template and production-ready SDD templates under `
 - WHEN the acceptance contract is generated
 - THEN it MUST select exactly one artifact language before writing: an explicit user artifact-language request takes precedence, otherwise the dominant approved PRD/proposal language applies, and chat/persona language MUST NOT override that choice
 - AND it MUST default to English only when approved sources establish no other language
-- AND it MUST keep headings, table labels, and body prose in the selected language, except immutable identifiers, deliberately standardized normative keywords, code, paths, and tool names
-- AND, for Spanish, it MUST use neutral, professional Spanish with correct diacritics and approved-source terminology, including translated human-readable canonical headings and labels
+- AND it MUST keep headings, table labels, metadata labels, and body prose in the selected language, except immutable identifiers, deliberately standardized normative keywords, code, paths, and tool names
+- AND, for Spanish, it MUST use neutral, professional Spanish with correct diacritics and approved-source terminology, including translated human-readable canonical headings and labels; its structural metadata MUST use `Creado:` and `Destino:`
 - AND, after marker validation and before Pegasus Memory persistence, it MUST run a separate language/terminology validation for language consistency, untranslated canonical headings/labels, diacritics, malformed or near-match terms, and PRD/proposal terminology
+- AND the Spanish validation MUST concretely require `Creado:` and `Destino:` and reject `Created:`, `Target:`, and every applicable default-English canonical heading/table label from the canonical spec-template vocabulary
+- AND the structural-label scan MUST allow standardized `GIVEN` / `WHEN` / `THEN`, contractually required canonical enum values such as `Approved` or `Draft`, paths, identifiers, tool/server names, code, source-section references, and established technical terms
 - AND, when that validation finds issues, it MUST repair only affected language blocks, reread the complete artifact, revalidate markers, and rerun the language/terminology validation
 - AND, if issues remain, it MUST report every exact unresolved issue, MUST NOT persist or claim success, and MUST report `Spec persistence: file-only — language validation failed: <exact issues>`
+- AND it MUST NOT report `Language gate: passed` while any prohibited English structural label remains
 - AND the final response MUST state `Artifact language: <selected language>` and `Language gate: <passed|blocked: exact unresolved issues>` before the exact Pegasus Memory persistence summary
 - AND each normative requirement MUST trace to approved PRD/proposal evidence or a visible unresolved gap
 - AND it MUST NOT create architecture, task, or implementation content

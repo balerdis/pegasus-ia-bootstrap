@@ -1,6 +1,9 @@
 <!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/spec.md ownership=full-file -->
 # Specification: {{PROJECT_NAME}}
 
+Created: `{{DATE}}`
+Target: `{{TARGET_PATH}}`
+
 Use this template inside `docs/pegasus/changes/<change-id>/spec.md` for change-specific SDD work. The spec file is the acceptance source of truth; Pegasus Memory (`pegasus-memory-mcp`) may summarize requirements, status, and artifact paths only. Preserve the managed markers exactly and edit only between them.
 
 ## Purpose
@@ -13,7 +16,27 @@ Use this file as the acceptance contract for Copilot-guided work. Prompts and ag
 
 Select one artifact language before writing: an explicit user artifact-language request takes precedence; otherwise use the dominant language of the approved PRD and proposal. Chat or persona language does not override this contract. English is the default only when approved sources establish no other language.
 
-The template is written in English by default. When the selected language is Spanish, translate every human-readable heading, table label, and body-prose block coherently into neutral, professional Spanish with correct diacritics and approved-source terminology. Leave only immutable managed markers, identifiers, deliberately standardized normative keywords, code, paths, and tool names unchanged. Do not mix English template headings with Spanish prose.
+The template is written in English by default. When the selected language is Spanish, translate every human-readable heading, table label, metadata label, and body-prose block coherently into neutral, professional Spanish with correct diacritics and approved-source terminology. Leave only immutable managed markers, identifiers, deliberately standardized normative keywords, code, paths, and tool names unchanged. Do not mix English template headings with Spanish prose.
+
+For a Spanish rendering, use this structural vocabulary and scan the reread artifact for its prohibited English counterpart before reporting a passed language gate:
+
+| Default English structure | Required Spanish rendering |
+|---|---|
+| `Created:` | `Creado:` |
+| `Target:` | `Destino:` |
+| `Specification` | `Especificación` |
+| `Purpose` | `Propósito` |
+| `Artifact Language` | `Idioma del artefacto` |
+| `Source Status` | `Estado de las fuentes` |
+| `Source`, `Path`, `Owner/Date`, `Status`, `Notes` | `Fuente`, `Ruta`, `Responsable/Fecha`, `Estado`, `Notas` |
+| `Source Isolation` | `Aislamiento de fuentes` |
+| `Requirements`, `Scenario` | `Requisitos`, `Escenario` |
+| `Acceptance Edge Cases` | `Casos límite de aceptación` |
+| `Related Change Traceability` | `Trazabilidad de cambios relacionados` |
+| `Non-Goals / Out of Scope` | `No objetivos / Fuera de alcance` |
+| `Non-Functional Requirements`, `Traceability`, `Open Questions / Material Gaps` | `Requisitos no funcionales`, `Trazabilidad`, `Preguntas abiertas / Brechas materiales` |
+
+The Spanish scan MUST reject exact structural labels such as `Created:` and `Target:` and every applicable default-English heading or table label above. It MUST NOT reject allowed immutable syntax or traceability references: standardized `GIVEN` / `WHEN` / `THEN`; contractually required canonical enum values such as `Approved` or `Draft`; paths; identifiers; tool or server names; code; source-section references; and established technical terms.
 
 ## Source Status
 

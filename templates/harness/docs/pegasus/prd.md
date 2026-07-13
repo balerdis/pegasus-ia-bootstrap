@@ -3,6 +3,8 @@
 Created: `{{DATE}}`  
 Target: `{{TARGET_PATH}}`
 
+When this artifact is rendered in Spanish, use `Creado:` and `Destino:`. Keep the default English labels for an English artifact.
+
 Use this template inside `docs/pegasus/changes/<change-id>/prd.md` for change-specific SDD work. Keep this file as the artifact source of truth for product discovery; MCP memory may store the active change, status, summary, and artifact path, but it must not replace this PRD.
 
 ## Outcome

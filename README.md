@@ -16,7 +16,7 @@ Check the installed product release at any time:
 
 ```sh
 pegasus-harness-bootstrap --version
-# Pegasus Harness Bootstrap 0.3.3
+# Pegasus Harness Bootstrap 0.3.4
 ```
 
 For everyday use from outside this checkout, install the CLI with `pipx`:
