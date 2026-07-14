@@ -20,7 +20,7 @@ Design requires all three current-change artifacts approved in-file. Conversatio
 |----------------|-------------------|-------------|-------------------------------|
 | User request, otherwise dominant approved-source language | TBD | Pending | Managed markers, identifiers, code, paths, tool/server names, deliberately standardized terms |
 
-**Required Spanish rendering and classification:** use `Greenfield / no implementation evidence` in English artifacts and `Greenfield / sin evidencia de implementación` in Spanish artifacts. Spanish translates all human-readable headings, labels, table cells, and prose coherently. Use `Costos y compromisos` or `Compensaciones` for `Tradeoffs`; do not leave `Inputs`, `Rationale`, `Tradeoffs`, `Unit`, or `Integration` untranslated. In Spanish, reject both `Greenfield/no implementation evidence` and `Greenfield / no implementation evidence`.
+**Required Spanish rendering and classification:** use `Greenfield / no implementation evidence` in English artifacts and `Greenfield / sin evidencia de implementación` in Spanish artifacts. Spanish translates all human-readable headings, labels, table cells, and prose coherently. The canonical Spanish heading is exactly `Decisiones y compensaciones`; reject `Tradeoffs`, `Costos y compromisos`, `Compensaciones`, `Decisiones y costos y compromisos`, and other composite variants as headings. Do not leave `Inputs`, `Rationale`, `Unit`, or `Integration` untranslated. In Spanish, reject both `Greenfield/no implementation evidence` and `Greenfield / no implementation evidence`.
 
 **Pegasus Memory product naming:** when naming persistence, write `Pegasus Memory` or the exact server annotation `pegasus-memory-mcp`. Reject standalone/generic `MCP`, `Contexto MCP`, `Memoria MCP`, and `Memoria Pegasus`. Validate every `MCP` occurrence independently: allow it only in the exact protocol phrase `protocolo MCP` or inside the exact server annotation. An allowed `protocolo MCP` occurrence never permits another standalone occurrence elsewhere in the document.
 
@@ -40,7 +40,7 @@ Blocking gaps prohibit design artifact writing, artifact finalization, and `reco
 
 ## Deferred Technical Choices
 
-Use this dedicated section whenever any technical choice is deferred. Every deferred row is required to use status `deferred-non-blocking` (or its selected-language translation) and complete every column. A missing field is a blocking design gap: repair it or block before marker, language, or Pegasus Memory persistence gates. If there are no deferred choices, retain the explicit `None` / `Ninguna` row; never use ambiguous `TBD`.
+Use this dedicated section whenever any technical choice is deferred. Every deferred row is required to use status `deferred-non-blocking` (or its selected-language translation) and complete every column. A missing field is a blocking design gap: repair it or block before marker, language, or Pegasus Memory persistence gates. If there are no deferred choices, retain the explicit `None` / `Ninguna` row; never use ambiguous `TBD`. Exception: in Greenfield context without concrete implementation stack, framework, or runtime evidence, `None` / `Ninguna` is invalid. Record stack/framework/runtime selection as a structured non-blocking deferred choice needed before tasks/apply. Its invariant architecture MUST state that logical components, responsibilities, boundaries, interfaces, and control flow remain independent of the eventual framework/runtime selection.
 
 | Choice / topic | Status | Owner | Impact | Next step | Needed-by gate | Invariant architecture | Why non-blocking | Evidence / source |
 |----------------|--------|-------|--------|-----------|----------------|------------------------|------------------|-------------------|
@@ -64,6 +64,8 @@ Use this dedicated section whenever any technical choice is deferred. Every defe
 Describe the architecture without inventing modules or files absent from evidence.
 
 ## Confirmed Decisions, Assumptions, and Tradeoffs
+
+For a Spanish artifact, render this heading exactly as `## Decisiones y compensaciones`.
 
 | Decision | State | Choice | Rationale / evidence | Tradeoffs |
 |----------|--------|-----------|-----------|

@@ -85,12 +85,12 @@ esac
 "$PYTHON_BIN" "$CLI" --help >/dev/null
 version_output="$($PYTHON_BIN "$CLI" --version)"
 case "$version_output" in
-  "Pegasus Harness Bootstrap 0.4.1") ;;
+  "Pegasus Harness Bootstrap 0.4.2") ;;
   *) printf 'expected clear Pegasus product version output\n' >&2; exit 1 ;;
 esac
-assert_file_contains "$ROOT/pyproject.toml" 'version = "0.4.1"'
-assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.4.1"'
-assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.4.1'
+assert_file_contains "$ROOT/pyproject.toml" 'version = "0.4.2"'
+assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.4.2"'
+assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.4.2'
 help_output="$($PYTHON_BIN "$CLI" --help)"
 case "$help_output" in
   *"--install-cursor-global"*) ;;
@@ -145,7 +145,7 @@ case "$default_plan" in
   *) printf 'expected default target path in dry-run output\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
-   *"Installed CLI version: 0.4.1"*"Source template version: 0.4.1"*) ;;
+   *"Installed CLI version: 0.4.2"*"Source template version: 0.4.2"*) ;;
   *) printf 'expected bootstrap plan version evidence\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
@@ -585,7 +585,7 @@ manifest_text = json.dumps(manifest)
 for forbidden in ("active_change", "activeChange", "last_change", "lastChange", "operational_memory", "operationalMemory", "memory_state", "memoryState", "recovery_state", "recoveryState"):
     assert forbidden not in manifest_text
 assert manifest["workspace"]["project_name"] == "sample-project"
-assert manifest["template_version"] == "0.4.1"
+assert manifest["template_version"] == "0.4.2"
 assert manifest["uninstall"]["remove_only_managed"] is True
 paths = {record["path"]: record for record in manifest["install"]["files"]}
 assert "AGENTS.md" in paths
@@ -593,8 +593,8 @@ assert ".vscode/mcp.json" in paths
 assert paths["AGENTS.md"]["ownership"] == "marker-managed"
 assert paths[".vscode/mcp.json"]["ownership"] == "full-file"
 assert paths[".github/agents/pegasus-orchestrator.agent.md"]["ownership"] == "full-file"
-assert all(record["package_version"] == "0.4.1" for record in paths.values())
-assert all(record["template_version"] == "0.4.1" for record in paths.values())
+assert all(record["package_version"] == "0.4.2" for record in paths.values())
+assert all(record["template_version"] == "0.4.2" for record in paths.values())
 assert manifest["install"]["skipped_conflicts"] == []
 PY
 
@@ -820,12 +820,18 @@ assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Greenfield / 
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "both spaced and unspaced English variants"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "A blocking technical gap requires one concise question and a stop before writing or finalizing the design artifact"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "A non-blocking gap may remain stack-agnostic"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'In Greenfield context without concrete implementation stack, framework, or runtime evidence, `None` / `Ninguna` is invalid'
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "logical components, responsibilities, boundaries, interfaces, and control flow independently"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Never ask a required close-out question after completed-path persistence or finalization"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Trace decisions to a spec requirement or explicit evidence"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/design.md ownership=full-file -->"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Before completed-path Pegasus Memory artifact persistence, reread the artifact"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'reject untranslated structural vocabulary including `Inputs`, `Rationale`, `Tradeoffs`, `Unit`, and `Integration`'
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Pegasus Memory persistence summary:"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Artifact language: <selected language>"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Language gate: <passed|blocked: exact unresolved issues>"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Deferred technical choices: <structured summary of every choice and next gate|None / Ninguna>"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Narrative prose does not satisfy the final-response contract"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'record_task_progress` for phase `design` before `record_handoff`'
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'Use `completed` only when the design is ready for review with no blocking gaps'
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Do not create tasks, work units, PR slices, implementation code"
@@ -939,9 +945,11 @@ assert_file_contains "$target/docs/pegasus/design.md" "canonical template only"
 assert_file_contains "$target/docs/pegasus/design.md" "## Deferred Technical Choices"
 assert_file_contains "$target/docs/pegasus/design.md" "Choice / topic | Status | Owner | Impact | Next step | Needed-by gate | Invariant architecture | Why non-blocking | Evidence / source"
 assert_file_contains "$target/docs/pegasus/design.md" "None / Ninguna"
+assert_file_contains "$target/docs/pegasus/design.md" 'in Greenfield context without concrete implementation stack, framework, or runtime evidence, `None` / `Ninguna` is invalid'
+assert_file_contains "$target/docs/pegasus/design.md" "Decisiones y compensaciones"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "canonical status \`deferred-non-blocking\`"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "A missing deferred field is blocking"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "The final response summarizes every deferred choice"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'The final response uses the exact `Deferred technical choices:` label'
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "every deferred choice (or \`None\` / \`Ninguna\`), its needed-by gate"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "dedicated \`Deferred Technical Choices\` table"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Reconcile deferred technical choices before marker, language, and persistence gates"
@@ -985,14 +993,15 @@ assert required <= set(cell.strip() for cell in header.strip("|").split("|"))
 assert "| None / Ninguna |" in template
 assert guidance.index("Before marker validation, language validation, or persistence") < guidance.index("## Managed artifact")
 assert guidance.index("Before marker validation, language validation, or persistence") < guidance.index("Before completed-path Pegasus Memory artifact persistence")
-assert "The final response summarizes every deferred choice" in guidance
+assert "The final response uses the exact `Deferred technical choices:` label" in guidance
 
 def spanish_gate_issues(text: str) -> set[str]:
     import re
 
     issues = set()
-    if "Tradeoffs" in text:
-        issues.add("Tradeoffs")
+    for heading in ("Tradeoffs", "Costos y compromisos", "Compensaciones", "Decisiones y costos y compromisos"):
+        if f"## {heading}" in text:
+            issues.add(heading)
     if re.search(r"(?i)\bgreenfield\s*/\s*no implementation evidence\b", text):
         issues.add("English greenfield classification")
     for term in ("Contexto MCP", "Memoria MCP", "Memoria Pegasus"):
@@ -1019,10 +1028,13 @@ assert spanish_gate_issues("protocolo MCP\nMCP para la persistencia") == {
 assert not spanish_gate_issues("protocolo MCP")
 assert not spanish_gate_issues("pegasus-memory-mcp")
 assert not spanish_gate_issues(
-    "## Costos y compromisos\nGreenfield / sin evidencia de implementación\n"
+    "## Decisiones y compensaciones\nGreenfield / sin evidencia de implementación\n"
     "Pegasus Memory\npegasus-memory-mcp\nprotocolo MCP\n`record_artifact`\n/path/to/file"
 )
-assert "Costos y compromisos" in guidance and "Compensaciones" in guidance
+for legacy_heading in ("## Costos y compromisos", "## Compensaciones", "## Decisiones y costos y compromisos"):
+    assert spanish_gate_issues(legacy_heading)
+assert not spanish_gate_issues("## Decisiones y compensaciones")
+assert "Decisiones y compensaciones" in guidance
 assert "Pegasus Memory" in template and "Pegasus Memory context" in template
 assert "Greenfield / no implementation evidence" in template
 assert "Greenfield / sin evidencia de implementación" in template
@@ -1095,6 +1107,9 @@ assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.m
 assert_file_contains "$target/.github/copilot-instructions.md" "Before design, require current-change in-file approval for PRD, proposal, and spec"
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "Design requires approved isolated evidence and technical context"
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "Design reconciles technical gaps and closes truthfully"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" '`None` / `Ninguna` MUST be invalid'
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" 'exact structured labels `Artifact language:`, `Language gate:`, `Deferred technical choices:`'
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" 'exact canonical heading `Decisiones y compensaciones`'
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" 'docs/pegasus/changes/<change-id>/design.md'
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" 'record_artifact` MUST be `not needed` because no design artifact was written'
 assert_file_contains "$target/docs/pegasus/design.md" "Blocking gaps prohibit design artifact writing, artifact finalization, and \`record_artifact\`"
@@ -1250,7 +1265,7 @@ esac
 cmp "$TMP/recovery-manifest-before.json" "$recovery_target/.pegasus-bootstrap-ia/manifest.json" || { printf 'normal bootstrap rewrote historical manifest metadata\n' >&2; exit 1; }
 recovery_dry_output="$($PYTHON_BIN "$CLI" --target-path "$recovery_target" --sync-workspace --dry-run)"
 case "$recovery_dry_output" in
-   *"Installed CLI version: 0.4.1"*"Source template version: 0.4.1"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
+   *"Installed CLI version: 0.4.2"*"Source template version: 0.4.2"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
   *) printf 'expected empty-manifest dry-run recovery and version evidence\n' >&2; exit 1 ;;
 esac
 assert_file_contains "$recovery_target/.github/agents/sdd-spec.agent.md" 'STALE PEGASUS SPEC AGENT'
@@ -1271,8 +1286,8 @@ from pathlib import Path
 
 manifest = json.loads(Path(sys.argv[1]).read_text())
 records = {record["path"]: record for record in manifest["ownership"]["files"]}
-assert manifest["template_version"] == "0.4.1"
-assert manifest["package_version"] == "0.4.1"
+assert manifest["template_version"] == "0.4.2"
+assert manifest["package_version"] == "0.4.2"
 assert records[".github/agents/sdd-spec.agent.md"]["action"] == "recovered"
 assert not any(path.startswith("docs/pegasus/") for path in records)
 PY

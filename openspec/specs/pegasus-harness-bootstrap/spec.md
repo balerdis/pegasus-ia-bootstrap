@@ -528,7 +528,8 @@ The system MUST create a PRD template and production-ready SDD templates under `
 - AND every flow, alternative, affected area, testing, rollout/rollback, and risk entry MUST include a spec requirement or explicit repository-evidence traceability field
 - AND the material-gap structure MUST include invariant architecture, deferred choice, and why a deferred choice is non-blocking
 - AND any deferred technical choice MUST appear in a dedicated `Deferred Technical Choices` section/table, not only in risks or prose
-- AND each deferred row MUST include choice/topic, canonical status `deferred-non-blocking` or selected-language translation, owner, impact, next step, needed-by gate, invariant architecture, why non-blocking, and evidence/source; if none exist, it MUST state `None` / `Ninguna`
+- AND each deferred row MUST include choice/topic, canonical status `deferred-non-blocking` or selected-language translation, owner, impact, next step, needed-by gate, invariant architecture, why non-blocking, and evidence/source; if evidence establishes none exist, it MUST state `None` / `Ninguna`
+- AND in Greenfield context without concrete implementation stack, framework, or runtime evidence, `None` / `Ninguna` MUST be invalid; stack/framework/runtime selection MUST be a structured non-blocking deferred choice needed before tasks/apply, and its invariant architecture MUST preserve logical components, responsibilities, boundaries, interfaces, and control flow independently of the eventual selection
 - AND root `docs/pegasus/design.md` MUST be described only as the canonical template, never as an active change artifact
 - AND it excludes implementation code and task checklist creation
 
@@ -553,14 +554,14 @@ The system MUST create a PRD template and production-ready SDD templates under `
 - AND on a healthy blocking path it MUST record only blocked state: ensure project/change, observation, phase `design` task progress with status `blocked`, then handoff; `record_artifact` MUST be `not needed` because no design artifact was written
 - AND it MUST record Pegasus Memory task progress before handoff using only `pending`, `in_progress`, `blocked`, `completed`; `completed` requires no blocking gap and `blocked` reflects a blocker
 - AND its task-progress notes and final response MUST summarize deferred choices (or `None` / `Ninguna`) and their next gate
-- AND its response MUST include artifact language, language gate, exact six-line `Pegasus Memory persistence summary:`, and truthful file-only or incomplete/partial failure classification
+- AND narrative prose alone MUST NOT satisfy closure; its response MUST include the exact structured labels `Artifact language:`, `Language gate:`, `Deferred technical choices:`, and the exact `Pegasus Memory persistence summary:` with the six states `ensure_project`, `ensure_change`, `record_artifact`, `record_observation`, `record_task_progress`, and `record_handoff`, plus truthful file-only or incomplete/partial failure classification
 - AND unresolved language validation MUST block artifact persistence, report `record_artifact` as not needed with the language reason, record the truthful blocked control state, and never claim full durable success
 
 #### Scenario: Design Spanish language and product naming gate
 
 - GIVEN a Spanish design artifact has passed marker validation
 - WHEN guidance validates language and terminology before Pegasus Memory persistence
-- THEN it MUST reject untranslated structural labels including `Tradeoffs` and accept `Costos y compromisos` or `Compensaciones`
+- THEN it MUST require the exact canonical heading `Decisiones y compensaciones` and reject `Tradeoffs`, legacy headings `Costos y compromisos` and `Compensaciones`, awkward composite `Decisiones y costos y compromisos`, and other composite variants as headings
 - AND it MUST reject both English classification variants `Greenfield/no implementation evidence` and `Greenfield / no implementation evidence` in Spanish artifacts and require `Greenfield / sin evidencia de implementación`; English artifacts MAY use `Greenfield / no implementation evidence`
 - AND it MUST allow only justified immutable technical exceptions such as markers, identifiers, code, paths, tool/server names, and deliberately standardized terms
 - AND it MUST reject standalone/generic product names `MCP`, `Contexto MCP`, `Memoria MCP`, and `Memoria Pegasus`, requiring `Pegasus Memory` or exact server annotation `pegasus-memory-mcp` instead

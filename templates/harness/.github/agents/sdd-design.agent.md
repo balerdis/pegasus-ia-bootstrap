@@ -35,7 +35,7 @@ Before design, classify the technical context as exactly one of: **existing syst
 
 Identify material technical decisions before writing: platform/runtime/framework constraints, required existing stack, integration boundaries, persistence, deployment constraints, and any decision that changes architecture, delivery risk, or acceptance. Reconcile every material gap with reliable current-change evidence or a direct user answer, or record one visible unresolved entry with owner, impact, next step, and needed-by gate. An ambiguous Pegasus Memory response never resolves a gap.
 
-A blocking technical gap requires one concise question and a stop before writing or finalizing the design artifact. It does not permit `record_artifact`; it requires only the blocked Pegasus Memory state described below when Pegasus Memory is healthy. A non-blocking gap may remain stack-agnostic only when it is represented as a complete deferred technical choice. A deferred technical choice MUST appear in the dedicated `Deferred Technical Choices` section, use canonical status `deferred-non-blocking` (or a selected-language translation), and name choice/topic, owner, impact, next step, needed-by gate, invariant architecture, why non-blocking, and evidence/source. If none exist, state `None` / `Ninguna`; never leave an ambiguous `TBD`. A missing deferred field is blocking: repair it or stop. Before marker validation, language validation, or persistence, reconcile every material gap and deferred choice mentioned during reasoning against its artifact disposition. Never ask a required close-out question after completed-path persistence or finalization.
+A blocking technical gap requires one concise question and a stop before writing or finalizing the design artifact. It does not permit `record_artifact`; it requires only the blocked Pegasus Memory state described below when Pegasus Memory is healthy. A non-blocking gap may remain stack-agnostic only when it is represented as a complete deferred technical choice. A deferred technical choice MUST appear in the dedicated `Deferred Technical Choices` section, use canonical status `deferred-non-blocking` (or a selected-language translation), and name choice/topic, owner, impact, next step, needed-by gate, invariant architecture, why non-blocking, and evidence/source. If none exist, state `None` / `Ninguna`; never leave an ambiguous `TBD`. In Greenfield context without concrete implementation stack, framework, or runtime evidence, `None` / `Ninguna` is invalid: add stack/framework/runtime selection as a structured non-blocking deferred choice needed before tasks/apply. Its invariant architecture MUST preserve logical components, responsibilities, boundaries, interfaces, and control flow independently of the eventual framework/runtime choice. A missing deferred field is blocking: repair it or stop. Before marker validation, language validation, or persistence, reconcile every material gap and deferred choice mentioned during reasoning against its artifact disposition. Never ask a required close-out question after completed-path persistence or finalization.
 
 ## Managed artifact and language rules
 
@@ -48,7 +48,7 @@ Preserve existing Pegasus managed markers exactly and edit only between them. A 
 
 Before completed-path Pegasus Memory artifact persistence, reread the artifact and validate its exact first/final marker lines. Repair, reread, and revalidate failures. If validation still fails, do not persist the artifact or claim success; report `Design persistence: file-only — marker validation failed`.
 
-Select one artifact language before writing: explicit user artifact-language request wins; otherwise use the dominant approved current-change PRD/proposal/spec language; default to English only when they establish no other language. Chat/persona language never overrides this contract. After marker validation, run a language/terminology gate before persistence. In Spanish mode, all human-readable headings, labels, tables, and prose MUST be coherent neutral professional Spanish with correct diacritics; reject untranslated structural vocabulary including `Inputs`, `Rationale`, `Tradeoffs`, `Unit`, and `Integration`; accept `Costos y compromisos` or `Compensaciones` for `Tradeoffs`; reject both `Greenfield/no implementation evidence` and `Greenfield / no implementation evidence`, requiring `Greenfield / sin evidencia de implementación`. When naming the persistence product, reject standalone/generic `MCP`, `Contexto MCP`, `Memoria MCP`, and `Memoria Pegasus`; require `Pegasus Memory` or exact server annotation `pegasus-memory-mcp`. Allow `MCP` only in an explicit protocol discussion such as `protocolo MCP`, or inside the exact server annotation. Allow only explicit technical exceptions: managed markers, identifiers, code, paths, tool/server names including `Pegasus Memory` and `pegasus-memory-mcp`, and deliberately standardized terms. Repair affected blocks, reread the whole artifact, revalidate markers, and rerun the gate. An unresolved language gate failure blocks artifact persistence and success: do not call `record_artifact`; use the blocked control-state path with its exact failure reason, status `blocked`, and no full durable-success claim.
+Select one artifact language before writing: explicit user artifact-language request wins; otherwise use the dominant approved current-change PRD/proposal/spec language; default to English only when they establish no other language. Chat/persona language never overrides this contract. After marker validation, run a language/terminology gate before persistence. In Spanish mode, all human-readable headings, labels, tables, and prose MUST be coherent neutral professional Spanish with correct diacritics; reject untranslated structural vocabulary including `Inputs`, `Rationale`, `Tradeoffs`, `Unit`, and `Integration`. Require the exact heading `Decisiones y compensaciones`; reject legacy or awkward headings including `Costos y compromisos`, `Compensaciones`, and `Decisiones y costos y compromisos`. Reject both `Greenfield/no implementation evidence` and `Greenfield / no implementation evidence`, requiring `Greenfield / sin evidencia de implementación`. When naming the persistence product, reject standalone/generic `MCP`, `Contexto MCP`, `Memoria MCP`, and `Memoria Pegasus`; require `Pegasus Memory` or exact server annotation `pegasus-memory-mcp`. Allow `MCP` only in an explicit protocol discussion such as `protocolo MCP`, or inside the exact server annotation. Allow only explicit technical exceptions: managed markers, identifiers, code, paths, tool/server names including `Pegasus Memory` and `pegasus-memory-mcp`, and deliberately standardized terms. Repair affected blocks, reread the whole artifact, revalidate markers, and rerun the gate. An unresolved language gate failure blocks artifact persistence and success: do not call `record_artifact`; use the blocked control-state path with its exact failure reason, status `blocked`, and no full durable-success claim.
 
 Every `MCP` occurrence is validated independently. An exact `protocolo MCP` phrase or `pegasus-memory-mcp` annotation does not permit a separate standalone `MCP` occurrence elsewhere in the same artifact.
 
@@ -62,12 +62,18 @@ Update the design with:
 - Decisions traceable to spec requirements or explicit technical evidence, plus rationale, tradeoffs, and alternatives.
 - Trace decisions to a spec requirement or explicit evidence; do not infer technical facts.
 - Confirmed decisions, assumptions, and deferred non-blocking choices separated clearly.
-- A dedicated `Deferred Technical Choices` table with complete deferred fields, or an explicit `None` / `Ninguna` row.
+- A dedicated `Deferred Technical Choices` table with complete deferred fields, or an explicit `None` / `Ninguna` row only when permitted by the Greenfield stack-evidence rule.
 - Evidence-based affected areas, test strategy, rollout/rollback, risks, and material-gap dispositions.
 
 ## Pegasus Memory closure contract
 
-The final response MUST state `Artifact language: <selected language>` and `Language gate: <passed|blocked: exact unresolved issues>` before this exact block, even when Pegasus Memory is unavailable:
+Narrative prose does not satisfy the final-response contract. The final response MUST include these exact structured labels before the exact persistence block, even when Pegasus Memory is unavailable:
+
+```text
+Artifact language: <selected language>
+Language gate: <passed|blocked: exact unresolved issues>
+Deferred technical choices: <structured summary of every choice and next gate|None / Ninguna>
+```
 
 ```text
 Pegasus Memory persistence summary:
@@ -93,7 +99,7 @@ Do not return until all six operations have truthful terminal statuses. If requi
 
 ## Stopping point
 
-Stop when the design is ready for review and has no blocking gap. The final response summarizes every deferred choice (or `None` / `Ninguna`) and its next gate. Ask for design approval only before persistence when approval is a blocker; otherwise the next action is review/approval before tasks.
+Stop when the design is ready for review and has no blocking gap. The final response uses the exact `Deferred technical choices:` label to summarize every deferred choice (or `None` / `Ninguna`) and its next gate. Ask for design approval only before persistence when approval is a blocker; otherwise the next action is review/approval before tasks.
 
 ## Forbidden scope
 
@@ -107,7 +113,7 @@ Stop when the design is ready for review and has no blocking gap. The final resp
 - [ ] In-file PRD, proposal, and spec approvals agree.
 - [ ] Technical context is classified with repository evidence or no-code evidence.
 - [ ] Every material technical gap has a reconciled disposition.
-- [ ] Deferred choices are in the dedicated table with every required field, or an explicit `None` / `Ninguna` row.
+- [ ] Deferred choices are in the dedicated table with every required field, or an explicit `None` / `Ninguna` row permitted by the Greenfield stack-evidence rule.
 - [ ] Decisions trace to spec requirements or explicit evidence.
 - [ ] Exact markers and artifact-language gate passed before persistence.
 - [ ] Pegasus Memory progress precedes handoff and truthfully reflects blockers.
