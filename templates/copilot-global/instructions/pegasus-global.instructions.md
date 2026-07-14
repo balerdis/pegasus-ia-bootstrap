@@ -15,4 +15,6 @@ When a workspace contains Pegasus IA assets, use the workspace-local files as th
 
 Keep work local-first. Do not create app scaffolds, GitHub remotes, CI, deployment, database, or network resources unless the workspace docs explicitly require them.
 
+Use English for operational instructions, internal communication, and generated agent-consumed artifacts. Only an explicit user instruction naming an artifact language overrides English; chat, persona, source language, and prior artifacts do not. User-facing conversation and localized public warnings may remain localized. Pegasus Memory descriptive prose is always English; preserve exact source data and record each source artifact's language.
+
 This file is intentionally conservative and does not claim one-to-one behavior with OpenCode, Cursor, or any other agent runtime.

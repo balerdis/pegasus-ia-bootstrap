@@ -9,6 +9,8 @@ This is secondary legacy Cursor compatibility guidance. For VS Code/Copilot sess
 
 Use `pegasus-memory-mcp` as the operational memory interface for recovery, search, and writes. This legacy Cursor guidance must not contradict the Copilot-first MCP memory policy.
 
+Durable descriptive prose is always English. Preserve exact source data and record `Artifact language: <language>` for persisted artifact references, regardless of chat, persona, source, or artifact language.
+
 At session start or after context compaction:
 
 1. Recover active project/change context through MCP when available.

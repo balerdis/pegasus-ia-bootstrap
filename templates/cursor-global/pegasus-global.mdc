@@ -9,12 +9,14 @@ Version: {{GLOBAL_TEMPLATE_VERSION}}
 
 Cursor support is retained as secondary legacy compatibility. For new Pegasus IA workspaces, prefer VS Code/Copilot assets under `.github/` when they are present.
 
+Use English for operational instructions, internal communication, and generated agent-consumed artifacts. Override artifact language only when the user explicitly names it; never infer an override from chat, persona, source, or prior artifact language. User-facing conversation and localized public warnings may remain localized.
+
 When working in a Pegasus IA workspace from Cursor:
 
 1. Prefer workspace-local guidance first. Read `.github/copilot-instructions.md`, `.github/instructions/`, `AGENTS.md`, and the rules under `.cursor/rules/` before making changes.
 2. Recover context through `pegasus-memory-mcp` when available; do not use Markdown memory as an active backend.
 3. Use active-change `docs/pegasus/changes/<change-id>/proposal.md`, `spec.md`, `design.md`, `tasks.md`, `apply-progress.md`, and `verify.md` as the local SDD workflow source. Root phase files are canonical templates only; root PRD is a natural-entry template only before an active change is selected.
 4. Keep generated bootstrap output limited to harness, documentation, and rules. Business application code is created later by the user or team inside the workspace.
-5. Save decisions, task status, handoffs, and learnings through Pegasus Memory when healthy; do not update Markdown memory.
+5. Save decisions, task status, handoffs, and learnings through Pegasus Memory when healthy; write descriptive prose in English, preserve exact source data, record `Artifact language: <language>` for artifact references, and do not update Markdown memory.
 
 This legacy global rule is intentionally minimal. Workspace-local files override or refine this guidance.

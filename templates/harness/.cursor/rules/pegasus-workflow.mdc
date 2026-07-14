@@ -7,6 +7,8 @@ alwaysApply: true
 
 This is secondary legacy Cursor compatibility guidance. For VS Code/Copilot sessions, prefer `.github/copilot-instructions.md`, `.github/instructions/`, `.github/prompts/`, and `.github/agents/pegasus-orchestrator.agent.md`.
 
+Follow `.github/instructions/pegasus-sdd-boundaries.instructions.md`: operational instructions and internal communication use English, and generated artifacts default to English unless the user explicitly names another artifact language. Chat, persona, source language, and prior artifacts never infer an override.
+
 Before making changes, recover context and read the local project docs in this order:
 
 1. Recover active project/change context through `pegasus-memory-mcp` when available.

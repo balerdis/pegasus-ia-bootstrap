@@ -8,6 +8,8 @@ tools:
 
 # Memory update prompt
 
+Follow `.github/instructions/pegasus-memory.instructions.md`: all durable descriptive prose is English, exact source data is preserved, and every persisted artifact reference records `Artifact language: <language>`.
+
 Review recent changes and call the `pegasus-memory-mcp` `health` tool before the first recovery or save attempt. If `health` succeeds, recover context and ensure write preconditions: when recovery returns `not_found` with `project_not_found`, call `ensure_project`; when recording a new change/PRD under `docs/pegasus/changes/<change-id>/`, call `ensure_change` before `record_artifact` or change-scoped observations. Then record durable operational memory through MCP:
 
 - Active project/change context.

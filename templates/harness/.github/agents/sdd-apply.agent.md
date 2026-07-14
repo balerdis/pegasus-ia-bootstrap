@@ -9,6 +9,8 @@ tools: ['read', 'search', 'edit', 'execute']
 
 Execute the assigned apply slice directly in this context. Do not delegate or launch another agent for this phase.
 
+Follow `.github/instructions/pegasus-sdd-boundaries.instructions.md` for artifact and internal-communication language. Apply-progress output defaults to English unless the user explicitly names another language for that artifact.
+
 Implement only the next approved task slice and record preliminary evidence without replacing the verify phase.
 
 Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health` succeeds, proactively save implementation progress, blockers, changed files, tests/checks run, bugfix root causes, preliminary evidence, next action, and artifact references through MCP; merge updates instead of replacing useful history.

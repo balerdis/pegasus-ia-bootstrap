@@ -12,6 +12,8 @@ tools:
 
 Use `docs/pegasus/` as the source of truth: request → PRD → proposal → spec → design → tasks → apply → verify → handoff.
 
+Follow `.github/instructions/pegasus-sdd-boundaries.instructions.md`: operational instructions and agent-to-agent communication use English, and every phase artifact defaults to English unless the user explicitly names another language for that artifact.
+
 The `pegasus-orchestrator` is a thin coordinator. Delegate every phase to its matching specialized agent in a fresh context. A specialized phase agent executes directly and never recursively delegates its phase. If required delegation is unavailable, blocked, or fails, stop and report instead of absorbing the work. Apply and verify MUST be distinct fresh-context launches.
 
 Follow `.github/instructions/pegasus-memory.instructions.md`. Call MCP `health` before first recovery/save, recover session context when healthy, call `ensure_project` before writes when recovery reports `project_not_found`, call `ensure_change` before new change-scoped artifact or observation writes, and proactively save decisions, discoveries, bugfixes, config changes, user constraints, artifact status, task progress, verification evidence, and handoff/session summaries through MCP after `health` succeeds.

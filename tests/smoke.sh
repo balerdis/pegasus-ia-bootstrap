@@ -689,8 +689,8 @@ assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "If repair and r
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Spec persistence: file-only — marker validation failed"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Preserve target-language standard orthography and diacritics"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "an explicit user artifact-language request wins"
-assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "otherwise use the dominant language of the approved current-change PRD and proposal"
-assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "chat or persona language never overrides this artifact contract"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "otherwise use English. Chat, persona, approved-source language, and prior artifacts never infer an override"
+assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "an explicit user artifact-language request wins"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "neutral, professional Spanish"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "with no persona slang"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "Keep headings, table labels, metadata labels, and body prose consistently in the selected language"
@@ -1153,6 +1153,18 @@ assert "docs/pegasus/changes/<change-id>/" in cursor
 assert "Update local Markdown memory" not in cursor
 assert "docs/pegasus/changes/<change-id>/" in copilot
 PY
+for global_language_file in \
+  "$copilot_install_xdg/pegasus-ia/copilot/agents/pegasus-global-orchestrator.agent.md" \
+  "$copilot_install_xdg/pegasus-ia/copilot/instructions/pegasus-global.instructions.md" \
+  "$copilot_install_xdg/pegasus-ia/copilot/prompts/pegasus-start.prompt.md"; do
+  assert_file_contains "$global_language_file" "English"
+done
+assert_file_contains "$copilot_install_xdg/pegasus-ia/copilot/agents/pegasus-global-orchestrator.agent.md" 'Artifact language: <language>'
+if grep -R -E "otherwise use the dominant language|dominant approved source language|dominant approved PRD/proposal language" \
+  "$target/.github" >/dev/null; then
+  printf 'rendered operational guidance retains legacy artifact-language inference\n' >&2
+  exit 1
+fi
 "$PYTHON_BIN" - "$ROOT/templates/harness/docs/pegasus/design.md" <<'PY'
 import sys
 from pathlib import Path
@@ -1724,6 +1736,8 @@ esac
 
 global_target="$TMP/global-target"
 global_output="$(printf 'yes\n' | HOME="$global_home" XDG_CONFIG_HOME="$global_xdg" "$PYTHON_BIN" "$CLI" --project-name global-project --target-path "$global_target" --install-cursor-global)"
+assert_file_contains "$global_xdg/Cursor/User/rules/pegasus-global.mdc" "never infer an override from chat, persona, source, or prior artifact language"
+assert_file_contains "$global_xdg/Cursor/User/rules/pegasus-global.mdc" 'record `Artifact language: <language>`'
 global_rule="$global_xdg/Cursor/User/rules/pegasus-global.mdc"
 [ -f "$global_rule" ] || { printf 'expected global Cursor rule to be written\n' >&2; exit 1; }
 assert_file_contains "$global_rule" "PEGASUS-CURSOR-GLOBAL"

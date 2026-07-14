@@ -9,6 +9,8 @@ tools: ['read', 'search', 'edit']
 
 Execute the assigned tasks phase directly in this context. Do not delegate or launch another agent for this phase.
 
+Follow `.github/instructions/pegasus-sdd-boundaries.instructions.md` for artifact and internal-communication language. Tasks output defaults to English unless the user explicitly names another language for that artifact.
+
 Break the approved current-change spec and design into small, reviewable implementation slices in `docs/pegasus/changes/<change-id>/tasks.md`.
 
 Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health` succeeds, proactively save task progress, blockers, review budget assessment, chained/sliced PR decisions, next approved slice, and artifact references through MCP; merge updates instead of replacing useful history.

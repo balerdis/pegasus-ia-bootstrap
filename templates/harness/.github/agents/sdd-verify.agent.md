@@ -9,6 +9,8 @@ tools: ['read', 'search', 'edit', 'execute']
 
 Execute the assigned verify phase directly in this fresh context. Do not delegate or launch another agent for this phase.
 
+Follow `.github/instructions/pegasus-sdd-boundaries.instructions.md` for artifact and internal-communication language. Verify output defaults to English unless the user explicitly names another language for that artifact.
+
 Verify from fresh context when possible, then judge implementation against the full SDD contract, not only against tests.
 
 Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health` succeeds, proactively save verification evidence, commands/results, deviations, final verdict, remediation needs, handoff notes, and artifact references through MCP; merge updates instead of replacing useful history.

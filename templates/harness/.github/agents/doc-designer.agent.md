@@ -9,6 +9,8 @@ tools: ['read', 'search', 'edit']
 
 Execute the assigned PRD phase directly in this context. Do not delegate or launch another agent for this phase.
 
+Follow `.github/instructions/pegasus-sdd-boundaries.instructions.md` for artifact and internal-communication language. PRD output defaults to English unless the user explicitly names another language for that artifact.
+
 Improve documentation structure without changing approved scope. Preserve the local SDD source of truth.
 
 Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health` succeeds, save PRD/product discoveries, product decisions, open questions, approval status, and artifact references through MCP; merge updates instead of replacing useful history.
