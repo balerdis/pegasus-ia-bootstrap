@@ -20,13 +20,15 @@ Design requires all three current-change artifacts approved in-file. Conversatio
 |----------------|-------------------|-------------|-------------------------------|
 | User request, otherwise dominant approved-source language | TBD | Pending | Managed markers, identifiers, code, paths, tool/server names, deliberately standardized terms |
 
-**Required Spanish rendering:** translate all human-readable headings, labels, table cells, and prose coherently. Do not leave labels such as `Inputs`, `Rationale`, `Tradeoffs`, `Unit`, or `Integration` untranslated.
+**Required Spanish rendering and classification:** use `Greenfield / no implementation evidence` in English artifacts and `Greenfield / sin evidencia de implementación` in Spanish artifacts. Spanish translates all human-readable headings, labels, table cells, and prose coherently. Use `Costos y compromisos` or `Compensaciones` for `Tradeoffs`; do not leave `Inputs`, `Rationale`, `Tradeoffs`, `Unit`, or `Integration` untranslated. In Spanish, reject both `Greenfield/no implementation evidence` and `Greenfield / no implementation evidence`.
+
+**Pegasus Memory product naming:** when naming persistence, write `Pegasus Memory` or the exact server annotation `pegasus-memory-mcp`. Reject standalone/generic `MCP`, `Contexto MCP`, `Memoria MCP`, and `Memoria Pegasus`. Validate every `MCP` occurrence independently: allow it only in the exact protocol phrase `protocolo MCP` or inside the exact server annotation. An allowed `protocolo MCP` occurrence never permits another standalone occurrence elsewhere in the document.
 
 ## Technical Context Classification
 
 | Classification | Evidence inspected | Consequence for design precision |
 |----------------|--------------------|----------------------------------|
-| Existing system with implementation evidence / Greenfield/no implementation evidence | TBD | TBD |
+| Existing system with implementation evidence / Greenfield / no implementation evidence | TBD | TBD |
 
 ## Material Technical Decisions and Gaps
 
@@ -35,6 +37,14 @@ Design requires all three current-change artifacts approved in-file. Conversatio
 | TBD | Platform/runtime, integration, persistence, deployment, or existing-stack constraint | Confirmed / assumption / deferred non-blocking / blocking | TBD | TBD | TBD | TBD | TBD | TBD | TBD |
 
 Blocking gaps prohibit design artifact writing, artifact finalization, and `record_artifact`; when Pegasus Memory is healthy, they still require minimal blocked control-state persistence: `ensure_project`/`ensure_change` as needed, `record_observation`, `record_task_progress` with status `blocked`, and `record_handoff`. A deferred non-blocking choice states the invariant architecture and why the stack choice can wait.
+
+## Deferred Technical Choices
+
+Use this dedicated section whenever any technical choice is deferred. Every deferred row is required to use status `deferred-non-blocking` (or its selected-language translation) and complete every column. A missing field is a blocking design gap: repair it or block before marker, language, or Pegasus Memory persistence gates. If there are no deferred choices, retain the explicit `None` / `Ninguna` row; never use ambiguous `TBD`.
+
+| Choice / topic | Status | Owner | Impact | Next step | Needed-by gate | Invariant architecture | Why non-blocking | Evidence / source |
+|----------------|--------|-------|--------|-----------|----------------|------------------------|------------------|-------------------|
+| None / Ninguna | N/A | N/A | No deferred technical choice | N/A | N/A | N/A | N/A | Current-change evidence reviewed |
 
 ## Design Goals / Non-Goals
 

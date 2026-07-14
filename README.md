@@ -1,4 +1,4 @@
-# Pegasus Harness Bootstrap 0.4.0
+# Pegasus Harness Bootstrap 0.4.1
 
 Local bootstrap tooling for configuring a Pegasus VS Code/Copilot-first harness in a target workspace. The generated workspace contains guidance, SDD templates, Copilot assets, and secondary legacy Cursor compatibility files; it does not scaffold app code, Git metadata, CI, deployment, or remote resources.
 
@@ -16,7 +16,7 @@ Check the installed product release at any time:
 
 ```sh
 pegasus-harness-bootstrap --version
-# Pegasus Harness Bootstrap 0.4.0
+# Pegasus Harness Bootstrap 0.4.1
 ```
 
 For everyday use from outside this checkout, install the CLI with `pipx`:

@@ -527,6 +527,8 @@ The system MUST create a PRD template and production-ready SDD templates under `
 - THEN generated guidance records inputs, design goals/non-goals, technical approach, decisions, tradeoffs, alternatives, affected areas/files, data/control flow, testing strategy, rollout/rollback, risks, and open questions in `docs/pegasus/changes/<change-id>/design.md`
 - AND every flow, alternative, affected area, testing, rollout/rollback, and risk entry MUST include a spec requirement or explicit repository-evidence traceability field
 - AND the material-gap structure MUST include invariant architecture, deferred choice, and why a deferred choice is non-blocking
+- AND any deferred technical choice MUST appear in a dedicated `Deferred Technical Choices` section/table, not only in risks or prose
+- AND each deferred row MUST include choice/topic, canonical status `deferred-non-blocking` or selected-language translation, owner, impact, next step, needed-by gate, invariant architecture, why non-blocking, and evidence/source; if none exist, it MUST state `None` / `Ninguna`
 - AND root `docs/pegasus/design.md` MUST be described only as the canonical template, never as an active change artifact
 - AND it excludes implementation code and task checklist creation
 
@@ -536,7 +538,7 @@ The system MUST create a PRD template and production-ready SDD templates under `
 - WHEN its PRD, proposal, or spec is missing approval, Draft, Pending, unchecked, or inconsistent
 - THEN guidance MUST prohibit design artifact writing, artifact finalization, and `record_artifact`, while allowing and requiring minimal blocked control-state persistence when Pegasus Memory is healthy: `ensure_project`/`ensure_change` as needed, `record_observation`, phase `design` `record_task_progress` with status `blocked`, and `record_handoff`
 - AND conversational approval MUST NOT override the artifact
-- AND it MUST use only current-change sources by default, disclose an explicit related dependency, and classify `existing system with implementation evidence` or `greenfield/no implementation evidence` with inspected evidence
+- AND it MUST use only current-change sources by default, disclose an explicit related dependency, and classify `existing system with implementation evidence` or the semantic Greenfield state without implementation evidence; it MUST render that state as `Greenfield / no implementation evidence` in English artifacts and `Greenfield / sin evidencia de implementación` in Spanish artifacts
 - AND it MUST distinguish blocked artifact finalization/persistence from allowed blocked control-state persistence: when healthy, ensure project/change as needed, record a blocker observation, record phase `design` task progress as `blocked`, then record handoff, while `record_artifact` is `not needed` because no design artifact was written
 
 #### Scenario: Design reconciles technical gaps and closes truthfully
@@ -545,12 +547,25 @@ The system MUST create a PRD template and production-ready SDD templates under `
 - WHEN design guidance prepares the artifact
 - THEN it MUST reconcile each gap before writing and again before persistence
 - AND a blocking gap MUST ask one concise question and stop before writing or finalizing the design artifact
-- AND a non-blocking deferred choice MUST state owner, impact, next step, needed-by, invariant architecture, and deferred choice
-- AND it MUST preserve/readback/repair/revalidate exact change-scoped markers, apply the selected-language gate, and never ask a required close-out question after persistence
+- AND a non-blocking deferred choice MUST state choice/topic, status `deferred-non-blocking` or selected-language translation, owner, impact, next step, needed-by gate, invariant architecture, why non-blocking, and evidence/source in the dedicated section
+- AND a missing deferred field MUST block completed/ready-for-review status until repaired or explicitly blocked
+- AND it MUST reconcile material gaps and deferred rows before marker validation, language validation, and persistence; it MUST preserve/readback/repair/revalidate exact change-scoped markers, apply the selected-language gate, and never ask a required close-out question after persistence
 - AND on a healthy blocking path it MUST record only blocked state: ensure project/change, observation, phase `design` task progress with status `blocked`, then handoff; `record_artifact` MUST be `not needed` because no design artifact was written
 - AND it MUST record Pegasus Memory task progress before handoff using only `pending`, `in_progress`, `blocked`, `completed`; `completed` requires no blocking gap and `blocked` reflects a blocker
+- AND its task-progress notes and final response MUST summarize deferred choices (or `None` / `Ninguna`) and their next gate
 - AND its response MUST include artifact language, language gate, exact six-line `Pegasus Memory persistence summary:`, and truthful file-only or incomplete/partial failure classification
 - AND unresolved language validation MUST block artifact persistence, report `record_artifact` as not needed with the language reason, record the truthful blocked control state, and never claim full durable success
+
+#### Scenario: Design Spanish language and product naming gate
+
+- GIVEN a Spanish design artifact has passed marker validation
+- WHEN guidance validates language and terminology before Pegasus Memory persistence
+- THEN it MUST reject untranslated structural labels including `Tradeoffs` and accept `Costos y compromisos` or `Compensaciones`
+- AND it MUST reject both English classification variants `Greenfield/no implementation evidence` and `Greenfield / no implementation evidence` in Spanish artifacts and require `Greenfield / sin evidencia de implementación`; English artifacts MAY use `Greenfield / no implementation evidence`
+- AND it MUST allow only justified immutable technical exceptions such as markers, identifiers, code, paths, tool/server names, and deliberately standardized terms
+- AND it MUST reject standalone/generic product names `MCP`, `Contexto MCP`, `Memoria MCP`, and `Memoria Pegasus`, requiring `Pegasus Memory` or exact server annotation `pegasus-memory-mcp` instead
+- AND it MUST validate every `MCP` occurrence independently, allowing it only in the exact protocol phrase `protocolo MCP` or inside the exact server annotation `pegasus-memory-mcp`; an allowed occurrence MUST NOT permit a separate standalone occurrence elsewhere in the document
+- AND it MUST repair affected blocks, reread the complete artifact, revalidate markers, and rerun language validation before any persistence attempt
 
 #### Scenario: Tasks define reviewable slices
 

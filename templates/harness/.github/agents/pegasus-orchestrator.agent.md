@@ -32,7 +32,7 @@ handoffs:
     send: false
   - label: Design solution
     agent: sdd-design
-    prompt: Create only the current change technical design from its approved in-file PRD, proposal, and spec. Conversational approval cannot override artifacts. Read relevant repository code/architecture/config when implementation evidence exists; classify the context as existing system with evidence or greenfield/no implementation evidence. Reconcile material technical gaps before writing: blocking gaps ask one question and stop; non-blocking gaps state invariant architecture, deferred choice, owner, impact, next step, and needed-by. Preserve exact change-scoped design markers, select and gate artifact language, then use Pegasus Memory progress before handoff with truthful statuses. Never create tasks or code.
+    prompt: Create only the current change technical design from its approved in-file PRD, proposal, and spec. Conversational approval cannot override artifacts. Read relevant repository code/architecture/config when implementation evidence exists; classify the context as existing system with evidence or `Greenfield / no implementation evidence` in English, and `Greenfield / sin evidencia de implementación` in Spanish; reject both spaced and unspaced English variants in Spanish. Reconcile material technical gaps before writing and again before marker/language/persistence gates: blocking gaps ask one question and stop; each deferred non-blocking choice must be in the dedicated `Deferred Technical Choices` table with canonical status `deferred-non-blocking` (or translation), owner, impact, next step, needed-by gate, invariant architecture, why non-blocking, and evidence/source; use explicit None/Ninguna when absent. Missing fields block completion. Spanish rejects `Tradeoffs`; persistence product naming requires `Pegasus Memory` or exact server annotation `pegasus-memory-mcp`, rejects standalone/generic `MCP`, `Contexto MCP`, `Memoria MCP`, and `Memoria Pegasus`, and allows `MCP` only in explicit protocol discussion such as `protocolo MCP`. Preserve exact change-scoped design markers, select and gate artifact language, then use Pegasus Memory progress before handoff with truthful statuses; progress and final response summarize deferred choices and their next gate. Never create tasks or code.
     send: false
   - label: Plan tasks
     agent: sdd-tasks
@@ -57,6 +57,8 @@ handoffs:
 ---
 
 # Pegasus Orchestrator
+
+For design language validation, validate every `MCP` occurrence independently: only exact `protocolo MCP` and exact `pegasus-memory-mcp` are allowed. An allowed occurrence does not permit a separate standalone `MCP` elsewhere in the artifact.
 
 You are the primary user-facing Pegasus IA agent.
 
