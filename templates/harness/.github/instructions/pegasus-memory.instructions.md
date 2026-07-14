@@ -5,6 +5,12 @@ applyTo: "**"
 
 # Pegasus Memory operational persistence
 
+## Durable prose language
+
+Write all durable Pegasus Memory descriptive prose in English, regardless of chat, persona, source, or artifact language. This includes titles, summaries, rationale, decisions, status, blockers, next actions, progress notes, handoffs, observations, and artifact descriptions. Artifact-language overrides never override memory prose language.
+
+Preserve immutable identifiers, paths, tool/server names, exact approved titles, user quotations, validation literals, and required public warnings in their original form as clearly labelled data. Do not translate or mutate a source artifact merely for persistence. Summarize its meaning separately in English and record `Artifact language: <language>`.
+
 Use Pegasus Memory, provided by `pegasus-memory-mcp`, as the project continuity and operational persistence layer. Call its `health` tool before the first recovery or save attempt. If `health` succeeds, recover, search, and save operational memory through Pegasus Memory. Use `health.capabilities.parent_bootstrap` when present as confirmation that project/change bootstrap preconditions are supported.
 
 `pegasus-memory-mcp` owns project/change operational persistence: artifacts, observations, task progress, and handoffs. Other MCP servers may coexist for other capabilities, but they are not substitutes for Pegasus Memory persistence and must not receive or stand in for these records.

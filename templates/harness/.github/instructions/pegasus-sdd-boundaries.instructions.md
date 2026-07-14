@@ -5,6 +5,12 @@ applyTo: "**"
 
 # SDD boundaries
 
+## Language contract
+
+Generate every agent-consumed artifact in English by default: PRD, proposal, spec, design, tasks, apply-progress, verify, handoff/session summaries, prompts, instructions, workflows, skills, and internal agent communication. Override English only when the user explicitly names the desired language for the artifact. Never infer artifact language from chat, persona, dominant source language, or prior artifacts. User-facing orchestrator conversation, README/user documentation, commit messages, and intentionally localized public runtime messages may use Spanish.
+
+Preserve immutable identifiers, paths, tool/server names, exact approved titles, user quotations, validation literals, and required public warnings in their original form as clearly labelled data. Language-specific validation applies only after an explicit artifact-language override. Follow `.github/instructions/pegasus-memory.instructions.md` for the independent durable-memory language contract.
+
 Treat proposal, spec, design, and tasks as gates:
 
 - The orchestrator coordinates only. Every SDD phase runs through its matching specialized agent in a fresh context; if delegation is unavailable, blocked, or fails, stop instead of executing the phase in orchestrator context.

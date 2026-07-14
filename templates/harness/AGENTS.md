@@ -16,6 +16,8 @@ VS Code/Copilot entry points live under `.github/`. `AGENTS.md` stays as portabl
 5. Use `docs/pegasus/changes/<change-id>/apply-progress.md` to track implementation slices and `docs/pegasus/changes/<change-id>/verify.md` to record verification commands and outcomes.
 6. Call Pegasus Memory `health` first, ensure the project/change exists when Pegasus Memory recovery reports missing preconditions, then save durable decisions, observations, handoffs, artifact references, and task progress through `pegasus-memory-mcp` when healthy.
 
+Language behavior is centralized in `.github/instructions/pegasus-sdd-boundaries.instructions.md` and `.github/instructions/pegasus-memory.instructions.md`. Agent-consumed artifacts default to English unless the user explicitly names another language for the artifact; durable Pegasus Memory descriptive prose remains English.
+
 ## Pegasus IA Workflow
 
 `pegasus-orchestrator` is a thin coordinator. Every SDD phase MUST be delegated to its matching specialized agent in a fresh context. Specialized agents execute their assigned phase directly and do not recursively delegate it. If delegation is unavailable, blocked, or fails, stop and report rather than absorbing phase work. Apply implements one authorized slice and returns; a distinct fresh-context verify agent evaluates it.

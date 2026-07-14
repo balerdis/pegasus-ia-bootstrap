@@ -337,6 +337,33 @@ The system MUST support global/user-level VS Code/Copilot asset installation onl
 - THEN it writes a timestamped backup of that target `settings.json`
 - AND it merges `chat.agentFilesLocations`, `chat.instructionsFilesLocations`, and `chat.promptFilesLocations` without removing existing values
 
+### Requirement: Agent artifact and durable memory language
+
+The generated harness MUST default all generated or agent-consumed artifacts to English, including PRD, proposal, spec, design, tasks, apply-progress, verify, handoff/session summaries, prompts, instructions, workflows, skills, and internal agent communication. Only an explicit user instruction naming the desired language for the artifact MAY override English. Chat language, persona language, dominant source language, and prior artifact language MUST NOT implicitly select artifact language. User-facing Pegasus Orchestrator conversation, README/user documentation, commit messages, and intentionally localized public runtime messages MAY use Spanish.
+
+Durable Pegasus Memory descriptive prose MUST be English regardless of chat or artifact language. This includes titles, summaries, rationale, decisions, status, blockers, next actions, progress notes, handoffs, observations, and artifact descriptions. Immutable identifiers, paths, tool/server names, exact approved titles, user quotations, validation literals, and required public warnings MUST remain unchanged and be clearly identified as data. Persistence MUST NOT translate or mutate source artifacts merely to store them; it MUST summarize their meaning separately in English and record `Artifact language: <language>`.
+
+#### Scenario: English is selected despite Spanish context
+
+- GIVEN the conversation and approved source artifacts are in Spanish
+- WHEN the user requests a new agent-consumed artifact without explicitly naming its language
+- THEN the artifact language is English
+- AND neither chat language nor dominant source language overrides the default
+
+#### Scenario: Explicit artifact-language override
+
+- GIVEN the user explicitly requests a Spanish spec
+- WHEN the spec is generated
+- THEN its artifact language is Spanish
+- AND the override applies to that named artifact rather than durable Pegasus Memory prose
+
+#### Scenario: Durable memory remains English
+
+- GIVEN an artifact or user conversation uses a language other than English
+- WHEN Pegasus Memory records descriptive project or change state
+- THEN titles, summaries, rationale, status, blockers, next actions, progress notes, handoffs, observations, and artifact descriptions are English
+- AND exact source data remains unchanged, clearly labelled, with `Artifact language: <language>` recorded
+
 ### Requirement: PRD and SDD document templates
 
 The system MUST create a PRD template and production-ready SDD templates under `docs/pegasus` or change-scoped `docs/pegasus/changes/<change-id>/` locations for proposal, spec, design, tasks, apply-progress, and verification, and Copilot prompts/instructions SHOULD reference those templates as the workflow source of truth. The guided SDD flow MUST be `request -> PRD -> proposal -> spec -> design -> tasks -> apply -> verify -> handoff`, and proposal work MUST require an explicitly approved PRD artifact. PRD guidance MUST capture product discovery and explicit approval, while proposal guidance MUST stay proposal-only as a bridge from approved PRD to spec.
@@ -506,8 +533,8 @@ The system MUST create a PRD template and production-ready SDD templates under `
 
 - GIVEN spec prose is written in a target language
 - WHEN the acceptance contract is generated
-- THEN it MUST select exactly one artifact language before writing: an explicit user artifact-language request takes precedence, otherwise the dominant approved PRD/proposal language applies, and chat/persona language MUST NOT override that choice
-- AND it MUST default to English only when approved sources establish no other language
+- THEN it MUST select exactly one artifact language before writing: an explicit user instruction naming the spec language takes precedence, otherwise it MUST use English
+- AND chat language, persona language, dominant approved-source language, and prior artifact language MUST NOT override that choice
 - AND it MUST keep headings, table labels, metadata labels, and body prose in the selected language, except immutable identifiers, deliberately standardized normative keywords, code, paths, and tool names
 - AND, for Spanish, it MUST use neutral, professional Spanish with correct diacritics and approved-source terminology, including translated human-readable canonical headings and labels; its structural metadata MUST use `Creado:` and `Destino:`
 - AND, after marker validation and before Pegasus Memory persistence, it MUST run a separate language/terminology validation for language consistency, untranslated canonical headings/labels, diacritics, malformed or near-match terms, and PRD/proposal terminology

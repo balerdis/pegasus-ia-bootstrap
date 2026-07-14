@@ -8,8 +8,15 @@ context: |
   Testing: bash tests/smoke.sh covers CLI help, dry-run, Copilot-first layout, conflict, force, no Git metadata, banned generated references, optional global Copilot Stable/Insiders install paths, settings backups/merge, and legacy Cursor planning/install paths
   Target workspace default path: /var/www/html/personal/<project-name>
   Persistence mode: hybrid
+  Artifact language: English by default; only an explicit user instruction naming the desired artifact language overrides this default
+  Memory language: durable Pegasus Memory descriptive prose is always English, independent of chat or artifact language
 
 rules:
+  language:
+    - Generate all agent-consumed artifacts, prompts, instructions, workflows, skills, and internal agent communication in English unless the user explicitly names another language for the artifact
+    - Do not infer artifact language from chat, persona, source language, or prior artifacts
+    - Preserve immutable or exact source data without translation and label persisted artifact references with `Artifact language: <language>`
+    - Keep durable Pegasus Memory descriptive prose in English
   proposal:
     - Keep scope small and reversible
   specs:

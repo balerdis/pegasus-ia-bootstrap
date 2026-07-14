@@ -442,6 +442,36 @@ assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "secondary leg
 assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "do not fall back to Markdown memory"
 assert_file_contains "$target/AGENTS.md" 'El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente'
 assert_file_contains "$target/AGENTS.md" "Pegasus Memory operational persistence"
+assert_file_contains "$target/AGENTS.md" "Agent-consumed artifacts default to English unless the user explicitly names another language for the artifact"
+assert_file_contains "$target/.github/instructions/pegasus-sdd-boundaries.instructions.md" "Generate every agent-consumed artifact in English by default"
+assert_file_contains "$target/.github/instructions/pegasus-sdd-boundaries.instructions.md" "Never infer artifact language from chat, persona, dominant source language, or prior artifacts"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Write all durable Pegasus Memory descriptive prose in English"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Artifact-language overrides never override memory prose language"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'record `Artifact language: <language>`'
+assert_file_contains "$target/.github/copilot-instructions.md" "Chat, persona, dominant source language, and prior artifacts do not select artifact language"
+assert_file_contains "$ROOT/openspec/config.yaml" "Artifact language: English by default"
+assert_file_contains "$ROOT/openspec/config.yaml" "Memory language: durable Pegasus Memory descriptive prose is always English"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "Agent artifact and durable memory language"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "dominant source language, and prior artifact language MUST NOT implicitly select artifact language"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "Durable Pegasus Memory descriptive prose MUST be English regardless of chat or artifact language"
+"$PYTHON_BIN" - "$ROOT" <<'PY'
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+sdd = (root / "templates/harness/.github/instructions/pegasus-sdd-boundaries.instructions.md").read_text()
+memory = (root / "templates/harness/.github/instructions/pegasus-memory.instructions.md").read_text()
+copilot = (root / "templates/harness/.github/copilot-instructions.md").read_text()
+spec = (root / "openspec/specs/pegasus-harness-bootstrap/spec.md").read_text()
+
+for text in (sdd, copilot, spec):
+    assert "dominant approved PRD/proposal language applies" not in text
+    assert "otherwise use the dominant approved PRD/proposal language" not in text
+assert "regardless of chat, persona, source, or artifact language" in memory
+assert "Artifact-language overrides never override memory prose language" in memory
+assert "Artifact language: <language>" in memory
+assert "required public warnings" in memory
+PY
 assert_file_contains "$target/AGENTS.md" "pegasus-harness:start path=AGENTS.md ownership=marker-managed"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "pegasus-harness:start path=.github/agents/pegasus-orchestrator.agent.md ownership=full-file"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "call the \`pegasus-memory-mcp\` \`health\` tool before the first recovery attempt"
@@ -948,8 +978,8 @@ assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "o
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "Spec persistence: file-only — <reason>"
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "Pegasus Memory persistence incomplete/partial — <failed operation>: <reason>"
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "prevent a full durable-completion or Pegasus Memory-success claim"
-assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "explicit user artifact-language request takes precedence"
-assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "chat/persona language MUST NOT override"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "explicit user instruction naming the spec language takes precedence, otherwise it MUST use English"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "chat language, persona language, dominant approved-source language, and prior artifact language MUST NOT override"
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "untranslated canonical headings/labels"
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "malformed or near-match terms"
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "repair only affected language blocks, reread the complete artifact, revalidate markers, and rerun"
