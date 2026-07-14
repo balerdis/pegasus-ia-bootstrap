@@ -524,14 +524,39 @@ The system MUST create a PRD template and production-ready SDD templates under `
 
 - GIVEN an approved proposal and approved spec
 - WHEN the design phase is run
-- THEN generated guidance records inputs, design goals/non-goals, technical approach, decisions, tradeoffs, alternatives, affected areas/files, data/control flow, testing strategy, rollout/rollback, risks, and open questions in `docs/pegasus/design.md`
+- THEN generated guidance records inputs, design goals/non-goals, technical approach, decisions, tradeoffs, alternatives, affected areas/files, data/control flow, testing strategy, rollout/rollback, risks, and open questions in `docs/pegasus/changes/<change-id>/design.md`
+- AND every flow, alternative, affected area, testing, rollout/rollback, and risk entry MUST include a spec requirement or explicit repository-evidence traceability field
+- AND the material-gap structure MUST include invariant architecture, deferred choice, and why a deferred choice is non-blocking
+- AND root `docs/pegasus/design.md` MUST be described only as the canonical template, never as an active change artifact
 - AND it excludes implementation code and task checklist creation
+
+#### Scenario: Design requires approved isolated evidence and technical context
+
+- GIVEN design work is requested for a current change
+- WHEN its PRD, proposal, or spec is missing approval, Draft, Pending, unchecked, or inconsistent
+- THEN guidance MUST prohibit design artifact writing, artifact finalization, and `record_artifact`, while allowing and requiring minimal blocked control-state persistence when Pegasus Memory is healthy: `ensure_project`/`ensure_change` as needed, `record_observation`, phase `design` `record_task_progress` with status `blocked`, and `record_handoff`
+- AND conversational approval MUST NOT override the artifact
+- AND it MUST use only current-change sources by default, disclose an explicit related dependency, and classify `existing system with implementation evidence` or `greenfield/no implementation evidence` with inspected evidence
+- AND it MUST distinguish blocked artifact finalization/persistence from allowed blocked control-state persistence: when healthy, ensure project/change as needed, record a blocker observation, record phase `design` task progress as `blocked`, then record handoff, while `record_artifact` is `not needed` because no design artifact was written
+
+#### Scenario: Design reconciles technical gaps and closes truthfully
+
+- GIVEN platform/runtime/framework, integration, persistence, deployment, or existing-stack decisions are material
+- WHEN design guidance prepares the artifact
+- THEN it MUST reconcile each gap before writing and again before persistence
+- AND a blocking gap MUST ask one concise question and stop before writing or finalizing the design artifact
+- AND a non-blocking deferred choice MUST state owner, impact, next step, needed-by, invariant architecture, and deferred choice
+- AND it MUST preserve/readback/repair/revalidate exact change-scoped markers, apply the selected-language gate, and never ask a required close-out question after persistence
+- AND on a healthy blocking path it MUST record only blocked state: ensure project/change, observation, phase `design` task progress with status `blocked`, then handoff; `record_artifact` MUST be `not needed` because no design artifact was written
+- AND it MUST record Pegasus Memory task progress before handoff using only `pending`, `in_progress`, `blocked`, `completed`; `completed` requires no blocking gap and `blocked` reflects a blocker
+- AND its response MUST include artifact language, language gate, exact six-line `Pegasus Memory persistence summary:`, and truthful file-only or incomplete/partial failure classification
+- AND unresolved language validation MUST block artifact persistence, report `record_artifact` as not needed with the language reason, record the truthful blocked control state, and never claim full durable success
 
 #### Scenario: Tasks define reviewable slices
 
 - GIVEN an approved spec and approved design
 - WHEN the tasks phase is run
-- THEN generated guidance records implementation slices with dependency/order, verification, risk, and rollback details in `docs/pegasus/tasks.md`
+- THEN generated guidance records implementation slices with dependency/order, verification, risk, and rollback details in `docs/pegasus/changes/<change-id>/tasks.md`
 - AND it includes the exact guard lines `Decision needed before apply: Yes|No`, `Chained PRs recommended: Yes|No`, and `400-line budget risk: Low|Medium|High`
 - AND it excludes implementation code
 
@@ -540,7 +565,7 @@ The system MUST create a PRD template and production-ready SDD templates under `
 - GIVEN an approved task slice and existing apply-progress history
 - WHEN the apply phase is run
 - THEN generated guidance requires reading spec, design, tasks, apply-progress, and MCP task progress before editing
-- AND it checks MCP task progress and `docs/pegasus/apply-progress.md` to avoid duplicate work
+- AND it checks MCP task progress and `docs/pegasus/changes/<change-id>/apply-progress.md` to avoid duplicate work
 - AND it records approved slice source, duplicate-check result, changed files, preliminary evidence, verification status per slice, risks, blockers, and next action with merge-not-overwrite discipline
 - AND it states that preliminary apply evidence does not replace the verify phase
 
@@ -549,7 +574,7 @@ The system MUST create a PRD template and production-ready SDD templates under `
 - GIVEN implementation is ready for verification
 - WHEN the verify phase is run
 - THEN generated guidance verifies against PRD, proposal, spec, design, tasks, apply-progress, changed files, and runtime evidence where possible
-- AND it records a compliance matrix, changed files reviewed, commands/results, test coverage/manual checks, deviations, risks, and final verdict in `docs/pegasus/verify.md`
+- AND it records a compliance matrix, changed files reviewed, commands/results, test coverage/manual checks, deviations, risks, and final verdict in `docs/pegasus/changes/<change-id>/verify.md`
 - AND it forbids unrelated implementation changes unless the user separately asks for remediation
 
 ### Requirement: Lightweight orchestration guardrails
@@ -576,7 +601,7 @@ The generated Pegasus guidance MUST support a direct-fix path for small, punctua
 
 #### Scenario: Duplicate launch is avoided
 
-- GIVEN MCP task progress or `docs/pegasus/apply-progress.md` shows a phase/task is already in progress or completed
+- GIVEN MCP task progress or `docs/pegasus/changes/<change-id>/apply-progress.md` shows a phase/task is already in progress or completed
 - WHEN orchestration considers delegating that same phase/task
 - THEN generated guidance requires avoiding duplicate work and moving to recovery, verification, handoff, or the next approved task slice as appropriate
 
@@ -584,7 +609,7 @@ The generated Pegasus guidance MUST support a direct-fix path for small, punctua
 
 - GIVEN an approved implementation slice
 - WHEN apply work starts or completes
-- THEN generated guidance records implementation slices, current in-progress work, completed work, changed files, verification evidence, unresolved risks, blockers, and next action in `docs/pegasus/apply-progress.md`
+- THEN generated guidance records implementation slices, current in-progress work, completed work, changed files, verification evidence, unresolved risks, blockers, and next action in `docs/pegasus/changes/<change-id>/apply-progress.md`
 - AND updates are merged with existing useful apply-progress history
 
 #### Scenario: Verification uses fresh context when possible

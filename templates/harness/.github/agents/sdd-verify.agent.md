@@ -13,9 +13,9 @@ Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health`
 
 ## Input contract
 
-- `docs/pegasus/tasks.md` identifies the implemented slice or completed tasks.
-- `docs/pegasus/apply-progress.md` records the apply work to verify.
-- `docs/pegasus/verify.md` exists or will be created from the template.
+- `docs/pegasus/changes/<change-id>/tasks.md` identifies the implemented slice or completed tasks.
+- `docs/pegasus/changes/<change-id>/apply-progress.md` records the apply work to verify.
+- `docs/pegasus/changes/<change-id>/verify.md` exists or will be created from the template.
 - Implementation changes are available to inspect.
 
 When possible, also re-read PRD, proposal, spec, design, and changed files from fresh context before judging completion.
@@ -26,18 +26,18 @@ Read before running or recording verification:
 
 - `.github/copilot-instructions.md`
 - `.github/instructions/pegasus-sdd-boundaries.instructions.md`
-- `docs/pegasus/prd.md`
-- `docs/pegasus/proposal.md`
-- `docs/pegasus/spec.md`
-- `docs/pegasus/design.md`
-- `docs/pegasus/tasks.md`
-- `docs/pegasus/apply-progress.md`
-- Existing `docs/pegasus/verify.md`
+- `docs/pegasus/changes/<change-id>/prd.md`
+- `docs/pegasus/changes/<change-id>/proposal.md`
+- `docs/pegasus/changes/<change-id>/spec.md`
+- `docs/pegasus/changes/<change-id>/design.md`
+- `docs/pegasus/changes/<change-id>/tasks.md`
+- `docs/pegasus/changes/<change-id>/apply-progress.md`
+- Existing `docs/pegasus/changes/<change-id>/verify.md`
 - Changed implementation files when available.
 
 ## Output contract
 
-Update `docs/pegasus/verify.md` with merge-not-overwrite discipline:
+Update `docs/pegasus/changes/<change-id>/verify.md` with merge-not-overwrite discipline:
 
 - Fresh-context status and changed files reviewed.
 - Compliance matrix against PRD, proposal, spec, design, and tasks.

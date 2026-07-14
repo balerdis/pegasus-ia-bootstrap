@@ -7,13 +7,13 @@ applyTo: "**"
 
 Treat proposal, spec, design, and tasks as gates:
 
-- Do not implement behavior that is outside `docs/pegasus/tasks.md`.
-- Do not bypass `docs/pegasus/spec.md`; acceptance scenarios are the contract.
+- Do not implement behavior that is outside active `docs/pegasus/changes/<change-id>/tasks.md`.
+- Do not bypass active `docs/pegasus/changes/<change-id>/spec.md`; acceptance scenarios are the contract.
 - Keep PRD, proposal, spec, design, tasks, apply-progress, and verify as file artifacts under `docs/pegasus/` or `docs/pegasus/changes/<change-id>/`.
-- Do not change architecture without updating `docs/pegasus/design.md`, calling MCP `health` first, and recording the durable decision through MCP after `health` succeeds.
-- Do not duplicate phase/task work already marked in progress or completed in MCP task progress or `docs/pegasus/apply-progress.md`.
-- Do not skip `docs/pegasus/apply-progress.md` when implementing; merge implementation status, changed files, evidence, blockers, and next action there.
-- Do not mark work complete until `docs/pegasus/verify.md` contains the commands and outcomes used to validate it.
+- Do not change architecture without updating the active `docs/pegasus/changes/<change-id>/design.md`, calling MCP `health` first, and recording the durable decision through MCP after `health` succeeds. Root `docs/pegasus/design.md` is a canonical template only, never the active change artifact.
+- Do not duplicate phase/task work already marked in progress or completed in MCP task progress or `docs/pegasus/changes/<change-id>/apply-progress.md`.
+- Do not skip active `docs/pegasus/changes/<change-id>/apply-progress.md` when implementing; merge implementation status, changed files, evidence, blockers, and next action there.
+- Do not mark work complete until active `docs/pegasus/changes/<change-id>/verify.md` contains the commands and outcomes used to validate it.
 - Do not use `docs/pegasus/memory/` as an operational memory backend, fallback, or co-source. It is deprecated after MCP integration.
 
 If a change exceeds the current task scope, split it into a new documented work unit before editing.

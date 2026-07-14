@@ -85,12 +85,12 @@ esac
 "$PYTHON_BIN" "$CLI" --help >/dev/null
 version_output="$($PYTHON_BIN "$CLI" --version)"
 case "$version_output" in
-  "Pegasus Harness Bootstrap 0.3.4") ;;
+  "Pegasus Harness Bootstrap 0.4.0") ;;
   *) printf 'expected clear Pegasus product version output\n' >&2; exit 1 ;;
 esac
-assert_file_contains "$ROOT/pyproject.toml" 'version = "0.3.4"'
-assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.3.4"'
-assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.3.4'
+assert_file_contains "$ROOT/pyproject.toml" 'version = "0.4.0"'
+assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.4.0"'
+assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.4.0'
 help_output="$($PYTHON_BIN "$CLI" --help)"
 case "$help_output" in
   *"--install-cursor-global"*) ;;
@@ -145,7 +145,7 @@ case "$default_plan" in
   *) printf 'expected default target path in dry-run output\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
-  *"Installed CLI version: 0.3.4"*"Source template version: 0.3.4"*) ;;
+   *"Installed CLI version: 0.4.0"*"Source template version: 0.4.0"*) ;;
   *) printf 'expected bootstrap plan version evidence\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
@@ -585,7 +585,7 @@ manifest_text = json.dumps(manifest)
 for forbidden in ("active_change", "activeChange", "last_change", "lastChange", "operational_memory", "operationalMemory", "memory_state", "memoryState", "recovery_state", "recoveryState"):
     assert forbidden not in manifest_text
 assert manifest["workspace"]["project_name"] == "sample-project"
-assert manifest["template_version"] == "0.3.4"
+assert manifest["template_version"] == "0.4.0"
 assert manifest["uninstall"]["remove_only_managed"] is True
 paths = {record["path"]: record for record in manifest["install"]["files"]}
 assert "AGENTS.md" in paths
@@ -593,8 +593,8 @@ assert ".vscode/mcp.json" in paths
 assert paths["AGENTS.md"]["ownership"] == "marker-managed"
 assert paths[".vscode/mcp.json"]["ownership"] == "full-file"
 assert paths[".github/agents/pegasus-orchestrator.agent.md"]["ownership"] == "full-file"
-assert all(record["package_version"] == "0.3.4" for record in paths.values())
-assert all(record["template_version"] == "0.3.4" for record in paths.values())
+assert all(record["package_version"] == "0.4.0" for record in paths.values())
+assert all(record["template_version"] == "0.4.0" for record in paths.values())
 assert manifest["install"]["skipped_conflicts"] == []
 PY
 
@@ -809,8 +809,34 @@ PY
 for mcp_status in ensure_project ensure_change record_artifact record_observation record_task_progress record_handoff; do
   assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "$mcp_status: <succeeded|not needed|failed: reason>"
 done
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Decisions, tradeoffs, and alternatives considered"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Decisions traceable to spec requirements or explicit technical evidence"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Do not implement code"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'current change'"'"'s `prd.md`, `proposal.md`, and `spec.md` exist and are approved in their files'
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Conversational approval never overrides"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Do not search, read, inspect, or reuse neighboring or unrelated change artifacts by default"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "existing system with implementation evidence"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "greenfield/no implementation evidence"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "A blocking technical gap requires one concise question and a stop before writing or finalizing the design artifact"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "A non-blocking gap may remain stack-agnostic"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Never ask a required close-out question after completed-path persistence or finalization"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Trace decisions to a spec requirement or explicit evidence"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/design.md ownership=full-file -->"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Before completed-path Pegasus Memory artifact persistence, reread the artifact"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'reject untranslated structural vocabulary including `Inputs`, `Rationale`, `Tradeoffs`, `Unit`, and `Integration`'
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Pegasus Memory persistence summary:"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'record_task_progress` for phase `design` before `record_handoff`'
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'Use `completed` only when the design is ready for review with no blocking gaps'
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Do not create tasks, work units, PR slices, implementation code"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "**Blocking path (approval/source or material technical blocker):** do not write/refine the design artifact"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "record_artifact: not needed — design artifact was not written because of blocking gap"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'status `blocked`, blockers/gaps, and next action `user answer`'
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "**Completed path:** only after marker, language, and gap validation"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "**Language-gate failure path:** the artifact may exist only as an unpersisted local draft"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "record_artifact: not needed — language validation failed before artifact persistence"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Never claim full durable success"
+for design_status in ensure_project ensure_change record_artifact record_observation record_task_progress record_handoff; do
+  assert_file_contains "$target/.github/agents/sdd-design.agent.md" "$design_status: <succeeded|not needed|failed: reason>"
+done
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Decision needed before apply: Yes|No"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Chained PRs recommended: Yes|No"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "400-line budget risk: Low|Medium|High"
@@ -899,6 +925,126 @@ assert_file_contains "$target/docs/pegasus/design.md" "## Design Goals / Non-Goa
 assert_file_contains "$target/docs/pegasus/design.md" "## Alternatives Considered"
 assert_file_contains "$target/docs/pegasus/design.md" "## Data / Control Flow"
 assert_file_contains "$target/docs/pegasus/design.md" "## Rollout / Rollback"
+assert_file_contains "$target/docs/pegasus/design.md" "## Technical Context Classification"
+assert_file_contains "$target/docs/pegasus/design.md" "## Material Technical Decisions and Gaps"
+assert_file_contains "$target/docs/pegasus/design.md" "Required Spanish rendering"
+assert_file_contains "$target/docs/pegasus/design.md" "Pegasus Memory context"
+assert_file_contains "$target/docs/pegasus/design.md" "Invariant architecture"
+assert_file_contains "$target/docs/pegasus/design.md" "Deferred choice"
+assert_file_contains "$target/docs/pegasus/design.md" "Why non-blocking"
+assert_file_contains "$target/docs/pegasus/design.md" "Evidence / traceability"
+assert_file_contains "$target/docs/pegasus/design.md" "canonical template only"
+assert_file_contains "$ROOT/templates/harness/docs/pegasus/design.md" '<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/design.md ownership=full-file -->'
+assert_file_contains "$ROOT/templates/harness/docs/pegasus/design.md" '<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/design.md -->'
+"$PYTHON_BIN" - "$target/.github/agents/sdd-design.agent.md" "$target/docs/pegasus/design.md" <<'PY'
+import sys
+from pathlib import Path
+
+guidance = Path(sys.argv[1]).read_text()
+template = Path(sys.argv[2]).read_text()
+assert guidance.index("A blocking technical gap") < guidance.index("## Managed artifact")
+assert guidance.index("Before completed-path Pegasus Memory artifact persistence, reread") < guidance.index("## Pegasus Memory closure contract")
+assert guidance.index("record_task_progress` for phase `design` occurs before `record_handoff`") < guidance.index("Do not return until all six operations")
+assert guidance.index("**Blocking path (approval/source or material technical blocker):**") < guidance.index("**Completed path:**")
+assert guidance.index("record_observation") < guidance.index("record_task_progress") < guidance.index("record_handoff")
+assert guidance.index("Repair affected blocks, reread the whole artifact, revalidate markers, and rerun the gate") < guidance.index("An unresolved language gate failure blocks artifact persistence and success")
+assert "Use generic MCP terminology" not in guidance
+assert "<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/design.md ownership=full-file -->" in template
+assert "<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/design.md -->" in template
+for text in ("Technical Context Classification", "Material Technical Decisions and Gaps", "Required Spanish rendering"):
+    assert text in template
+PY
+"$PYTHON_BIN" - "$target" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+surfaces = [root / "AGENTS.md"]
+surfaces.extend((root / ".github").rglob("*.md"))
+surfaces.extend((root / ".cursor").rglob("*.mdc"))
+operational_root = re.compile(r"docs/pegasus/(?:proposal|spec|design|tasks|apply-progress|verify)\.md")
+phase_name = re.compile(r"^(?:prd|proposal|spec|design|tasks|apply-progress|verify)\.md$")
+for path in surfaces:
+    for number, line in enumerate(path.read_text().splitlines(), start=1):
+        if operational_root.search(line):
+            assert "canonical template" in line, f"root operational phase path: {path}:{number}: {line}"
+
+        # A root path followed by bare sibling filenames is shorthand for root
+        # phase paths and must not bypass the change-scoped path requirement.
+        spans = re.findall(r"`([^`]+)`", line)
+        root_phase_seen = False
+        for span in spans:
+            if re.fullmatch(r"docs/pegasus/(?:prd|proposal|spec|design|tasks|apply-progress|verify)\.md", span):
+                root_phase_seen = True
+                continue
+            if root_phase_seen and phase_name.fullmatch(span):
+                raise AssertionError(f"shorthand root phase sibling: {path}:{number}: {line}")
+
+required = "docs/pegasus/changes/<change-id>/"
+for name in (
+    ".github/agents/sdd-tasks.agent.md",
+    ".github/agents/sdd-apply.agent.md",
+    ".github/agents/sdd-verify.agent.md",
+    ".github/prompts/sdd-phases.prompt.md",
+    ".github/prompts/handoff.prompt.md",
+    ".cursor/rules/pegasus-workflow.mdc",
+    ".cursor/rules/pegasus-memory.mdc",
+):
+    assert required in (root / name).read_text(), name
+
+copilot = (root / ".github/copilot-instructions.md").read_text()
+for phase in ("prd", "proposal", "spec", "design", "tasks", "apply-progress", "verify"):
+    assert f"docs/pegasus/changes/<change-id>/{phase}.md" in copilot, phase
+assert "Root phase files are canonical templates only" in copilot
+assert "Then read `docs/pegasus/prd.md`, `proposal.md`" not in copilot
+PY
+"$PYTHON_BIN" - "$ROOT/templates/cursor-global/pegasus-global.mdc" "$ROOT/templates/copilot-global/agents/pegasus-global-orchestrator.agent.md" <<'PY'
+import sys
+from pathlib import Path
+
+cursor, copilot = (Path(raw).read_text() for raw in sys.argv[1:])
+assert "docs/pegasus/changes/<change-id>/" in cursor
+assert "Update local Markdown memory" not in cursor
+assert "docs/pegasus/changes/<change-id>/" in copilot
+PY
+"$PYTHON_BIN" - "$ROOT/templates/harness/docs/pegasus/design.md" <<'PY'
+import sys
+from pathlib import Path
+
+lines = Path(sys.argv[1]).read_text().splitlines()
+assert lines[0] == "<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/design.md ownership=full-file -->"
+assert lines[-1] == "<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/design.md -->"
+PY
+assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Create only the current change technical design from its approved in-file PRD, proposal, and spec"
+assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'Before design, read the current change'"'"'s approved in-file PRD, proposal, and spec'
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'For design closure, use Pegasus Memory/`pegasus-memory-mcp` terminology'
+assert_file_contains "$target/.github/copilot-instructions.md" "Before design, require current-change in-file approval for PRD, proposal, and spec"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "Design requires approved isolated evidence and technical context"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "Design reconciles technical gaps and closes truthfully"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" 'docs/pegasus/changes/<change-id>/design.md'
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" 'record_artifact` MUST be `not needed` because no design artifact was written'
+assert_file_contains "$target/docs/pegasus/design.md" "Blocking gaps prohibit design artifact writing, artifact finalization, and \`record_artifact\`"
+assert_file_contains "$target/docs/pegasus/design.md" "minimal blocked control-state persistence: \`ensure_project\`/\`ensure_change\` as needed, \`record_observation\`, \`record_task_progress\` with status \`blocked\`, and \`record_handoff\`"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" 'MUST prohibit design artifact writing, artifact finalization, and `record_artifact`, while allowing and requiring minimal blocked control-state persistence'
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" '`ensure_project`/`ensure_change` as needed, `record_observation`, phase `design` `record_task_progress` with status `blocked`, and `record_handoff`'
+if grep -Fq 'Blocking gaps stop before writing/finalization/persistence' "$ROOT/templates/harness/docs/pegasus/design.md"; then
+  printf 'canonical design template contains generic blocked-persistence wording\n' >&2
+  exit 1
+fi
+if grep -Fq 'stop before writing, finalizing, or Pegasus Memory persistence' "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md"; then
+  printf 'stable spec contains generic blocked-persistence wording\n' >&2
+  exit 1
+fi
+"$PYTHON_BIN" - "$target/.github/agents/sdd-tasks.agent.md" "$target/.github/agents/sdd-apply.agent.md" "$target/.github/agents/sdd-verify.agent.md" "$target/.github/prompts/sdd-phases.prompt.md" <<'PY'
+import sys
+from pathlib import Path
+
+for raw in sys.argv[1:]:
+    text = Path(raw).read_text()
+    assert "docs/pegasus/changes/<change-id>/design.md" in text, raw
+    assert "docs/pegasus/design.md" not in text, raw
+PY
 assert_file_contains "$target/docs/pegasus/tasks.md" "Decision needed before apply: Yes|No"
 assert_file_contains "$target/docs/pegasus/tasks.md" "Chained PRs recommended: Yes|No"
 assert_file_contains "$target/docs/pegasus/tasks.md" "400-line budget risk: Low|Medium|High"
@@ -1031,7 +1177,7 @@ esac
 cmp "$TMP/recovery-manifest-before.json" "$recovery_target/.pegasus-bootstrap-ia/manifest.json" || { printf 'normal bootstrap rewrote historical manifest metadata\n' >&2; exit 1; }
 recovery_dry_output="$($PYTHON_BIN "$CLI" --target-path "$recovery_target" --sync-workspace --dry-run)"
 case "$recovery_dry_output" in
-  *"Installed CLI version: 0.3.4"*"Source template version: 0.3.4"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
+   *"Installed CLI version: 0.4.0"*"Source template version: 0.4.0"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
   *) printf 'expected empty-manifest dry-run recovery and version evidence\n' >&2; exit 1 ;;
 esac
 assert_file_contains "$recovery_target/.github/agents/sdd-spec.agent.md" 'STALE PEGASUS SPEC AGENT'
@@ -1052,8 +1198,8 @@ from pathlib import Path
 
 manifest = json.loads(Path(sys.argv[1]).read_text())
 records = {record["path"]: record for record in manifest["ownership"]["files"]}
-assert manifest["template_version"] == "0.3.4"
-assert manifest["package_version"] == "0.3.4"
+assert manifest["template_version"] == "0.4.0"
+assert manifest["package_version"] == "0.4.0"
 assert records[".github/agents/sdd-spec.agent.md"]["action"] == "recovered"
 assert not any(path.startswith("docs/pegasus/") for path in records)
 PY

@@ -15,10 +15,10 @@ At session start or after context compaction:
 2. If recovery returns `not_found` with `project_not_found`, call `ensure_project` before recording observations, artifacts, task progress, or handoffs.
 3. When creating a new PRD/change under `docs/pegasus/changes/<change-id>/prd.md`, call `ensure_change` before `record_artifact` or change-scoped observations.
 4. Search MCP memory for decisions, constraints, task progress, handoffs, observations, and learnings.
-5. Read `docs/pegasus/prd.md`, `docs/pegasus/proposal.md`, `docs/pegasus/spec.md`, `docs/pegasus/design.md`, `docs/pegasus/tasks.md`, and `docs/pegasus/apply-progress.md` for file-based SDD artifacts.
-6. Avoid duplicate launches by comparing MCP task progress with `docs/pegasus/apply-progress.md`.
+5. Read active-change `docs/pegasus/changes/<change-id>/prd.md`, `proposal.md`, `spec.md`, `design.md`, `tasks.md`, `apply-progress.md`, and `verify.md` for file-based SDD artifacts. Root `docs/pegasus/*.md` files are canonical templates only; root PRD is a natural-entry template only before selecting an active change.
+6. Avoid duplicate launches by comparing MCP task progress with `docs/pegasus/changes/<change-id>/apply-progress.md`.
 
-When work changes facts, decisions, task status, blockers, artifacts, handoffs, or gotchas, save the durable record through MCP when available and merge implementation status into `docs/pegasus/apply-progress.md` when relevant. Treat `persistence_error` or foreign-key write failures as precondition/flow bugs, not MCP unavailability.
+When work changes facts, decisions, task status, blockers, artifacts, handoffs, or gotchas, save the durable record through MCP when available and merge implementation status into `docs/pegasus/changes/<change-id>/apply-progress.md` when relevant. Treat `persistence_error` or foreign-key write failures as precondition/flow bugs, not MCP unavailability.
 
 If `pegasus-memory-mcp` is unavailable, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Project/change artifact work may continue, but do not claim persistent memory was saved and do not fall back to Markdown memory.
 

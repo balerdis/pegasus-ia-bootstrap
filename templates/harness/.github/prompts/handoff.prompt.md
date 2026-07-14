@@ -9,7 +9,7 @@ tools:
 
 # Handoff prompt
 
-Follow `.github/instructions/pegasus-memory.instructions.md`. Call MCP `health` first. After `health` succeeds, recover task progress, decisions, artifact status, verification evidence, and prior handoff context through MCP, then read `docs/pegasus/verify.md`.
+Follow `.github/instructions/pegasus-memory.instructions.md`. Call MCP `health` first. After `health` succeeds, recover task progress, decisions, artifact status, verification evidence, and prior handoff context through MCP, then read `docs/pegasus/changes/<change-id>/verify.md`. Root phase files are canonical templates only.
 
 Save an MCP handoff/session summary with current state, completed work, open risks, blockers, next steps, verification status, and files that matter for the next session. Merge with existing useful history instead of replacing prior handoffs.
 

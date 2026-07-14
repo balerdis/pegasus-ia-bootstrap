@@ -12,8 +12,8 @@ VS Code/Copilot entry points live under `.github/`. `AGENTS.md` stays as portabl
 1. In VS Code with Copilot, start with `.github/agents/pegasus-orchestrator.agent.md`.
 2. Read `.github/copilot-instructions.md` and the scoped files under `.github/instructions/`.
 3. Recover current project context through `pegasus-memory-mcp` tools when available.
-4. Read `docs/pegasus/prd.md`, `docs/pegasus/proposal.md`, `docs/pegasus/spec.md`, `docs/pegasus/design.md`, `docs/pegasus/tasks.md`, and `docs/pegasus/apply-progress.md` before changing files.
-5. Use `docs/pegasus/apply-progress.md` to track implementation slices and `docs/pegasus/verify.md` to record verification commands and outcomes.
+4. For an active change, read `docs/pegasus/changes/<change-id>/prd.md`, `proposal.md`, `spec.md`, `design.md`, `tasks.md`, and `apply-progress.md` before changing files. Root `docs/pegasus/design.md` is the canonical template only, not an active artifact.
+5. Use `docs/pegasus/changes/<change-id>/apply-progress.md` to track implementation slices and `docs/pegasus/changes/<change-id>/verify.md` to record verification commands and outcomes.
 6. Call Pegasus Memory `health` first, ensure the project/change exists when Pegasus Memory recovery reports missing preconditions, then save durable decisions, observations, handoffs, artifact references, and task progress through `pegasus-memory-mcp` when healthy.
 
 ## Pegasus IA Workflow
@@ -29,7 +29,7 @@ VS Code/Copilot entry points live under `.github/`. `AGENTS.md` stays as portabl
 
 Before moving to the next SDD phase, confirm the required docs exist and ask for user approval. The default SDD path is `request → PRD → proposal → spec → design → tasks → apply → verify → handoff`.
 
-Before delegating or starting a phase/task, check MCP task progress and `docs/pegasus/apply-progress.md` for the same phase/task already in progress or completed. Avoid duplicate launches.
+Before delegating or starting a phase/task, check MCP task progress and `docs/pegasus/changes/<change-id>/apply-progress.md` for the same phase/task already in progress or completed. Avoid duplicate launches.
 
 Before large implementation, estimate review workload. If work is likely to exceed about 400 changed lines or touch multiple unrelated areas, stop and ask whether to split it into chained PRs.
 

@@ -12,9 +12,9 @@ Cursor support is retained as secondary legacy compatibility. For new Pegasus IA
 When working in a Pegasus IA workspace from Cursor:
 
 1. Prefer workspace-local guidance first. Read `.github/copilot-instructions.md`, `.github/instructions/`, `AGENTS.md`, and the rules under `.cursor/rules/` before making changes.
-2. Recover context from `docs/pegasus/memory/context.md` and `docs/pegasus/memory/handoff.md` at the start of a session.
-3. Use `docs/pegasus/proposal.md`, `spec.md`, `design.md`, `tasks.md`, and `verify.md` as the local SDD workflow source.
-4. Keep generated bootstrap output limited to harness, documentation, rules, and memory files. Business application code is created later by the user or team inside the workspace.
-5. Update local Markdown memory as work progresses: decisions in `decisions.md`, task status in `tasks-log.md`, handoffs in `handoff.md`, and durable lessons in `learnings.md`.
+2. Recover context through `pegasus-memory-mcp` when available; do not use Markdown memory as an active backend.
+3. Use active-change `docs/pegasus/changes/<change-id>/proposal.md`, `spec.md`, `design.md`, `tasks.md`, `apply-progress.md`, and `verify.md` as the local SDD workflow source. Root phase files are canonical templates only; root PRD is a natural-entry template only before an active change is selected.
+4. Keep generated bootstrap output limited to harness, documentation, and rules. Business application code is created later by the user or team inside the workspace.
+5. Save decisions, task status, handoffs, and learnings through Pegasus Memory when healthy; do not update Markdown memory.
 
 This legacy global rule is intentionally minimal. Workspace-local files override or refine this guidance.

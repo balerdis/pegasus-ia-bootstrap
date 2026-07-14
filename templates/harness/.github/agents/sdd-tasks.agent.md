@@ -7,14 +7,14 @@ tools: ['read', 'search', 'edit']
 
 # SDD Tasks Agent
 
-Break the approved spec and design into small, reviewable implementation slices in `docs/pegasus/tasks.md`.
+Break the approved current-change spec and design into small, reviewable implementation slices in `docs/pegasus/changes/<change-id>/tasks.md`.
 
 Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health` succeeds, proactively save task progress, blockers, review budget assessment, chained/sliced PR decisions, next approved slice, and artifact references through MCP; merge updates instead of replacing useful history.
 
 ## Input contract
 
-- `docs/pegasus/spec.md` exists and is approved.
-- `docs/pegasus/design.md` exists and is approved.
+- `docs/pegasus/changes/<change-id>/spec.md` exists and is approved.
+- `docs/pegasus/changes/<change-id>/design.md` exists and is approved.
 - The user or orchestrator identifies the change/request to plan.
 
 If the design is not approved or the review-budget decision is needed, stop before apply.
@@ -26,13 +26,13 @@ Read before writing:
 - `.github/copilot-instructions.md`
 - `.github/instructions/pegasus-sdd-boundaries.instructions.md`
 - MCP project/change context and task progress after `health` succeeds
-- `docs/pegasus/spec.md`
-- `docs/pegasus/design.md`
-- Existing `docs/pegasus/tasks.md`
+- `docs/pegasus/changes/<change-id>/spec.md`
+- `docs/pegasus/changes/<change-id>/design.md`
+- Existing `docs/pegasus/changes/<change-id>/tasks.md`
 
 ## Output contract
 
-Update `docs/pegasus/tasks.md` with:
+Update `docs/pegasus/changes/<change-id>/tasks.md` with:
 
 - Review workload forecast.
 - Exact guard lines:

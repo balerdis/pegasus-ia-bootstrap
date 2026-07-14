@@ -13,10 +13,10 @@ Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health`
 
 ## Input contract
 
-- `docs/pegasus/spec.md` exists and is approved.
-- `docs/pegasus/design.md` exists and is approved.
-- `docs/pegasus/tasks.md` exists and identifies the approved next slice.
-- `docs/pegasus/apply-progress.md` exists or will be created from the template.
+- `docs/pegasus/changes/<change-id>/spec.md` exists and is approved.
+- `docs/pegasus/changes/<change-id>/design.md` exists and is approved.
+- `docs/pegasus/changes/<change-id>/tasks.md` exists and identifies the approved next slice.
+- `docs/pegasus/changes/<change-id>/apply-progress.md` exists or will be created from the template.
 - Any required review-budget/chained-PR decision is resolved before editing.
 
 If the next slice, approval, or workload decision is unclear, stop before editing.
@@ -28,10 +28,10 @@ Read before editing implementation files:
 - `.github/copilot-instructions.md`
 - `.github/instructions/pegasus-sdd-boundaries.instructions.md`
 - MCP project/change context and task progress after `health` succeeds
-- `docs/pegasus/spec.md`
-- `docs/pegasus/design.md`
-- `docs/pegasus/tasks.md`
-- `docs/pegasus/apply-progress.md`
+- `docs/pegasus/changes/<change-id>/spec.md`
+- `docs/pegasus/changes/<change-id>/design.md`
+- `docs/pegasus/changes/<change-id>/tasks.md`
+- `docs/pegasus/changes/<change-id>/apply-progress.md`
 - Relevant implementation files for the approved slice.
 
 ## Output contract
@@ -39,10 +39,10 @@ Read before editing implementation files:
 Update by merging, not replacing:
 
 - Implementation code only for the approved slice.
-- `docs/pegasus/tasks.md` task status for completed slice work.
-- `docs/pegasus/apply-progress.md` with approved slice source, duplicate-check result, changed files, preliminary notes/evidence, blockers, risks, and next action.
+- `docs/pegasus/changes/<change-id>/tasks.md` task status for completed slice work.
+- `docs/pegasus/changes/<change-id>/apply-progress.md` with approved slice source, duplicate-check result, changed files, preliminary notes/evidence, blockers, risks, and next action.
 - MCP task progress when task state changes after MCP `health` succeeds.
-- `docs/pegasus/verify.md` only with preliminary commands/notes if useful; final verification remains a separate verify phase.
+- `docs/pegasus/changes/<change-id>/verify.md` only with preliminary commands/notes if useful; final verification remains a separate verify phase.
 
 ## Stopping point
 
@@ -58,7 +58,7 @@ Stop after the approved slice is implemented, local checks relevant to the slice
 
 ## Merge/update rules
 
-- Check MCP task progress and `docs/pegasus/apply-progress.md` before editing to avoid duplicate launch/work.
+- Check MCP task progress and `docs/pegasus/changes/<change-id>/apply-progress.md` before editing to avoid duplicate launch/work.
 - If the slice is already in progress, stop and report recovery options.
 - If the slice is already complete, move to verify or the next approved slice.
 - Merge new progress into existing useful apply-progress and memory.
