@@ -14,11 +14,11 @@ Use this file as the acceptance contract for Copilot-guided work. Prompts and ag
 
 ## Artifact Language
 
-Select one artifact language before writing: an explicit user artifact-language request takes precedence; otherwise use the dominant language of the approved PRD and proposal. Chat or persona language does not override this contract. English is the default only when approved sources establish no other language.
+Default this generated artifact to English regardless of chat language, persona, dominant approved-source language, or prior artifact language. Use another artifact language only when the user explicitly names it.
 
 The template is written in English by default. When the selected language is Spanish, translate every human-readable heading, table label, metadata label, and body-prose block coherently into neutral, professional Spanish with correct diacritics and approved-source terminology. Leave only immutable managed markers, identifiers, deliberately standardized normative keywords, code, paths, and tool names unchanged. Do not mix English template headings with Spanish prose.
 
-For a Spanish rendering, use this structural vocabulary and scan the reread artifact for its prohibited English counterpart before reporting a passed language gate:
+Validation mapping for an explicit Spanish override only: use this structural vocabulary and scan the reread artifact for its prohibited English counterpart before reporting a passed language gate. These Spanish labels are fixtures, not default template content.
 
 | Default English structure | Required Spanish rendering |
 |---|---|

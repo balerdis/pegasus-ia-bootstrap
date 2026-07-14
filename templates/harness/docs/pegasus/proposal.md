@@ -3,7 +3,9 @@
 Created: `{{DATE}}`  
 Target: `{{TARGET_PATH}}`
 
-When this artifact is rendered in Spanish, use `Creado:` and `Destino:`. Keep the default English labels for an English artifact.
+Artifact language defaults to English regardless of chat language, persona, source language, or prior artifacts. Use another language only when the user explicitly names it for this artifact; then translate all human-readable headings, labels, and scaffolding consistently and run the existing language gate.
+
+Validation mapping for an explicit Spanish override only: `Created:` becomes `Creado:` and `Target:` becomes `Destino:`. These Spanish labels are not default template content.
 
 Use this template inside `docs/pegasus/changes/<change-id>/proposal.md` for change-specific SDD work. The proposal file is the source of truth for scope and approach; MCP memory may store summaries, status, artifact references, and recovery notes only.
 

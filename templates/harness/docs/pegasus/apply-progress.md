@@ -4,6 +4,8 @@ Use this file to track implementation progress for approved SDD task slices.
 
 Use this template inside `docs/pegasus/changes/<change-id>/apply-progress.md` for change-specific SDD work. This file is the source of truth for apply evidence; MCP memory may store slice summaries, task status, blockers, and artifact references only.
 
+Default the generated artifact to English regardless of chat language, persona, dominant approved-source language, or prior artifact language. Use another language only when the user explicitly names it; then localize every human-readable heading, label, and scaffold consistently and run the existing language gate.
+
 Merge updates into the existing useful history. Do not overwrite prior implementation slices, changed files, verification evidence, blockers, risks, or next actions unless the user explicitly approves cleanup.
 
 Before starting a slice, check this file and MCP task progress when available for the same phase/task already in progress or completed. Avoid duplicate launches.

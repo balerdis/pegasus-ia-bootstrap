@@ -4,6 +4,8 @@ Use this file to prove that implementation matches the PRD, proposal, spec, desi
 
 Use this template inside `docs/pegasus/changes/<change-id>/verify.md` for change-specific SDD work. This verify file is the source of truth for validation evidence and verdicts; MCP memory may store summaries, status, and artifact references only.
 
+Default the generated artifact to English regardless of chat language, persona, dominant approved-source language, or prior artifact language. Use another language only when the user explicitly names it; then localize every human-readable heading, label, and scaffold consistently and run the existing language gate.
+
 Use `.github/prompts/sdd-phases.prompt.md` for Copilot-guided verification, but record the actual commands, observations, and outcomes here.
 
 Append new verification evidence to preserve useful history. Do not remove prior commands, failures, deviations, or caveats unless the user explicitly approves cleanup.

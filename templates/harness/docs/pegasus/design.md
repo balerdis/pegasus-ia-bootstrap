@@ -1,7 +1,7 @@
 <!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/design.md ownership=full-file -->
 # Design: <change-id>
 
-This root file is the canonical template only. Copy it to `docs/pegasus/changes/<change-id>/design.md` for the active change; only that change-scoped file is the technical source of truth. Pegasus Memory stores summaries, status, and references. Render every human-readable label in the selected artifact language before persistence.
+This root file is the canonical template only. Copy it to `docs/pegasus/changes/<change-id>/design.md` for the active change; only that change-scoped file is the technical source of truth. Pegasus Memory stores summaries, status, and references. Default the generated artifact to English regardless of chat language, persona, dominant approved-source language, or prior artifact language. Use another language only when the user explicitly names it; then localize every human-readable label consistently and run the existing language gate before persistence.
 
 ## Inputs and Source Status
 
@@ -18,9 +18,9 @@ Design requires all three current-change artifacts approved in-file. Conversatio
 
 | Selection rule | Selected language | Gate result | Explicit technical exceptions |
 |----------------|-------------------|-------------|-------------------------------|
-| User request, otherwise dominant approved-source language | TBD | Pending | Managed markers, identifiers, code, paths, tool/server names, deliberately standardized terms |
+| English unless the user explicitly names another artifact language | English | Pending | Managed markers, identifiers, code, paths, tool/server names, deliberately standardized terms |
 
-**Required Spanish rendering and classification:** use `Greenfield / no implementation evidence` in English artifacts and `Greenfield / sin evidencia de implementación` in Spanish artifacts. Spanish translates all human-readable headings, labels, table cells, and prose coherently. The canonical Spanish heading is exactly `Decisiones y compensaciones`; reject `Tradeoffs`, `Costos y compromisos`, `Compensaciones`, `Decisiones y costos y compromisos`, and other composite variants as headings. Do not leave `Inputs`, `Rationale`, `Unit`, or `Integration` untranslated. In Spanish, reject both `Greenfield/no implementation evidence` and `Greenfield / no implementation evidence`.
+**Validation mapping for an explicit Spanish override only:** use `Greenfield / no implementation evidence` in default English artifacts and `Greenfield / sin evidencia de implementación` under an explicit Spanish override. Translate all human-readable headings, labels, table cells, and prose coherently. The Spanish fixture heading is exactly `Decisiones y compensaciones`; reject `Tradeoffs`, `Costos y compromisos`, `Compensaciones`, `Decisiones y costos y compromisos`, and other composite variants as headings. Do not leave `Inputs`, `Rationale`, `Unit`, or `Integration` untranslated. Under the Spanish override, reject both `Greenfield/no implementation evidence` and `Greenfield / no implementation evidence`. These Spanish values are validation fixtures, not defaults.
 
 **Pegasus Memory product naming:** when naming persistence, write `Pegasus Memory` or the exact server annotation `pegasus-memory-mcp`. Reject standalone/generic `MCP`, `Contexto MCP`, `Memoria MCP`, and `Memoria Pegasus`. Validate every `MCP` occurrence independently: allow it only in the exact protocol phrase `protocolo MCP` or inside the exact server annotation. An allowed `protocolo MCP` occurrence never permits another standalone occurrence elsewhere in the document.
 
@@ -40,11 +40,11 @@ Blocking gaps prohibit design artifact writing, artifact finalization, and `reco
 
 ## Deferred Technical Choices
 
-Use this dedicated section whenever any technical choice is deferred. Every deferred row is required to use status `deferred-non-blocking` (or its selected-language translation) and complete every column. A missing field is a blocking design gap: repair it or block before marker, language, or Pegasus Memory persistence gates. If there are no deferred choices, retain the explicit `None` / `Ninguna` row; never use ambiguous `TBD`. Exception: in Greenfield context without concrete implementation stack, framework, or runtime evidence, `None` / `Ninguna` is invalid. Record stack/framework/runtime selection as a structured non-blocking deferred choice needed before tasks/apply. Its invariant architecture MUST state that logical components, responsibilities, boundaries, interfaces, and control flow remain independent of the eventual framework/runtime selection.
+Use this dedicated section whenever any technical choice is deferred. Every deferred row is required to use status `deferred-non-blocking` (or its selected-language translation) and complete every column. A missing field is a blocking design gap: repair it or block before marker, language, or Pegasus Memory persistence gates. If there are no deferred choices, retain the explicit `None` row; never use ambiguous `TBD`. Under an explicit Spanish override, the validation mapping is `None` to `Ninguna`. Exception: in Greenfield context without concrete implementation stack, framework, or runtime evidence, `None` (or its selected-language translation) is invalid. Record stack/framework/runtime selection as a structured non-blocking deferred choice needed before tasks/apply. Its invariant architecture MUST state that logical components, responsibilities, boundaries, interfaces, and control flow remain independent of the eventual framework/runtime selection.
 
 | Choice / topic | Status | Owner | Impact | Next step | Needed-by gate | Invariant architecture | Why non-blocking | Evidence / source |
 |----------------|--------|-------|--------|-----------|----------------|------------------------|------------------|-------------------|
-| None / Ninguna | N/A | N/A | No deferred technical choice | N/A | N/A | N/A | N/A | Current-change evidence reviewed |
+| None | N/A | N/A | No deferred technical choice | N/A | N/A | N/A | N/A | Current-change evidence reviewed |
 
 ## Design Goals / Non-Goals
 
@@ -65,7 +65,7 @@ Describe the architecture without inventing modules or files absent from evidenc
 
 ## Confirmed Decisions, Assumptions, and Tradeoffs
 
-For a Spanish artifact, render this heading exactly as `## Decisiones y compensaciones`.
+Validation fixture for an explicit Spanish override: render this heading exactly as `## Decisiones y compensaciones`; this is not the default heading.
 
 | Decision | State | Choice | Rationale / evidence | Tradeoffs |
 |----------|--------|-----------|-----------|

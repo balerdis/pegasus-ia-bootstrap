@@ -927,7 +927,7 @@ assert_file_contains "$target/docs/pegasus/spec.md" "Every normative requirement
 assert_file_contains "$target/docs/pegasus/spec.md" "An ambiguous Pegasus Memory response never resolves a gap"
 assert_file_contains "$target/docs/pegasus/spec.md" "Replace each placeholder with behavior explicitly supported"
 assert_file_contains "$target/docs/pegasus/spec.md" "## Artifact Language"
-assert_file_contains "$target/docs/pegasus/spec.md" "explicit user artifact-language request takes precedence"
+assert_file_contains "$target/docs/pegasus/spec.md" "Use another artifact language only when the user explicitly names it"
 assert_file_contains "$target/docs/pegasus/spec.md" "Do not mix English template headings with Spanish prose"
 if grep -Fq "reject duplicate apply work" "$target/docs/pegasus/spec.md"; then
   printf 'spec template contains unrelated duplicate-apply behavior\n' >&2
@@ -995,7 +995,7 @@ assert_file_contains "$target/docs/pegasus/design.md" "## Data / Control Flow"
 assert_file_contains "$target/docs/pegasus/design.md" "## Rollout / Rollback"
 assert_file_contains "$target/docs/pegasus/design.md" "## Technical Context Classification"
 assert_file_contains "$target/docs/pegasus/design.md" "## Material Technical Decisions and Gaps"
-assert_file_contains "$target/docs/pegasus/design.md" "Required Spanish rendering"
+assert_file_contains "$target/docs/pegasus/design.md" "Validation mapping for an explicit Spanish override only"
 assert_file_contains "$target/docs/pegasus/design.md" "Pegasus Memory context"
 assert_file_contains "$target/docs/pegasus/design.md" "Invariant architecture"
 assert_file_contains "$target/docs/pegasus/design.md" "Deferred choice"
@@ -1004,8 +1004,8 @@ assert_file_contains "$target/docs/pegasus/design.md" "Evidence / traceability"
 assert_file_contains "$target/docs/pegasus/design.md" "canonical template only"
 assert_file_contains "$target/docs/pegasus/design.md" "## Deferred Technical Choices"
 assert_file_contains "$target/docs/pegasus/design.md" "Choice / topic | Status | Owner | Impact | Next step | Needed-by gate | Invariant architecture | Why non-blocking | Evidence / source"
-assert_file_contains "$target/docs/pegasus/design.md" "None / Ninguna"
-assert_file_contains "$target/docs/pegasus/design.md" 'in Greenfield context without concrete implementation stack, framework, or runtime evidence, `None` / `Ninguna` is invalid'
+assert_file_contains "$target/docs/pegasus/design.md" "| None | N/A |"
+assert_file_contains "$target/docs/pegasus/design.md" 'in Greenfield context without concrete implementation stack, framework, or runtime evidence, `None` (or its selected-language translation) is invalid'
 assert_file_contains "$target/docs/pegasus/design.md" "Decisiones y compensaciones"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "canonical status \`deferred-non-blocking\`"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "A missing deferred field is blocking"
@@ -1035,7 +1035,7 @@ assert guidance.index("Repair affected blocks, reread the whole artifact, revali
 assert "Use generic MCP terminology" not in guidance
 assert "<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/design.md ownership=full-file -->" in template
 assert "<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/design.md -->" in template
-for text in ("Technical Context Classification", "Material Technical Decisions and Gaps", "Required Spanish rendering"):
+for text in ("Technical Context Classification", "Material Technical Decisions and Gaps", "Validation mapping for an explicit Spanish override only"):
     assert text in template
 PY
 "$PYTHON_BIN" - "$target/.github/agents/sdd-design.agent.md" "$target/docs/pegasus/design.md" <<'PY'
@@ -1050,7 +1050,7 @@ required = {
 }
 header = next(line for line in template.splitlines() if line.startswith("| Choice / topic |"))
 assert required <= set(cell.strip() for cell in header.strip("|").split("|"))
-assert "| None / Ninguna |" in template
+assert "| None | N/A |" in template
 assert guidance.index("Before marker validation, language validation, or persistence") < guidance.index("## Managed artifact")
 assert guidance.index("Before marker validation, language validation, or persistence") < guidance.index("Before completed-path Pegasus Memory artifact persistence")
 assert "The final response uses the exact `Deferred technical choices:` label" in guidance
@@ -1098,6 +1098,28 @@ assert "Decisiones y compensaciones" in guidance
 assert "Pegasus Memory" in template and "Pegasus Memory context" in template
 assert "Greenfield / no implementation evidence" in template
 assert "Greenfield / sin evidencia de implementación" in template
+PY
+"$PYTHON_BIN" - "$target/docs/pegasus" <<'PY'
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+templates = {name: (root / f"{name}.md").read_text() for name in (
+    "prd", "proposal", "spec", "design", "tasks", "apply-progress", "verify"
+)}
+for name, text in templates.items():
+    assert "English" in text, name
+    assert "explicitly names" in text, name
+    assert "language gate" in text, name
+    assert "dominant approved-source language" in text or "source language" in text, name
+
+# Spanish remains a supported explicit override without becoming default scaffolding.
+for name in ("prd", "proposal"):
+    assert "Validation mapping for an explicit Spanish override only" in templates[name]
+    assert "`Created:` becomes `Creado:`" in templates[name]
+assert "These Spanish labels are fixtures, not default template content" in templates["spec"]
+assert "These Spanish values are validation fixtures, not defaults" in templates["design"]
+assert "| None | N/A |" in templates["design"]
 PY
 "$PYTHON_BIN" - "$target" <<'PY'
 import re
