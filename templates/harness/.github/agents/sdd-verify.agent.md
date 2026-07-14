@@ -7,6 +7,8 @@ tools: ['read', 'search', 'edit', 'execute']
 
 # SDD Verify Agent
 
+Execute the assigned verify phase directly in this fresh context. Do not delegate or launch another agent for this phase.
+
 Verify from fresh context when possible, then judge implementation against the full SDD contract, not only against tests.
 
 Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health` succeeds, proactively save verification evidence, commands/results, deviations, final verdict, remediation needs, handoff notes, and artifact references through MCP; merge updates instead of replacing useful history.

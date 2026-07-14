@@ -7,6 +7,8 @@ tools: ['read', 'search', 'edit']
 
 # Documentation Designer Agent
 
+Execute the assigned PRD phase directly in this context. Do not delegate or launch another agent for this phase.
+
 Improve documentation structure without changing approved scope. Preserve the local SDD source of truth.
 
 Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health` succeeds, save PRD/product discoveries, product decisions, open questions, approval status, and artifact references through MCP; merge updates instead of replacing useful history.

@@ -18,6 +18,8 @@ VS Code/Copilot entry points live under `.github/`. `AGENTS.md` stays as portabl
 
 ## Pegasus IA Workflow
 
+`pegasus-orchestrator` is a thin coordinator. Every SDD phase MUST be delegated to its matching specialized agent in a fresh context. Specialized agents execute their assigned phase directly and do not recursively delegate it. If delegation is unavailable, blocked, or fails, stop and report rather than absorbing phase work. Apply implements one authorized slice and returns; a distinct fresh-context verify agent evaluates it.
+
 - Direct fix handles small, punctual, low-risk changes with clear acceptance criteria.
 - PRD defines the user problem, outcome, scope, success criteria, and approval for SDD.
 - Proposal defines intent, scope, risks, and rollback. It requires an approved PRD.
@@ -31,7 +33,9 @@ Before moving to the next SDD phase, confirm the required docs exist and ask for
 
 Before delegating or starting a phase/task, check MCP task progress and `docs/pegasus/changes/<change-id>/apply-progress.md` for the same phase/task already in progress or completed. Avoid duplicate launches.
 
-Before large implementation, estimate review workload. If work is likely to exceed about 400 changed lines or touch multiple unrelated areas, stop and ask whether to split it into chained PRs.
+Session preflight sets the review budget and delivery preference only. `sdd-tasks` forecasts implementation volume before finalizing tasks. After tasks and before apply, the orchestrator must consult the user when the forecast exceeds budget, is High risk, recommends chaining, or needs a decision. The choices are `stacked-to-main`, `feature-branch-chain`, or explicit maintainer-approved `size:exception`; apply receives the resolved strategy and one authorized slice.
+
+Outside SDD, delegate whenever understanding requires 4 or more files, implementation touches 2 or more non-trivial files, tests/builds/installs/external tools must run, or the work exceeds small mechanical coordination.
 
 Verification should use fresh context when possible: re-read PRD, proposal, spec, design, tasks, apply-progress, verify log, and changed files before judging completion. This is an operational rule, not a runtime guarantee.
 

@@ -1,4 +1,4 @@
-# Pegasus Harness Bootstrap 0.4.2
+# Pegasus Harness Bootstrap 0.5.0
 
 Local bootstrap tooling for configuring a Pegasus VS Code/Copilot-first harness in a target workspace. The generated workspace contains guidance, SDD templates, Copilot assets, and secondary legacy Cursor compatibility files; it does not scaffold app code, Git metadata, CI, deployment, or remote resources.
 
@@ -16,7 +16,7 @@ Check the installed product release at any time:
 
 ```sh
 pegasus-harness-bootstrap --version
-# Pegasus Harness Bootstrap 0.4.2
+# Pegasus Harness Bootstrap 0.5.0
 ```
 
 For everyday use from outside this checkout, install the CLI with `pipx`:
@@ -32,6 +32,8 @@ Use `--target-path <path>` for an explicit target. For an existing Pegasus works
 If a historical interrupted bootstrap left a valid manifest with empty ownership records, sync recovers only current managed harness text files with their exact Pegasus marker (path and ownership mode). It never adopts `docs/pegasus/**`, change artifacts, `.vscode/mcp.json`, or unmarked files.
 
 After a successful run, open the target workspace in VS Code with GitHub Copilot and start from the Pegasus orchestrator custom agent at `.github/agents/pegasus-orchestrator.agent.md`.
+
+Version 0.5.0 makes that orchestrator a strict coordinator: every SDD phase runs through its specialized agent in fresh context, apply and verify stay separate, and `sdd-tasks` produces the workload forecast that must be resolved before apply when review risk requires it. Mandatory delegation also covers non-SDD work that spans substantial reading, multiple implementation files, or external tooling.
 
 ## Generated workspace layout
 

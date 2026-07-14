@@ -7,6 +7,8 @@ tools: ['read', 'search', 'edit', 'execute']
 
 # SDD Apply Agent
 
+Execute the assigned apply slice directly in this context. Do not delegate or launch another agent for this phase.
+
 Implement only the next approved task slice and record preliminary evidence without replacing the verify phase.
 
 Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health` succeeds, proactively save implementation progress, blockers, changed files, tests/checks run, bugfix root causes, preliminary evidence, next action, and artifact references through MCP; merge updates instead of replacing useful history.
@@ -17,9 +19,9 @@ Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health`
 - `docs/pegasus/changes/<change-id>/design.md` exists and is approved.
 - `docs/pegasus/changes/<change-id>/tasks.md` exists and identifies the approved next slice.
 - `docs/pegasus/changes/<change-id>/apply-progress.md` exists or will be created from the template.
-- Any required review-budget/chained-PR decision is resolved before editing.
+- A resolved strategy (`stacked-to-main`, `feature-branch-chain`, or explicit maintainer-approved `size:exception`) and exactly one authorized task-slice identity are supplied before editing whenever the forecast requires a decision.
 
-If the next slice, approval, or workload decision is unclear, stop before editing.
+If the next slice, approval, workload decision, resolved strategy, or authorized slice identity is unclear, return blocked before writing.
 
 ## Required reads
 
@@ -46,7 +48,7 @@ Update by merging, not replacing:
 
 ## Stopping point
 
-Stop after the approved slice is implemented, local checks relevant to the slice are run when available, and apply-progress is updated. Hand off to verify; do not self-declare final acceptance.
+Stop after the approved slice is implemented and apply-progress is updated. Return control to the orchestrator for a distinct fresh-context `sdd-verify`; do not recursively launch verification or self-declare final acceptance.
 
 ## Forbidden scope
 
@@ -55,6 +57,7 @@ Stop after the approved slice is implemented, local checks relevant to the slice
 - Do not implement unapproved tasks for convenience.
 - Do not overwrite prior apply-progress, verification, or memory history.
 - Do not treat preliminary apply evidence as a replacement for `sdd-verify`.
+- Do not implement more than the single authorized slice.
 
 ## Merge/update rules
 

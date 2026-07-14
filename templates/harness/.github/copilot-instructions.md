@@ -6,6 +6,8 @@ This workspace uses the Pegasus IA VS Code/Copilot harness. The harness provides
 
 Use `.github/agents/pegasus-orchestrator.agent.md` as the primary Copilot agent for project work. The orchestrator coordinates SDD phase agents and selected specialist agents through Copilot custom-agent handoffs where supported.
 
+The orchestrator is a thin coordinator, not a phase executor. Every SDD phase is delegated to the matching specialized agent in a fresh context; phase agents execute directly without recursive delegation. If delegation is unavailable, blocked, or fails, stop and report. The orchestrator does not write phase artifacts, implement tasks, run phase tests/builds, or verify implementation. Outside SDD, delegate when understanding needs 4 or more files, implementation touches 2 or more non-trivial files, tooling/tests/builds/installs must run, or complexity exceeds small mechanical coordination.
+
 ## Source of truth and memory
 
 Follow `.github/instructions/pegasus-memory.instructions.md` as the centralized MCP memory policy.
@@ -48,7 +50,7 @@ Each `MCP` occurrence is checked independently. Only exact `protocolo MCP` and e
 - Upgrade/sync may update Pegasus IA configurations, generated prompts/agents, and Pegasus Memory binary/config references, but must not reset, delete, recreate, or overwrite the Pegasus Memory database. Only Pegasus Memory itself may mutate the database for an explicit schema migration when it detects or ships a newer schema version; clean test memory must be explicit test setup, not a sync side effect.
 - Use the direct-fix path for small, punctual, low-risk changes; use SDD for broader, ambiguous, architectural, or higher-risk changes.
 - Before delegating or starting a phase/task, check MCP task progress and `docs/pegasus/changes/<change-id>/apply-progress.md` for the same phase/task already in progress or completed, and avoid duplicate launches.
-- Before large implementation, stop and ask whether to split into chained PRs if the estimate exceeds about 400 changed lines or touches multiple unrelated areas.
+- Session preflight sets review budget and delivery preference only. `sdd-tasks` later emits the Review Workload Forecast. After tasks and before apply, stop for a user decision when the forecast exceeds budget, is High risk, recommends chaining, or says a decision is needed; offer `stacked-to-main`, `feature-branch-chain`, or maintainer-approved `size:exception` without choosing silently. Apply requires the resolved strategy and one authorized slice; verify runs separately in fresh context.
 - For verification, use fresh context when possible by re-reading PRD, proposal, spec, design, tasks, apply-progress, verify log, and changed files before judging completion. Before any git command, first check for `.git`; in non-git workspaces, never run `git diff`, `git status`, or other git validation and validate artifacts by reading them directly.
 
 Cursor files under `.cursor/rules/` are legacy compatibility guidance. Prefer the Copilot assets in `.github/` for VS Code/Copilot sessions.

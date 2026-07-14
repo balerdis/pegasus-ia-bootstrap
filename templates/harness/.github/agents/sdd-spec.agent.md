@@ -7,6 +7,8 @@ tools: ['read', 'search', 'edit']
 
 # SDD Spec Agent
 
+Execute the assigned spec phase directly in this context. Do not delegate or launch another agent for this phase.
+
 Create or refine only the acceptance contract in `docs/pegasus/changes/<change-id>/spec.md` from the approved PRD and approved proposal.
 
 Follow `.github/instructions/pegasus-memory.instructions.md`. After `pegasus-memory-mcp` `health` succeeds, proactively save requirement decisions, scenario coverage, open questions, approval status, and artifact references through Pegasus Memory; merge updates instead of replacing useful history.

@@ -573,7 +573,9 @@ The system MUST create a PRD template and production-ready SDD templates under `
 - GIVEN an approved spec and approved design
 - WHEN the tasks phase is run
 - THEN generated guidance records implementation slices with dependency/order, verification, risk, and rollback details in `docs/pegasus/changes/<change-id>/tasks.md`
-- AND it includes the exact guard lines `Decision needed before apply: Yes|No`, `Chained PRs recommended: Yes|No`, and `400-line budget risk: Low|Medium|High`
+- AND it includes the exact forecast lines `Decision needed before apply: Yes|No`, `Chained PRs recommended: Yes|No`, `Chain strategy: stacked-to-main|feature-branch-chain|size-exception|pending`, `400-line budget risk: Low|Medium|High`, `Estimated authored changed lines: <range>`, `Estimated generated changed lines: <range|none>`, and `Tests included in estimate: Yes`
+- AND authored estimates include code, tests, docs, config, and migrations while generated goldens, snapshots, and fixtures are counted separately
+- AND each work unit declares implementation scope, test scope, focused test command, runtime validation, rollback boundary, and estimated authored changed lines
 - AND it excludes implementation code
 
 #### Scenario: Apply implements only the approved slice
@@ -595,19 +597,36 @@ The system MUST create a PRD template and production-ready SDD templates under `
 
 ### Requirement: Lightweight orchestration guardrails
 
-The generated Pegasus guidance MUST support a direct-fix path for small, punctual, low-risk changes, MUST require required-doc checks and user approval before phase transitions, MUST require review-budget confirmation before large implementation, MUST avoid duplicate launches for the same phase/task when MCP task progress or apply-progress already shows work exists, and MUST preserve useful apply-progress, memory, and verification history by merging updates instead of overwriting content.
+The generated Pegasus guidance MUST make `pegasus-orchestrator` a thin coordinator. It MUST delegate every SDD phase to its matching specialized agent in a fresh context and MUST stop when required delegation is unavailable, blocked, or fails. Specialized phase agents MUST execute directly and MUST NOT recursively delegate their phase. The orchestrator MUST NOT write phase artifacts, implement tasks, run phase tests/builds, or perform verification. `sdd-apply` MUST implement only one authorized slice and return control; a distinct fresh-context `sdd-verify` MUST verify it. Outside SDD, delegation MUST occur when understanding requires reading 4 or more files, implementation touches 2 or more non-trivial files, tests/builds/installs/external tooling must run, or complexity exceeds small mechanical coordination. The guidance MUST avoid duplicate launches by change, phase, and task-slice identity using MCP task progress and apply-progress, and MUST preserve useful history by merging updates.
 
 #### Scenario: Direct fix avoids unnecessary SDD
 
 - GIVEN a small, punctual, low-risk change with clear acceptance criteria
 - WHEN the orchestrator selects the workflow
-- THEN it may use a direct-fix path with memory and verification updates instead of forcing all SDD phases
+- THEN the orchestrator may coordinate a narrowly defined small mechanical task instead of forcing all SDD phases
+- AND that direct work does not include phase artifacts or implementation code
 
 #### Scenario: Large change triggers review budget decision
 
-- GIVEN an implementation estimate above about 400 changed lines or touching multiple unrelated areas
-- WHEN implementation is about to start
-- THEN generated guidance requires the orchestrator to stop and ask whether to split the work into chained PRs
+- GIVEN session preflight established a review budget and general delivery preference
+- WHEN `sdd-tasks` emits a forecast that exceeds the budget, reports High risk, recommends chaining, or says a decision is needed
+- THEN the orchestrator stops after tasks and before apply and asks the user to choose `stacked-to-main`, `feature-branch-chain`, or explicit maintainer-approved `size:exception`
+- AND it does not choose silently
+- AND apply returns blocked before writing unless it receives the resolved strategy and one authorized slice
+
+#### Scenario: Required delegation cannot run
+
+- GIVEN a matching phase agent is unavailable, blocked, or fails
+- WHEN the orchestrator coordinates that phase
+- THEN it stops and reports the blocker
+- AND it does not absorb phase execution into orchestrator context
+
+#### Scenario: Apply and verify remain isolated
+
+- GIVEN one authorized apply slice and resolved delivery strategy
+- WHEN implementation and verification run
+- THEN `sdd-apply` implements only that slice and returns control
+- AND a distinct fresh-context `sdd-verify` performs verification
 
 #### Scenario: Progress history is preserved
 

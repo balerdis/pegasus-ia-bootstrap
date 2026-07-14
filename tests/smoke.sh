@@ -85,12 +85,12 @@ esac
 "$PYTHON_BIN" "$CLI" --help >/dev/null
 version_output="$($PYTHON_BIN "$CLI" --version)"
 case "$version_output" in
-  "Pegasus Harness Bootstrap 0.4.2") ;;
+  "Pegasus Harness Bootstrap 0.5.0") ;;
   *) printf 'expected clear Pegasus product version output\n' >&2; exit 1 ;;
 esac
-assert_file_contains "$ROOT/pyproject.toml" 'version = "0.4.2"'
-assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.4.2"'
-assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.4.2'
+assert_file_contains "$ROOT/pyproject.toml" 'version = "0.5.0"'
+assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.5.0"'
+assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.5.0'
 help_output="$($PYTHON_BIN "$CLI" --help)"
 case "$help_output" in
   *"--install-cursor-global"*) ;;
@@ -145,7 +145,7 @@ case "$default_plan" in
   *) printf 'expected default target path in dry-run output\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
-   *"Installed CLI version: 0.4.2"*"Source template version: 0.4.2"*) ;;
+   *"Installed CLI version: 0.5.0"*"Source template version: 0.5.0"*) ;;
   *) printf 'expected bootstrap plan version evidence\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
@@ -585,7 +585,7 @@ manifest_text = json.dumps(manifest)
 for forbidden in ("active_change", "activeChange", "last_change", "lastChange", "operational_memory", "operationalMemory", "memory_state", "memoryState", "recovery_state", "recoveryState"):
     assert forbidden not in manifest_text
 assert manifest["workspace"]["project_name"] == "sample-project"
-assert manifest["template_version"] == "0.4.2"
+assert manifest["template_version"] == "0.5.0"
 assert manifest["uninstall"]["remove_only_managed"] is True
 paths = {record["path"]: record for record in manifest["install"]["files"]}
 assert "AGENTS.md" in paths
@@ -593,8 +593,8 @@ assert ".vscode/mcp.json" in paths
 assert paths["AGENTS.md"]["ownership"] == "marker-managed"
 assert paths[".vscode/mcp.json"]["ownership"] == "full-file"
 assert paths[".github/agents/pegasus-orchestrator.agent.md"]["ownership"] == "full-file"
-assert all(record["package_version"] == "0.4.2" for record in paths.values())
-assert all(record["template_version"] == "0.4.2" for record in paths.values())
+assert all(record["package_version"] == "0.5.0" for record in paths.values())
+assert all(record["template_version"] == "0.5.0" for record in paths.values())
 assert manifest["install"]["skipped_conflicts"] == []
 PY
 
@@ -848,6 +848,13 @@ done
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Decision needed before apply: Yes|No"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Chained PRs recommended: Yes|No"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "400-line budget risk: Low|Medium|High"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Chain strategy: stacked-to-main|feature-branch-chain|size-exception|pending"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Estimated authored changed lines: <range>"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Estimated generated changed lines: <range|none>"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Tests included in estimate: Yes"
+for work_unit_field in "Implementation scope:" "Test scope:" "Focused test command:" "Runtime validation:" "Rollback boundary:" "Estimated authored changed lines:"; do
+  assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "$work_unit_field"
+done
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Do not implement code"
 assert_file_contains "$target/.github/agents/sdd-apply.agent.md" "approved next task slice"
 assert_file_contains "$target/.github/agents/sdd-apply.agent.md" "duplicate-check result"
@@ -855,6 +862,29 @@ assert_file_contains "$target/.github/agents/sdd-apply.agent.md" 'preliminary ap
 assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "Compliance matrix against PRD, proposal, spec, design, and tasks"
 assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "No unrelated implementation changes were made"
 assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "Do not edit implementation code unless the user separately asks for remediation"
+
+orchestrator="$target/.github/agents/pegasus-orchestrator.agent.md"
+assert_file_contains "$orchestrator" "thin coordinator, not a phase executor"
+assert_file_contains "$orchestrator" "Every SDD phase MUST run through its matching specialized agent in a fresh context"
+assert_file_contains "$orchestrator" "MUST NOT write phase artifacts, implement tasks, run phase tests/builds, or perform verification"
+assert_file_contains "$orchestrator" "If required delegation is unavailable, blocked, or fails, stop and report"
+assert_file_contains "$orchestrator" "understanding requires reading 4 or more files"
+assert_file_contains "$orchestrator" "implementation touches 2 or more non-trivial files"
+assert_file_contains "$orchestrator" "tests/builds/installs/external tooling must run"
+assert_file_contains "$orchestrator" "stacked-to-main"
+assert_file_contains "$orchestrator" "feature-branch-chain"
+assert_file_contains "$orchestrator" 'maintainer-approved `size:exception`'
+assert_file_contains "$orchestrator" "change ID plus phase and, for apply, task-slice ID"
+if grep -Eq '^  - (edit|execute)$' "$orchestrator"; then
+  printf 'orchestrator must not expose phase execution tools\n' >&2
+  exit 1
+fi
+for phase_agent in doc-designer sdd-proposal sdd-spec sdd-design sdd-tasks sdd-apply sdd-verify session-handoff; do
+  assert_file_contains "$target/.github/agents/$phase_agent.agent.md" "Do not delegate or launch another agent for this phase."
+done
+assert_file_contains "$target/.github/agents/sdd-apply.agent.md" "return blocked before writing"
+assert_file_contains "$target/.github/agents/sdd-apply.agent.md" 'distinct fresh-context `sdd-verify`'
+assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "directly in this fresh context"
 
 assert_file_contains "$target/docs/pegasus/spec.md" "## Source Status"
 assert_file_contains "$target/docs/pegasus/spec.md" "## Acceptance Edge Cases"
@@ -1265,7 +1295,7 @@ esac
 cmp "$TMP/recovery-manifest-before.json" "$recovery_target/.pegasus-bootstrap-ia/manifest.json" || { printf 'normal bootstrap rewrote historical manifest metadata\n' >&2; exit 1; }
 recovery_dry_output="$($PYTHON_BIN "$CLI" --target-path "$recovery_target" --sync-workspace --dry-run)"
 case "$recovery_dry_output" in
-   *"Installed CLI version: 0.4.2"*"Source template version: 0.4.2"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
+   *"Installed CLI version: 0.5.0"*"Source template version: 0.5.0"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
   *) printf 'expected empty-manifest dry-run recovery and version evidence\n' >&2; exit 1 ;;
 esac
 assert_file_contains "$recovery_target/.github/agents/sdd-spec.agent.md" 'STALE PEGASUS SPEC AGENT'
@@ -1286,8 +1316,8 @@ from pathlib import Path
 
 manifest = json.loads(Path(sys.argv[1]).read_text())
 records = {record["path"]: record for record in manifest["ownership"]["files"]}
-assert manifest["template_version"] == "0.4.2"
-assert manifest["package_version"] == "0.4.2"
+assert manifest["template_version"] == "0.5.0"
+assert manifest["package_version"] == "0.5.0"
 assert records[".github/agents/sdd-spec.agent.md"]["action"] == "recovered"
 assert not any(path.startswith("docs/pegasus/") for path in records)
 PY

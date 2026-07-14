@@ -168,7 +168,8 @@ The system MUST create PRD and SDD templates under `docs/pegasus` or change-scop
 - GIVEN an approved spec and approved design
 - WHEN the tasks phase is run
 - THEN generated guidance records implementation slices with dependency/order, verification, risk, and rollback details in the tasks artifact
-- AND it includes the exact guard lines `Decision needed before apply: Yes|No`, `Chained PRs recommended: Yes|No`, and `400-line budget risk: Low|Medium|High`
+- AND it includes the exact forecast lines `Decision needed before apply: Yes|No`, `Chained PRs recommended: Yes|No`, `Chain strategy: stacked-to-main|feature-branch-chain|size-exception|pending`, `400-line budget risk: Low|Medium|High`, `Estimated authored changed lines: <range>`, `Estimated generated changed lines: <range|none>`, and `Tests included in estimate: Yes`
+- AND every work unit declares implementation scope, test scope, focused test command, runtime validation, rollback boundary, and estimated authored changed lines
 
 #### Scenario: Apply implements only the approved slice
 
@@ -186,7 +187,7 @@ The system MUST create PRD and SDD templates under `docs/pegasus` or change-scop
 
 ### Requirement: Lightweight orchestration guardrails
 
-The generated Pegasus guidance MUST support a direct-fix path for small, punctual, low-risk changes, MUST require required-doc checks and user approval before phase transitions, MUST require review-budget confirmation before large implementation, MUST avoid duplicate launches for the same phase/task when MCP task progress or apply-progress already shows work exists, and MUST preserve useful apply-progress, memory, and verification history by merging updates instead of overwriting content.
+The generated Pegasus guidance MUST make `pegasus-orchestrator` a thin coordinator that delegates every SDD phase to the matching specialized agent in a fresh context and stops when delegation is unavailable, blocked, or fails. Specialized agents MUST execute directly without recursively delegating their phase. Apply MUST implement one authorized slice and return control; a distinct fresh-context verify agent MUST verify it. Outside SDD, delegation MUST be mandatory for 4 or more required file reads, 2 or more non-trivial implementation files, tests/builds/installs/external tooling, or complexity beyond small mechanical coordination. Duplicate protection MUST use change, phase, and task-slice identity across MCP task progress and apply-progress.
 (Previously: duplicate checks and memory history depended on `docs/pegasus/memory/tasks-log.md`.)
 
 #### Scenario: Duplicate launch is avoided
@@ -207,13 +208,16 @@ The generated Pegasus guidance MUST support a direct-fix path for small, punctua
 
 - GIVEN a small, punctual, low-risk change with clear acceptance criteria
 - WHEN the orchestrator selects the workflow
-- THEN it may use a direct-fix path with MCP memory and verification updates instead of forcing all SDD phases
+- THEN it may coordinate only a narrowly defined small mechanical task instead of forcing all SDD phases
+- AND direct work excludes phase artifacts and implementation code
 
 #### Scenario: Large change triggers review budget decision
 
-- GIVEN an implementation estimate above about 400 changed lines or touching multiple unrelated areas
-- WHEN implementation is about to start
-- THEN generated guidance requires the orchestrator to stop and ask whether to split the work into chained PRs
+- GIVEN preflight established review budget and delivery preference
+- WHEN the `sdd-tasks` forecast exceeds budget, reports High risk, recommends chaining, or needs a decision
+- THEN the orchestrator stops after tasks and before apply and presents `stacked-to-main`, `feature-branch-chain`, or explicit maintainer-approved `size:exception`
+- AND it never chooses silently
+- AND apply returns blocked before writing without a resolved strategy and one authorized slice
 
 #### Scenario: Apply progress is tracked
 

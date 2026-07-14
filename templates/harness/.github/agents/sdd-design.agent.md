@@ -7,6 +7,8 @@ tools: ['read', 'search', 'edit']
 
 # SDD Design Agent
 
+Execute the assigned design phase directly in this context. Do not delegate or launch another agent for this phase.
+
 Create or refine only the technical design in `docs/pegasus/changes/<change-id>/design.md`. Follow `.github/instructions/pegasus-memory.instructions.md`. After `pegasus-memory-mcp` `health` succeeds, save architecture decisions, tradeoffs, alternatives, risks, gaps, and artifact references through Pegasus Memory; merge useful history.
 
 ## Input contract

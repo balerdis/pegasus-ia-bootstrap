@@ -8,20 +8,26 @@ Use `.github/prompts/sdd-phases.prompt.md` to help maintain this file in VS Code
 
 ## Review Workload Forecast
 
-Estimate before implementation starts. If estimated changes exceed about 400 changed lines or touch multiple unrelated areas, stop and ask whether to split the work into chained PRs.
+Estimate implementation volume before finalizing tasks. Session preflight review budget and delivery preference are inputs, not this forecast. The orchestrator inspects the forecast after tasks and owns any user decision before apply.
 
 Decision needed before apply: Yes|No
 Chained PRs recommended: Yes|No
+Chain strategy: stacked-to-main|feature-branch-chain|size-exception|pending
 400-line budget risk: Low|Medium|High
+Estimated authored changed lines: <range>
+Estimated generated changed lines: <range|none>
+Tests included in estimate: Yes
 
 | Question | Answer |
 |----------|--------|
-| Estimated changed lines | TBD |
+| Estimated authored changed lines | TBD range; includes code, tests, docs, config, and migrations |
+| Estimated generated changed lines | TBD range or none; goldens/snapshots/fixtures only |
 | Multiple areas touched | TBD |
 | 400-line budget risk | Low / Medium / High |
 | Chained PRs recommended | Yes / No |
 | Decision needed before apply | Yes / No |
 | User decision | TBD |
+| Chain strategy | stacked-to-main / feature-branch-chain / size-exception / pending |
 
 ## Inputs
 
@@ -44,6 +50,13 @@ Use small slices that can be reviewed independently and rolled back safely. Task
 | Verification | TBD command or manual check |
 | Risk | TBD |
 | Rollback boundary | Revert files changed by this slice |
+
+Implementation scope: TBD
+Test scope: TBD
+Focused test command: TBD
+Runtime validation: TBD or N/A with reason
+Rollback boundary: TBD
+Estimated authored changed lines: TBD range
 
 - [ ] 1.1 TBD
 - [ ] 1.2 TBD

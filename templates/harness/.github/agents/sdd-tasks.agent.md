@@ -7,6 +7,8 @@ tools: ['read', 'search', 'edit']
 
 # SDD Tasks Agent
 
+Execute the assigned tasks phase directly in this context. Do not delegate or launch another agent for this phase.
+
 Break the approved current-change spec and design into small, reviewable implementation slices in `docs/pegasus/changes/<change-id>/tasks.md`.
 
 Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health` succeeds, proactively save task progress, blockers, review budget assessment, chained/sliced PR decisions, next approved slice, and artifact references through MCP; merge updates instead of replacing useful history.
@@ -17,7 +19,7 @@ Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health`
 - `docs/pegasus/changes/<change-id>/design.md` exists and is approved.
 - The user or orchestrator identifies the change/request to plan.
 
-If the design is not approved or the review-budget decision is needed, stop before apply.
+If the design is not approved, stop. Session preflight review budget and delivery preference are inputs, not the workload forecast or final delivery decision.
 
 ## Required reads
 
@@ -38,7 +40,11 @@ Update `docs/pegasus/changes/<change-id>/tasks.md` with:
 - Exact guard lines:
   - `Decision needed before apply: Yes|No`
   - `Chained PRs recommended: Yes|No`
+  - `Chain strategy: stacked-to-main|feature-branch-chain|size-exception|pending`
   - `400-line budget risk: Low|Medium|High`
+- `Estimated authored changed lines: <range>`
+- `Estimated generated changed lines: <range|none>`
+- `Tests included in estimate: Yes`
 - Reviewable implementation slices with dependency/order.
 - Verification expected per slice.
 - Risk notes and rollback boundary per slice.
@@ -46,7 +52,9 @@ Update `docs/pegasus/changes/<change-id>/tasks.md` with:
 
 ## Stopping point
 
-Stop after producing the task plan. If `Decision needed before apply: Yes`, ask for the chained PR or size-exception decision before apply starts.
+Authored estimates include code, tests, docs, config, and migrations. Generated goldens, snapshots, and fixtures are excluded from authored count but included in generated estimates and full snapshot identity. Every work unit MUST declare `Implementation scope:`, `Test scope:`, `Focused test command:`, `Runtime validation:`, `Rollback boundary:`, and `Estimated authored changed lines:` and keep tests with behavior.
+
+Stop after producing the task plan and return control to the orchestrator. Forecast and propose autonomous work units, but do not choose the final delivery strategy or ask the user yourself. The orchestrator owns any required user consultation after tasks and before apply.
 
 ## Forbidden scope
 
