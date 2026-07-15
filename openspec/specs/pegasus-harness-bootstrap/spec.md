@@ -632,6 +632,7 @@ The system MUST create a PRD template and production-ready SDD templates under `
 - WHEN the tasks phase is run
 - THEN generated guidance records implementation slices with dependency/order, verification, risk, and rollback details in `docs/pegasus/changes/<change-id>/tasks.md`
 - AND it includes the exact forecast lines `Decision needed before apply: Yes|No`, `Chained PRs recommended: Yes|No`, `Chain strategy: stacked-to-main|feature-branch-chain|size-exception|pending`, `400-line budget risk: Low|Medium|High`, `Estimated authored changed lines: <range>`, `Estimated generated changed lines: <range|none>`, and `Tests included in estimate: Yes`
+- AND it includes `Strategy decision evidence: <exact current-session user quote/message reference|none>` and `Size-exception approval evidence: <distinct current maintainer approval quote/message reference|none>`; Decision Yes without an explicit current user choice MUST keep strategy exactly `pending` and both evidence values exactly `none`
 - AND authored estimates include code, tests, docs, config, and migrations while generated goldens, snapshots, and fixtures are counted separately
 - AND each work unit declares implementation scope, test scope, focused test command, runtime validation, rollback boundary, and estimated authored changed lines
 - AND it excludes implementation code
@@ -640,11 +641,14 @@ The system MUST create a PRD template and production-ready SDD templates under `
 
 - GIVEN the orchestrator delegates tasks to a fresh `sdd-tasks` context
 - WHEN the specialist completes the task plan
-- THEN it MUST finish edits, fully reread, validate language, exact markers, current-change source identity, exactly seven forecast lines and values, complete work units and assigned scope, authored/generated estimates, and test inclusion before freezing the final tasks revision
-- AND after ensure preconditions it MUST persist `record_task_progress` then `record_handoff`, with no later artifact edit
-- AND a post-persistence edit MUST invalidate completion and require full revalidation, a new revision, and refreshed affected persistence before return
-- AND it MUST return the complete flat canonical envelope with owner/delegation fields, every validation, all seven forecast values, work-unit count and assigned scope, matching final/persistence revisions, exact `Post-persistence edits: none`, initial recovery, ordered transitions, truthful operation states, risks/blockers, decision required, and next action
-- AND the orchestrator MUST reproduce the envelope field-for-field, explicitly consume the forecast, and fail closed on omission, revision mismatch, post-persistence edits, or non-truthful persistence states
+- THEN it MUST finish edits, fully reread, validate language, exact markers, current-change source identity, exactly seven forecast lines and values, strategy evidence, complete work units and assigned scope, authored/generated estimates, and test inclusion before computing and freezing the SHA-256 final tasks revision
+- AND it MUST set persistence revision equal to the frozen value before completion persistence, then ensure preconditions if needed, call `record_task_progress` carrying it, call `record_handoff` carrying it, perform no later edit or hash recomputation, and return the envelope
+- AND calling or attempting `record_task_progress` or `record_handoff` before freeze MUST fail validation; a post-freeze or post-persistence edit MUST block that closure rather than refresh or recompute inside the same run
+- AND a non-pending strategy MUST have an observable current-session user message explicitly selecting that exact strategy; design recommendation, memory, cached preference, architecture, previous conversation/session, default, inference, and fabricated/generic text MUST be rejected
+- AND `size:exception` MUST additionally have a distinct observable current fact recording maintainer approval; user selection alone MUST block envelope completion, persistence, and apply
+- AND it MUST return the complete flat canonical envelope with owner/delegation fields, every validation, all seven forecast values, strategy evidence, work-unit count and assigned scope, matching final/persistence revisions, exact `Post-persistence edits: none`, initial recovery, ordered transitions, truthful operation states, risks/blockers, decision required, and next action
+- AND the orchestrator MUST reproduce the entire envelope field-for-field in flat output, explicitly consume the forecast, and fail closed on omission, dropped numeric fields, narrative substitution, unauthorized strategy, revision mismatch, post-persistence edits, or non-truthful persistence states
+- AND before asking it MUST cite the returned authored range such as `590-720`, generated range, High risk, tests included, and work-unit count, then ask the exact three options
 - AND Decision Yes, chaining Yes, High risk, or an over-budget authored estimate MUST block apply until the orchestrator asks the user in Spanish to choose exactly `stacked-to-main`, `feature-branch-chain`, or maintainer-approved `size:exception`, states no apply starts until the answer, and records the current resolved strategy
 - AND a tasks-only request MUST NOT bypass this post-tasks guard, and no current selection may be inferred from prior preferences
 

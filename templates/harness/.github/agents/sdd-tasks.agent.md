@@ -60,9 +60,23 @@ Stop after producing the task plan and return control to the orchestrator. Forec
 
 ## Atomic closure and result envelope
 
-`sdd-tasks` is the sole tasks artifact writer, validator, and persistence owner. Finish every edit, fully reread the artifact, validate artifact language, exact first/last managed markers, current-change source identity, exactly seven forecast lines and values, work-unit completeness/count/assigned scope, authored/generated estimate separation, and test inclusion, then freeze a content hash or explicit revision token. Only after final validation and freeze, satisfy `ensure_project` and `ensure_change` preconditions as required, persist `record_task_progress` for phase `tasks`, then `record_handoff`, and return the envelope. Do not persist tasks completion before final validation or edit the artifact after persistence begins.
+`sdd-tasks` is the sole tasks artifact writer, validator, and persistence owner. Execute this concrete closure algorithm exactly once and in order:
 
-If any content or formatting edit occurs or becomes necessary after persistence begins, completion and affected persistence evidence are stale. Finish the edit, repeat the full reread and every validation, freeze a new final tasks revision, and refresh `record_task_progress` then `record_handoff` after ensure preconditions. Never reuse an earlier persistence revision or claim success until revisions match and `Post-persistence edits: none` is truthful.
+1. Finish every tasks artifact edit.
+2. Then fully reread the artifact and validate artifact language, exact first/last managed markers, current-change source identity, exactly seven forecast lines and values, work-unit completeness/count/assigned scope, authored/generated estimate separation, test inclusion, and the strategy/evidence rule below.
+3. Compute and freeze the SHA-256 `Final tasks revision` from that validated final content before any completion persistence call. Set `Persistence tasks revision` in every persistence payload and the envelope to that same frozen value.
+4. Only now satisfy `ensure_project` and `ensure_change` preconditions when needed.
+5. Call `record_task_progress` for phase `tasks`, carrying the frozen revision.
+6. Call `record_handoff`, carrying the same frozen revision.
+7. Return the complete envelope.
+
+In short, after freeze and any required ensures, persist `record_task_progress` for phase `tasks`, then `record_handoff`, with the same frozen revision in both payloads.
+
+Calling or attempting `record_task_progress` or `record_handoff` before the SHA-256 revision is frozen is prohibited. After the freeze there are no artifact edits and no hash recomputation; a required later edit blocks this closure instead of restarting or refreshing persistence inside the same run.
+
+When `Decision needed before apply: Yes` and no explicit current user strategy decision is recorded, `Chain strategy` MUST be exactly `pending`, `Strategy decision evidence` MUST be exactly `none`, and `Size-exception approval evidence` MUST be exactly `none`. A resolved strategy requires an observable current-session user message that explicitly selects that exact strategy; record its exact quote or message reference. Evidence from a design recommendation, memory, cached preference, architecture, previous conversation/session, default, inference, or fabricated/generic text is invalid. `size:exception` additionally requires a distinct observable current fact recording maintainer approval; user selection alone is insufficient. A non-`pending` strategy with invalid/missing selection evidence, or a `size:exception` without distinct maintainer approval evidence, fails forecast validation and blocks persistence, envelope completion, and apply.
+
+If any content or formatting edit occurs or becomes necessary after freeze or after persistence begins, completion is blocked. Do not edit, recompute the hash, refresh persistence, or claim success in that run. Report the mutation/blocker with truthful operation states; a new closure attempt must start from edits before reread and validation.
 
 Return this mandatory flat envelope with every canonical English label on its own line. Narrative summaries, renamed labels, and omissions are invalid:
 
@@ -82,6 +96,8 @@ Forecast validation: <passed|blocked: exact issues>
 Decision needed before apply: <Yes|No>
 Chained PRs recommended: <Yes|No>
 Chain strategy: <stacked-to-main|feature-branch-chain|size-exception|pending>
+Strategy decision evidence: <exact current-session user quote/message reference|none>
+Size-exception approval evidence: <distinct current maintainer approval quote/message reference|none>
 400-line budget risk: <Low|Medium|High>
 Estimated authored changed lines: <range>
 Estimated generated changed lines: <range|none>
@@ -103,7 +119,7 @@ Decision required: <Yes|No>
 Next action: <user strategy decision|ready for apply authorization|exact blocker>
 ```
 
-The envelope forecast values MUST exactly reproduce the seven artifact forecast lines. Persistence states must be truthful: never report `succeeded` for an omitted operation. Completed closure requires matching revisions and exact `Post-persistence edits: none`.
+The envelope forecast values MUST exactly reproduce the seven artifact forecast lines. Before user choice, it MUST include exact `Chain strategy: pending`, `Strategy decision evidence: none`, and `Size-exception approval evidence: none`. Persistence states must be truthful: never report `succeeded` for an omitted operation. Completed closure requires matching frozen SHA-256 revisions and exact `Post-persistence edits: none`.
 
 ## Forbidden scope
 

@@ -17,6 +17,8 @@ Estimate implementation volume before finalizing tasks. Session preflight review
 Decision needed before apply: Yes|No
 Chained PRs recommended: Yes|No
 Chain strategy: stacked-to-main|feature-branch-chain|size-exception|pending
+Strategy decision evidence: <exact current-session user quote/message reference|none>
+Size-exception approval evidence: <distinct current maintainer approval quote/message reference|none>
 400-line budget risk: Low|Medium|High
 Estimated authored changed lines: <range>
 Estimated generated changed lines: <range|none>
@@ -32,6 +34,8 @@ Tests included in estimate: Yes
 | Decision needed before apply | Yes / No |
 | User decision | TBD |
 | Chain strategy | stacked-to-main / feature-branch-chain / size-exception / pending |
+| Strategy decision evidence | Exact current user decision reference / none |
+| Size-exception approval evidence | Distinct current maintainer approval reference / none |
 
 ## Inputs
 
@@ -99,5 +103,6 @@ Estimated authored changed lines: TBD range
 - Do not edit application/source files from this phase.
 - Do not mark apply or verify complete from this phase.
 - Stop and ask before apply if any exact guard line above says a decision is needed.
+- When a decision is needed and no explicit current user choice exists, keep `Chain strategy: pending`, `Strategy decision evidence: none`, and `Size-exception approval evidence: none`; never infer a choice from design, risk, delivery preference, memory, architecture, a previous session, defaults, or generic text. `size:exception` requires both a current user selection and a distinct recorded maintainer approval.
 
 <!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/tasks.md -->

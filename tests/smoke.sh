@@ -85,12 +85,12 @@ esac
 "$PYTHON_BIN" "$CLI" --help >/dev/null
 version_output="$($PYTHON_BIN "$CLI" --version)"
 case "$version_output" in
-  "Pegasus Harness Bootstrap 0.6.4") ;;
+  "Pegasus Harness Bootstrap 0.6.5") ;;
   *) printf 'expected clear Pegasus product version output\n' >&2; exit 1 ;;
 esac
-assert_file_contains "$ROOT/pyproject.toml" 'version = "0.6.4"'
-assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.6.4"'
-assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.6.4'
+assert_file_contains "$ROOT/pyproject.toml" 'version = "0.6.5"'
+assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.6.5"'
+assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.6.5'
 assert_file_contains "$ROOT/README.md" 'La conversación con el usuario, este README y los mensajes públicos localizados pueden estar en español.'
 assert_file_contains "$ROOT/README.md" 'los prompts, las instrucciones, la comunicación interna entre agentes, la prosa descriptiva persistente de Pegasus Memory y los artefactos generados usan inglés de forma predeterminada.'
 assert_file_contains "$ROOT/README.md" 'El idioma de un artefacto generado cambia únicamente cuando el usuario indica de manera explícita el idioma para ese artefacto'
@@ -148,7 +148,7 @@ case "$default_plan" in
   *) printf 'expected default target path in dry-run output\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
-   *"Installed CLI version: 0.6.4"*"Source template version: 0.6.4"*) ;;
+    *"Installed CLI version: 0.6.5"*"Source template version: 0.6.5"*) ;;
   *) printf 'expected bootstrap plan version evidence\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
@@ -618,7 +618,7 @@ manifest_text = json.dumps(manifest)
 for forbidden in ("active_change", "activeChange", "last_change", "lastChange", "operational_memory", "operationalMemory", "memory_state", "memoryState", "recovery_state", "recoveryState"):
     assert forbidden not in manifest_text
 assert manifest["workspace"]["project_name"] == "sample-project"
-assert manifest["template_version"] == "0.6.4"
+assert manifest["template_version"] == "0.6.5"
 assert manifest["uninstall"]["remove_only_managed"] is True
 paths = {record["path"]: record for record in manifest["install"]["files"]}
 assert "AGENTS.md" in paths
@@ -626,8 +626,8 @@ assert ".vscode/mcp.json" in paths
 assert paths["AGENTS.md"]["ownership"] == "marker-managed"
 assert paths[".vscode/mcp.json"]["ownership"] == "full-file"
 assert paths[".github/agents/pegasus-orchestrator.agent.md"]["ownership"] == "full-file"
-assert all(record["package_version"] == "0.6.4" for record in paths.values())
-assert all(record["template_version"] == "0.6.4" for record in paths.values())
+assert all(record["package_version"] == "0.6.5" for record in paths.values())
+assert all(record["template_version"] == "0.6.5" for record in paths.values())
 assert manifest["install"]["skipped_conflicts"] == []
 PY
 
@@ -907,10 +907,16 @@ assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "sole tasks art
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "fully reread the artifact"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "exactly seven forecast lines and values"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" 'persist `record_task_progress` for phase `tasks`, then `record_handoff`'
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "affected persistence evidence are stale"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "completion is blocked"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Final tasks revision:"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Persistence tasks revision:"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Post-persistence edits:"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Strategy decision evidence:"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Size-exception approval evidence:"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "design recommendation, memory, cached preference, architecture, previous conversation/session, default, inference, or fabricated/generic text"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "user selection alone is insufficient"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Calling or attempting \`record_task_progress\` or \`record_handoff\` before the SHA-256 revision is frozen is prohibited"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "no artifact edits and no hash recomputation"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Work-unit count:"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Assigned scope:"
 for work_unit_field in "Implementation scope:" "Test scope:" "Focused test command:" "Runtime validation:" "Rollback boundary:" "Estimated authored changed lines:"; do
@@ -951,7 +957,7 @@ assert_file_contains "$orchestrator" "tests/builds/installs/external tooling mus
 assert_file_contains "$orchestrator" "stacked-to-main"
 assert_file_contains "$orchestrator" "feature-branch-chain"
 assert_file_contains "$orchestrator" 'maintainer-approved `size:exception`'
-assert_file_contains "$orchestrator" "Reproduce a valid tasks envelope"
+assert_file_contains "$orchestrator" "Reproduce the entire valid tasks envelope"
 assert_file_contains "$orchestrator" "Explicitly consume those returned values"
 assert_file_contains "$orchestrator" 'La previsión requiere definir la estrategia antes de apply.'
 assert_file_contains "$orchestrator" 'No se iniciará apply hasta que respondas.'
@@ -1218,18 +1224,42 @@ forecast_fields = (
     "400-line budget risk", "Estimated authored changed lines",
     "Estimated generated changed lines", "Tests included in estimate",
 )
+strategy_evidence_field = "Strategy decision evidence"
+approval_evidence_field = "Size-exception approval evidence"
 envelope_fields = (
     "Status", "Specialist agent", "Fresh-context delegation", "Artifact path",
     "Artifact writer/validator/persistence owner", "Artifact language",
     "Explicit language override evidence", "Language gate", "Marker validation",
     "Source identity validation", "Work-unit validation", "Forecast validation",
-    *forecast_fields, "Work-unit count", "Assigned scope", "Final tasks revision",
+    *forecast_fields, strategy_evidence_field, approval_evidence_field,
+    "Work-unit count", "Assigned scope", "Final tasks revision",
     "Persistence tasks revision", "Post-persistence edits", "Initial recovery result",
     "Recovery/ensure transitions", "Risks/blockers", "Decision required", "Next action",
 )
 operations = ("ensure_project", "ensure_change", "record_task_progress", "record_handoff")
 
-def validate_envelope(text: str) -> bool:
+def valid_current_strategy_evidence(strategy: str, evidence_id: str, evidence_events: dict[str, dict[str, object]]) -> bool:
+    event = evidence_events.get(evidence_id, {})
+    return all((
+        event.get("source") == "current_user",
+        event.get("session") == "current",
+        event.get("kind") == "strategy_selection",
+        event.get("strategy") == strategy,
+        event.get("explicit") is True,
+    ))
+
+def valid_size_approval(evidence_id: str, selection_id: str, evidence_events: dict[str, dict[str, object]]) -> bool:
+    event = evidence_events.get(evidence_id, {})
+    return evidence_id != selection_id and all((
+        event.get("source") == "maintainer",
+        event.get("session") == "current",
+        event.get("kind") == "size_exception_approval",
+        event.get("strategy") == "size:exception",
+        event.get("explicit") is True,
+    ))
+
+def validate_envelope(text: str, evidence_events: dict[str, dict[str, object]] | None = None) -> bool:
+    evidence_events = evidence_events or {}
     lines = text.splitlines()
     labels = {line.split(":", 1)[0] for line in lines if ":" in line}
     values = dict(line.split(": ", 1) for line in lines if ": " in line)
@@ -1241,17 +1271,45 @@ def validate_envelope(text: str) -> bool:
         return False
     if values.get("Final tasks revision") != values.get("Persistence tasks revision"):
         return False
+    strategy = values.get("Chain strategy")
+    selection_id = values.get(strategy_evidence_field)
+    approval_id = values.get(approval_evidence_field)
+    if strategy == "pending":
+        if selection_id != "none" or approval_id != "none":
+            return False
+    elif strategy not in {"stacked-to-main", "feature-branch-chain", "size:exception"}:
+        return False
+    elif not valid_current_strategy_evidence(strategy, selection_id or "", evidence_events):
+        return False
+    elif strategy == "size:exception":
+        if not valid_size_approval(approval_id or "", selection_id or "", evidence_events):
+            return False
+    elif approval_id != "none":
+        return False
     return all(values.get(operation) in {"succeeded", "not needed"} for operation in operations)
 
-def valid_atomic_trace(events: list[str]) -> bool:
-    validation = events.index("validate_all") if "validate_all" in events else len(events)
-    freeze = events.index("freeze_revision") if "freeze_revision" in events else -1
-    first_persist = min((events.index(op) for op in operations[2:] if op in events), default=-1)
+def parse_tool_events(raw: str) -> list[tuple[str, str | None]]:
+    parsed = []
+    for line in raw.splitlines():
+        event, separator, revision = line.partition(" revision=")
+        parsed.append((event, revision if separator else None))
+    return parsed
+
+def valid_atomic_trace(raw: str, frozen_revision: str) -> bool:
+    events = parse_tool_events(raw)
+    names = [event for event, _ in events]
+    validation = names.index("validate_all") if "validate_all" in names else len(names)
+    freeze = names.index("freeze_sha256") if "freeze_sha256" in names else -1
+    persistence_indexes = [names.index(op) for op in operations[2:] if op in names]
+    first_persist = min(persistence_indexes, default=-1)
     if not (validation < freeze < first_persist):
         return False
-    if events[first_persist:first_persist + 2] != list(operations[2:]):
+    if names[first_persist:first_persist + 2] != list(operations[2:]):
         return False
-    return "edit_artifact" not in events[first_persist + 1:]
+    if any(event in {"edit_artifact", "freeze_sha256"} for event in names[freeze + 1:]):
+        return False
+    revisions = [revision for event, revision in events if event in operations[2:]]
+    return revisions == [frozen_revision, frozen_revision]
 
 complete = "\n".join([
     "Status: completed", "Specialist agent: sdd-tasks",
@@ -1261,8 +1319,9 @@ complete = "\n".join([
     "Explicit language override evidence: None — English default enforced", "Language gate: passed",
     "Marker validation: passed", "Source identity validation: passed", "Work-unit validation: passed",
     "Forecast validation: passed", "Decision needed before apply: Yes",
-    "Chained PRs recommended: Yes", "Chain strategy: pending", "400-line budget risk: High",
-    "Estimated authored changed lines: 620-780", "Estimated generated changed lines: 40-60",
+    "Chained PRs recommended: Yes", "Chain strategy: pending", "Strategy decision evidence: none",
+    "Size-exception approval evidence: none",
+    "400-line budget risk: High", "Estimated authored changed lines: 590-720", "Estimated generated changed lines: 40-60",
     "Tests included in estimate: Yes", "Work-unit count: 3",
     "Assigned scope: WU1 behavior+tests; WU2 integration+tests; WU3 docs+smoke",
     "Final tasks revision: sha256:abc123", "Persistence tasks revision: sha256:abc123",
@@ -1276,24 +1335,88 @@ assert validate_envelope(complete)
 for field in (*envelope_fields, *operations):
     assert field in specialist_guidance, field
 assert all(field in orchestrator_guidance for field in forecast_fields)
-assert valid_atomic_trace(["edit_artifact", "full_reread", "validate_all", "freeze_revision", "ensure_project", "ensure_change", "record_task_progress", "record_handoff", "return_envelope"])
-assert not valid_atomic_trace(["edit_artifact", "full_reread", "record_task_progress", "validate_all", "freeze_revision", "record_handoff"])
-assert not valid_atomic_trace(["edit_artifact", "full_reread", "validate_all", "freeze_revision", "record_task_progress", "edit_artifact", "record_handoff"])
+valid_events = "\n".join((
+    "edit_artifact", "full_reread", "validate_all", "freeze_sha256",
+    "ensure_project", "ensure_change", "record_task_progress revision=sha256:abc123",
+    "record_handoff revision=sha256:abc123", "return_envelope",
+))
+assert valid_atomic_trace(valid_events, "sha256:abc123")
+assert not valid_atomic_trace("\n".join(("edit_artifact", "full_reread", "record_task_progress revision=sha256:abc123", "validate_all", "freeze_sha256", "record_handoff revision=sha256:abc123")), "sha256:abc123")
+assert not valid_atomic_trace("\n".join(("edit_artifact", "full_reread", "validate_all", "record_task_progress revision=sha256:abc123", "freeze_sha256", "record_handoff revision=sha256:abc123")), "sha256:abc123")
+assert not valid_atomic_trace("\n".join(("edit_artifact", "full_reread", "validate_all", "freeze_sha256", "record_task_progress revision=sha256:abc123", "edit_artifact", "record_handoff revision=sha256:abc123")), "sha256:abc123")
+assert not valid_atomic_trace("\n".join(("edit_artifact", "full_reread", "validate_all", "freeze_sha256", "record_task_progress revision=sha256:abc123", "freeze_sha256", "record_handoff revision=sha256:def456")), "sha256:abc123")
 assert not validate_envelope(complete.replace("Forecast validation: passed\n", ""))
 assert not validate_envelope(complete.replace("Persistence tasks revision: sha256:abc123", "Persistence tasks revision: sha256:def456"))
 assert not validate_envelope(complete.replace("Post-persistence edits: none", "Post-persistence edits: detected: rewrite"))
+assert not validate_envelope(complete.replace("Chain strategy: pending", "Chain strategy: feature-branch-chain"))
+
+evidence_events = {
+    "current-stacked": {"source": "current_user", "session": "current", "kind": "strategy_selection", "strategy": "stacked-to-main", "explicit": True},
+    "current-feature": {"source": "current_user", "session": "current", "kind": "strategy_selection", "strategy": "feature-branch-chain", "explicit": True},
+    "current-size": {"source": "current_user", "session": "current", "kind": "strategy_selection", "strategy": "size:exception", "explicit": True},
+    "current-size-approval": {"source": "maintainer", "session": "current", "kind": "size_exception_approval", "strategy": "size:exception", "explicit": True},
+    "design-recommendation": {"source": "design", "session": "current", "kind": "strategy_selection", "strategy": "feature-branch-chain", "explicit": True},
+    "memory-preference": {"source": "memory", "session": "current", "kind": "strategy_selection", "strategy": "stacked-to-main", "explicit": True},
+    "cached-preference": {"source": "cached_preference", "session": "current", "kind": "strategy_selection", "strategy": "stacked-to-main", "explicit": True},
+    "architecture-recommendation": {"source": "architecture", "session": "current", "kind": "strategy_selection", "strategy": "feature-branch-chain", "explicit": True},
+    "previous-conversation": {"source": "current_user", "session": "previous", "kind": "strategy_selection", "strategy": "stacked-to-main", "explicit": True},
+    "default-choice": {"source": "default", "session": "current", "kind": "strategy_selection", "strategy": "stacked-to-main", "explicit": True},
+    "inferred-choice": {"source": "inference", "session": "current", "kind": "strategy_selection", "strategy": "feature-branch-chain", "explicit": True},
+    "fabricated-generic": {"source": "generated_text", "session": "current", "kind": "strategy_selection", "strategy": "stacked-to-main", "explicit": True},
+}
+
+def resolved_envelope(strategy: str, selection_id: str, approval_id: str = "none") -> str:
+    return complete.replace("Chain strategy: pending", f"Chain strategy: {strategy}").replace(
+        "Strategy decision evidence: none", f"Strategy decision evidence: {selection_id}"
+    ).replace("Size-exception approval evidence: none", f"Size-exception approval evidence: {approval_id}")
+
+stacked = resolved_envelope("stacked-to-main", "current-stacked")
+feature = resolved_envelope("feature-branch-chain", "current-feature")
+size_approved = resolved_envelope("size:exception", "current-size", "current-size-approval")
+size_unapproved = resolved_envelope("size:exception", "current-size")
+assert validate_envelope(stacked, evidence_events)
+assert validate_envelope(feature, evidence_events)
+assert validate_envelope(size_approved, evidence_events)
+assert not validate_envelope(size_unapproved, evidence_events)
+for invalid_id in (
+    "design-recommendation", "memory-preference", "cached-preference", "architecture-recommendation",
+    "previous-conversation", "default-choice", "inferred-choice", "fabricated-generic",
+):
+    assert not validate_envelope(resolved_envelope("stacked-to-main", invalid_id), evidence_events), invalid_id
 
 strategy_question = "La previsión requiere definir la estrategia antes de apply. ¿Elegís `stacked-to-main`, `feature-branch-chain` o una excepción `size:exception` aprobada por el maintainer? No se iniciará apply hasta que respondas."
-def may_launch_apply(envelope: str, user_answer: str | None) -> bool:
+def may_launch_apply(envelope: str, evidence_events: dict[str, dict[str, object]]) -> bool:
     values = dict(line.split(": ", 1) for line in envelope.splitlines() if ": " in line)
     gated = values.get("Decision needed before apply") == "Yes" or values.get("Chained PRs recommended") == "Yes" or values.get("400-line budget risk") == "High"
-    return validate_envelope(envelope) and (not gated or user_answer in {"stacked-to-main", "feature-branch-chain", "size:exception"})
-assert not may_launch_apply(complete, None)
-assert may_launch_apply(complete, "feature-branch-chain")
+    return validate_envelope(envelope, evidence_events) and (not gated or values.get("Chain strategy") != "pending")
+assert not may_launch_apply(complete, evidence_events)
+assert may_launch_apply(stacked, evidence_events)
+assert may_launch_apply(feature, evidence_events)
+assert may_launch_apply(size_approved, evidence_events)
+assert not may_launch_apply(size_unapproved, evidence_events)
+assert not may_launch_apply(resolved_envelope("feature-branch-chain", "design-recommendation"), evidence_events)
 assert all(option in strategy_question for option in ("stacked-to-main", "feature-branch-chain", "size:exception"))
 generic_pause = "La previsión requiere una decisión. ¿Cómo seguimos?"
 assert not all(option in generic_pause for option in ("stacked-to-main", "feature-branch-chain", "size:exception"))
 assert "No se iniciará apply hasta que respondas." in strategy_question
+
+def orchestrator_flat_output(envelope: str) -> str:
+    if not validate_envelope(envelope):
+        return "Status: blocked\nRisks/blockers: invalid tasks envelope"
+    return envelope
+
+flat_output = orchestrator_flat_output(complete)
+for label in (*envelope_fields, *operations):
+    assert f"{label}:" in flat_output
+for exact_line in (
+    "Estimated authored changed lines: 590-720", "Estimated generated changed lines: 40-60",
+    "400-line budget risk: High", "Tests included in estimate: Yes", "Work-unit count: 3",
+):
+    assert exact_line in flat_output
+partial_output = complete.replace("Estimated generated changed lines: 40-60\n", "")
+assert orchestrator_flat_output(partial_output).startswith("Status: blocked")
+generic_output = "Forecast is High and around six hundred authored lines with tests across three units."
+assert orchestrator_flat_output(generic_output).startswith("Status: blocked")
 lines = template.splitlines()
 assert lines[0] == "<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/tasks.md ownership=full-file -->"
 assert lines[-1] == "<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/tasks.md -->"
@@ -1664,7 +1787,7 @@ esac
 cmp "$TMP/recovery-manifest-before.json" "$recovery_target/.pegasus-bootstrap-ia/manifest.json" || { printf 'normal bootstrap rewrote historical manifest metadata\n' >&2; exit 1; }
 recovery_dry_output="$($PYTHON_BIN "$CLI" --target-path "$recovery_target" --sync-workspace --dry-run)"
 case "$recovery_dry_output" in
-   *"Installed CLI version: 0.6.4"*"Source template version: 0.6.4"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
+    *"Installed CLI version: 0.6.5"*"Source template version: 0.6.5"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
   *) printf 'expected empty-manifest dry-run recovery and version evidence\n' >&2; exit 1 ;;
 esac
 assert_file_contains "$recovery_target/.github/agents/sdd-spec.agent.md" 'STALE PEGASUS SPEC AGENT'
@@ -1685,8 +1808,8 @@ from pathlib import Path
 
 manifest = json.loads(Path(sys.argv[1]).read_text())
 records = {record["path"]: record for record in manifest["ownership"]["files"]}
-assert manifest["template_version"] == "0.6.4"
-assert manifest["package_version"] == "0.6.4"
+assert manifest["template_version"] == "0.6.5"
+assert manifest["package_version"] == "0.6.5"
 assert records[".github/agents/sdd-spec.agent.md"]["action"] == "recovered"
 assert not any(path.startswith("docs/pegasus/") for path in records)
 PY
