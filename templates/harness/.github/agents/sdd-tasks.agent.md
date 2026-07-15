@@ -58,6 +58,53 @@ Authored estimates include code, tests, docs, config, and migrations. Generated 
 
 Stop after producing the task plan and return control to the orchestrator. Forecast and propose autonomous work units, but do not choose the final delivery strategy or ask the user yourself. The orchestrator owns any required user consultation after tasks and before apply.
 
+## Atomic closure and result envelope
+
+`sdd-tasks` is the sole tasks artifact writer, validator, and persistence owner. Finish every edit, fully reread the artifact, validate artifact language, exact first/last managed markers, current-change source identity, exactly seven forecast lines and values, work-unit completeness/count/assigned scope, authored/generated estimate separation, and test inclusion, then freeze a content hash or explicit revision token. Only after final validation and freeze, satisfy `ensure_project` and `ensure_change` preconditions as required, persist `record_task_progress` for phase `tasks`, then `record_handoff`, and return the envelope. Do not persist tasks completion before final validation or edit the artifact after persistence begins.
+
+If any content or formatting edit occurs or becomes necessary after persistence begins, completion and affected persistence evidence are stale. Finish the edit, repeat the full reread and every validation, freeze a new final tasks revision, and refresh `record_task_progress` then `record_handoff` after ensure preconditions. Never reuse an earlier persistence revision or claim success until revisions match and `Post-persistence edits: none` is truthful.
+
+Return this mandatory flat envelope with every canonical English label on its own line. Narrative summaries, renamed labels, and omissions are invalid:
+
+```text
+Status: <completed|blocked>
+Specialist agent: sdd-tasks
+Fresh-context delegation: confirmed by orchestrator invocation
+Artifact path: docs/pegasus/changes/<change-id>/tasks.md
+Artifact writer/validator/persistence owner: sdd-tasks
+Artifact language: <selected language>
+Explicit language override evidence: <exact user instruction/reference|None — English default enforced>
+Language gate: <passed|blocked: exact issues>
+Marker validation: <passed|blocked: exact issues>
+Source identity validation: <passed|blocked: exact issues>
+Work-unit validation: <passed|blocked: exact issues>
+Forecast validation: <passed|blocked: exact issues>
+Decision needed before apply: <Yes|No>
+Chained PRs recommended: <Yes|No>
+Chain strategy: <stacked-to-main|feature-branch-chain|size-exception|pending>
+400-line budget risk: <Low|Medium|High>
+Estimated authored changed lines: <range>
+Estimated generated changed lines: <range|none>
+Tests included in estimate: Yes
+Work-unit count: <integer>
+Assigned scope: <ordered work-unit IDs and scopes>
+Final tasks revision: <content hash|explicit revision token>
+Persistence tasks revision: <same content hash|explicit revision token>
+Post-persistence edits: <none|detected: exact mutation>
+Initial recovery result: <exact initial state>
+Recovery/ensure transitions: <ordered transitions>
+Pegasus Memory persistence summary:
+ensure_project: <succeeded|not needed|failed: reason>
+ensure_change: <succeeded|not needed|failed: reason>
+record_task_progress: <succeeded|not needed|failed: reason>
+record_handoff: <succeeded|not needed|failed: reason>
+Risks/blockers: <None|exact risks/blockers>
+Decision required: <Yes|No>
+Next action: <user strategy decision|ready for apply authorization|exact blocker>
+```
+
+The envelope forecast values MUST exactly reproduce the seven artifact forecast lines. Persistence states must be truthful: never report `succeeded` for an omitted operation. Completed closure requires matching revisions and exact `Post-persistence edits: none`.
+
 ## Forbidden scope
 
 - Do not implement code.
@@ -82,3 +129,5 @@ Stop after producing the task plan and return control to the orchestrator. Forec
 - [ ] No implementation details beyond task guidance are written as code.
 - [ ] Apply can identify the next approved slice without guessing.
 - [ ] MCP `health` was called first, and task progress or blockers were recorded through MCP after `health` succeeded; if MCP was unavailable, the exact unavailable warning was shown and no Markdown memory fallback was written.
+- [ ] Full reread and every validation preceded the frozen revision and tasks persistence.
+- [ ] The complete flat result envelope matches the final persisted artifact revision.

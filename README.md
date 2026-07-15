@@ -1,4 +1,4 @@
-# Pegasus Harness Bootstrap 0.6.3
+# Pegasus Harness Bootstrap 0.6.4
 
 Herramienta local de inicialización para configurar un harness de Pegasus orientado a VS Code/Copilot en un workspace de destino. El workspace generado contiene guías, plantillas SDD, recursos de Copilot y archivos secundarios de compatibilidad heredada con Cursor; no genera código de aplicación, metadatos de Git, CI, despliegues ni recursos remotos.
 
@@ -16,7 +16,7 @@ Para consultar en cualquier momento la versión instalada del producto:
 
 ```sh
 pegasus-harness-bootstrap --version
-# Pegasus Harness Bootstrap 0.6.3
+# Pegasus Harness Bootstrap 0.6.4
 ```
 
 Para el uso cotidiano fuera de este checkout, instale la CLI con `pipx`:
@@ -33,7 +33,7 @@ Si una inicialización interrumpida anteriormente dejó un manifiesto válido co
 
 Después de una ejecución correcta, abra el workspace de destino en VS Code con GitHub Copilot y comience desde el agente personalizado del orquestador de Pegasus ubicado en `.github/agents/pegasus-orchestrator.agent.md`.
 
-La versión 0.6.3 hace atómico el cierre de `sdd-design`: el especialista termina y relee el artefacto, valida todos sus contratos, congela una identidad de revisión y recién entonces persiste en el orden requerido, sin permitir mutaciones posteriores. El sobre completo incluye esa identidad y confirma `Post-persistence edits: none`; el orquestador falla de forma cerrada ante omisiones, ediciones posteriores o revisiones divergentes, reproduce todos los campos y formula una pregunta explícita de aprobación.
+La versión 0.6.4 extiende el cierre atómico a `sdd-tasks`: el especialista valida el plan y su forecast antes de persistir, devuelve un sobre ligado a la revisión final y obliga al orquestador a reproducir y consumir esa evidencia. Un forecast High, encadenado, con decisión pendiente o fuera de presupuesto bloquea apply hasta que el usuario elige explícitamente `stacked-to-main`, `feature-branch-chain` o una `size:exception` aprobada por el maintainer.
 
 ## Idioma del producto y de los artefactos
 

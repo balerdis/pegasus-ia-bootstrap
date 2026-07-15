@@ -85,12 +85,12 @@ esac
 "$PYTHON_BIN" "$CLI" --help >/dev/null
 version_output="$($PYTHON_BIN "$CLI" --version)"
 case "$version_output" in
-  "Pegasus Harness Bootstrap 0.6.3") ;;
+  "Pegasus Harness Bootstrap 0.6.4") ;;
   *) printf 'expected clear Pegasus product version output\n' >&2; exit 1 ;;
 esac
-assert_file_contains "$ROOT/pyproject.toml" 'version = "0.6.3"'
-assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.6.3"'
-assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.6.3'
+assert_file_contains "$ROOT/pyproject.toml" 'version = "0.6.4"'
+assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.6.4"'
+assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.6.4'
 assert_file_contains "$ROOT/README.md" 'La conversación con el usuario, este README y los mensajes públicos localizados pueden estar en español.'
 assert_file_contains "$ROOT/README.md" 'los prompts, las instrucciones, la comunicación interna entre agentes, la prosa descriptiva persistente de Pegasus Memory y los artefactos generados usan inglés de forma predeterminada.'
 assert_file_contains "$ROOT/README.md" 'El idioma de un artefacto generado cambia únicamente cuando el usuario indica de manera explícita el idioma para ese artefacto'
@@ -148,7 +148,7 @@ case "$default_plan" in
   *) printf 'expected default target path in dry-run output\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
-   *"Installed CLI version: 0.6.3"*"Source template version: 0.6.3"*) ;;
+   *"Installed CLI version: 0.6.4"*"Source template version: 0.6.4"*) ;;
   *) printf 'expected bootstrap plan version evidence\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
@@ -618,7 +618,7 @@ manifest_text = json.dumps(manifest)
 for forbidden in ("active_change", "activeChange", "last_change", "lastChange", "operational_memory", "operationalMemory", "memory_state", "memoryState", "recovery_state", "recoveryState"):
     assert forbidden not in manifest_text
 assert manifest["workspace"]["project_name"] == "sample-project"
-assert manifest["template_version"] == "0.6.3"
+assert manifest["template_version"] == "0.6.4"
 assert manifest["uninstall"]["remove_only_managed"] is True
 paths = {record["path"]: record for record in manifest["install"]["files"]}
 assert "AGENTS.md" in paths
@@ -626,8 +626,8 @@ assert ".vscode/mcp.json" in paths
 assert paths["AGENTS.md"]["ownership"] == "marker-managed"
 assert paths[".vscode/mcp.json"]["ownership"] == "full-file"
 assert paths[".github/agents/pegasus-orchestrator.agent.md"]["ownership"] == "full-file"
-assert all(record["package_version"] == "0.6.3" for record in paths.values())
-assert all(record["template_version"] == "0.6.3" for record in paths.values())
+assert all(record["package_version"] == "0.6.4" for record in paths.values())
+assert all(record["template_version"] == "0.6.4" for record in paths.values())
 assert manifest["install"]["skipped_conflicts"] == []
 PY
 
@@ -903,6 +903,16 @@ assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Chain strategy
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Estimated authored changed lines: <range>"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Estimated generated changed lines: <range|none>"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Tests included in estimate: Yes"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "sole tasks artifact writer, validator, and persistence owner"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "fully reread the artifact"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "exactly seven forecast lines and values"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" 'persist `record_task_progress` for phase `tasks`, then `record_handoff`'
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "affected persistence evidence are stale"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Final tasks revision:"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Persistence tasks revision:"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Post-persistence edits:"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Work-unit count:"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Assigned scope:"
 for work_unit_field in "Implementation scope:" "Test scope:" "Focused test command:" "Runtime validation:" "Rollback boundary:" "Estimated authored changed lines:"; do
   assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "$work_unit_field"
 done
@@ -941,6 +951,12 @@ assert_file_contains "$orchestrator" "tests/builds/installs/external tooling mus
 assert_file_contains "$orchestrator" "stacked-to-main"
 assert_file_contains "$orchestrator" "feature-branch-chain"
 assert_file_contains "$orchestrator" 'maintainer-approved `size:exception`'
+assert_file_contains "$orchestrator" "Reproduce a valid tasks envelope"
+assert_file_contains "$orchestrator" "Explicitly consume those returned values"
+assert_file_contains "$orchestrator" 'La previsión requiere definir la estrategia antes de apply.'
+assert_file_contains "$orchestrator" 'No se iniciará apply hasta que respondas.'
+assert_file_contains "$orchestrator" "A request that asks only for tasks still requires this post-tasks review-guard question"
+assert_file_contains "$orchestrator" "Until that record exists, B2/apply is blocked"
 assert_file_contains "$orchestrator" "change ID plus phase and, for apply, task-slice ID"
 if grep -Eq '^  - (edit|execute)$' "$orchestrator"; then
   printf 'orchestrator must not expose phase execution tools\n' >&2
@@ -1191,6 +1207,96 @@ assert "¿Aprobás el diseño para avanzar a la fase de tareas?" in orchestrator
 assert "Next action: review/approval" in complete
 assert "reproduce the COMPLETE specialist result envelope" in guidance
 assert "do not summarize success, request approval, or advance to tasks" in guidance
+PY
+"$PYTHON_BIN" - "$target/.github/agents/sdd-tasks.agent.md" "$target/.github/agents/pegasus-orchestrator.agent.md" "$ROOT/templates/harness/docs/pegasus/tasks.md" <<'PY'
+import sys
+from pathlib import Path
+
+specialist_guidance, orchestrator_guidance, template = (Path(path).read_text() for path in sys.argv[1:])
+forecast_fields = (
+    "Decision needed before apply", "Chained PRs recommended", "Chain strategy",
+    "400-line budget risk", "Estimated authored changed lines",
+    "Estimated generated changed lines", "Tests included in estimate",
+)
+envelope_fields = (
+    "Status", "Specialist agent", "Fresh-context delegation", "Artifact path",
+    "Artifact writer/validator/persistence owner", "Artifact language",
+    "Explicit language override evidence", "Language gate", "Marker validation",
+    "Source identity validation", "Work-unit validation", "Forecast validation",
+    *forecast_fields, "Work-unit count", "Assigned scope", "Final tasks revision",
+    "Persistence tasks revision", "Post-persistence edits", "Initial recovery result",
+    "Recovery/ensure transitions", "Risks/blockers", "Decision required", "Next action",
+)
+operations = ("ensure_project", "ensure_change", "record_task_progress", "record_handoff")
+
+def validate_envelope(text: str) -> bool:
+    lines = text.splitlines()
+    labels = {line.split(":", 1)[0] for line in lines if ":" in line}
+    values = dict(line.split(": ", 1) for line in lines if ": " in line)
+    if not all(field in labels for field in envelope_fields):
+        return False
+    if "Pegasus Memory persistence summary:" not in lines:
+        return False
+    if values.get("Post-persistence edits") != "none":
+        return False
+    if values.get("Final tasks revision") != values.get("Persistence tasks revision"):
+        return False
+    return all(values.get(operation) in {"succeeded", "not needed"} for operation in operations)
+
+def valid_atomic_trace(events: list[str]) -> bool:
+    validation = events.index("validate_all") if "validate_all" in events else len(events)
+    freeze = events.index("freeze_revision") if "freeze_revision" in events else -1
+    first_persist = min((events.index(op) for op in operations[2:] if op in events), default=-1)
+    if not (validation < freeze < first_persist):
+        return False
+    if events[first_persist:first_persist + 2] != list(operations[2:]):
+        return False
+    return "edit_artifact" not in events[first_persist + 1:]
+
+complete = "\n".join([
+    "Status: completed", "Specialist agent: sdd-tasks",
+    "Fresh-context delegation: confirmed by orchestrator invocation",
+    "Artifact path: docs/pegasus/changes/mobile/tasks.md",
+    "Artifact writer/validator/persistence owner: sdd-tasks", "Artifact language: English",
+    "Explicit language override evidence: None — English default enforced", "Language gate: passed",
+    "Marker validation: passed", "Source identity validation: passed", "Work-unit validation: passed",
+    "Forecast validation: passed", "Decision needed before apply: Yes",
+    "Chained PRs recommended: Yes", "Chain strategy: pending", "400-line budget risk: High",
+    "Estimated authored changed lines: 620-780", "Estimated generated changed lines: 40-60",
+    "Tests included in estimate: Yes", "Work-unit count: 3",
+    "Assigned scope: WU1 behavior+tests; WU2 integration+tests; WU3 docs+smoke",
+    "Final tasks revision: sha256:abc123", "Persistence tasks revision: sha256:abc123",
+    "Post-persistence edits: none", "Initial recovery result: found",
+    "Recovery/ensure transitions: found -> ensure_project not needed -> ensure_change not needed",
+    "Pegasus Memory persistence summary:", "ensure_project: not needed", "ensure_change: not needed",
+    "record_task_progress: succeeded", "record_handoff: succeeded", "Risks/blockers: High review load",
+    "Decision required: Yes", "Next action: user strategy decision",
+])
+assert validate_envelope(complete)
+for field in (*envelope_fields, *operations):
+    assert field in specialist_guidance, field
+assert all(field in orchestrator_guidance for field in forecast_fields)
+assert valid_atomic_trace(["edit_artifact", "full_reread", "validate_all", "freeze_revision", "ensure_project", "ensure_change", "record_task_progress", "record_handoff", "return_envelope"])
+assert not valid_atomic_trace(["edit_artifact", "full_reread", "record_task_progress", "validate_all", "freeze_revision", "record_handoff"])
+assert not valid_atomic_trace(["edit_artifact", "full_reread", "validate_all", "freeze_revision", "record_task_progress", "edit_artifact", "record_handoff"])
+assert not validate_envelope(complete.replace("Forecast validation: passed\n", ""))
+assert not validate_envelope(complete.replace("Persistence tasks revision: sha256:abc123", "Persistence tasks revision: sha256:def456"))
+assert not validate_envelope(complete.replace("Post-persistence edits: none", "Post-persistence edits: detected: rewrite"))
+
+strategy_question = "La previsión requiere definir la estrategia antes de apply. ¿Elegís `stacked-to-main`, `feature-branch-chain` o una excepción `size:exception` aprobada por el maintainer? No se iniciará apply hasta que respondas."
+def may_launch_apply(envelope: str, user_answer: str | None) -> bool:
+    values = dict(line.split(": ", 1) for line in envelope.splitlines() if ": " in line)
+    gated = values.get("Decision needed before apply") == "Yes" or values.get("Chained PRs recommended") == "Yes" or values.get("400-line budget risk") == "High"
+    return validate_envelope(envelope) and (not gated or user_answer in {"stacked-to-main", "feature-branch-chain", "size:exception"})
+assert not may_launch_apply(complete, None)
+assert may_launch_apply(complete, "feature-branch-chain")
+assert all(option in strategy_question for option in ("stacked-to-main", "feature-branch-chain", "size:exception"))
+generic_pause = "La previsión requiere una decisión. ¿Cómo seguimos?"
+assert not all(option in generic_pause for option in ("stacked-to-main", "feature-branch-chain", "size:exception"))
+assert "No se iniciará apply hasta que respondas." in strategy_question
+lines = template.splitlines()
+assert lines[0] == "<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/tasks.md ownership=full-file -->"
+assert lines[-1] == "<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/tasks.md -->"
 PY
 "$PYTHON_BIN" - "$target/.github/copilot-instructions.md" "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" <<'PY'
 import sys
@@ -1558,7 +1664,7 @@ esac
 cmp "$TMP/recovery-manifest-before.json" "$recovery_target/.pegasus-bootstrap-ia/manifest.json" || { printf 'normal bootstrap rewrote historical manifest metadata\n' >&2; exit 1; }
 recovery_dry_output="$($PYTHON_BIN "$CLI" --target-path "$recovery_target" --sync-workspace --dry-run)"
 case "$recovery_dry_output" in
-   *"Installed CLI version: 0.6.3"*"Source template version: 0.6.3"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
+   *"Installed CLI version: 0.6.4"*"Source template version: 0.6.4"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
   *) printf 'expected empty-manifest dry-run recovery and version evidence\n' >&2; exit 1 ;;
 esac
 assert_file_contains "$recovery_target/.github/agents/sdd-spec.agent.md" 'STALE PEGASUS SPEC AGENT'
@@ -1579,8 +1685,8 @@ from pathlib import Path
 
 manifest = json.loads(Path(sys.argv[1]).read_text())
 records = {record["path"]: record for record in manifest["ownership"]["files"]}
-assert manifest["template_version"] == "0.6.3"
-assert manifest["package_version"] == "0.6.3"
+assert manifest["template_version"] == "0.6.4"
+assert manifest["package_version"] == "0.6.4"
 assert records[".github/agents/sdd-spec.agent.md"]["action"] == "recovered"
 assert not any(path.startswith("docs/pegasus/") for path in records)
 PY

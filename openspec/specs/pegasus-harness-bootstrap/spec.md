@@ -636,6 +636,18 @@ The system MUST create a PRD template and production-ready SDD templates under `
 - AND each work unit declares implementation scope, test scope, focused test command, runtime validation, rollback boundary, and estimated authored changed lines
 - AND it excludes implementation code
 
+#### Scenario: Tasks specialist closes atomically and gates apply
+
+- GIVEN the orchestrator delegates tasks to a fresh `sdd-tasks` context
+- WHEN the specialist completes the task plan
+- THEN it MUST finish edits, fully reread, validate language, exact markers, current-change source identity, exactly seven forecast lines and values, complete work units and assigned scope, authored/generated estimates, and test inclusion before freezing the final tasks revision
+- AND after ensure preconditions it MUST persist `record_task_progress` then `record_handoff`, with no later artifact edit
+- AND a post-persistence edit MUST invalidate completion and require full revalidation, a new revision, and refreshed affected persistence before return
+- AND it MUST return the complete flat canonical envelope with owner/delegation fields, every validation, all seven forecast values, work-unit count and assigned scope, matching final/persistence revisions, exact `Post-persistence edits: none`, initial recovery, ordered transitions, truthful operation states, risks/blockers, decision required, and next action
+- AND the orchestrator MUST reproduce the envelope field-for-field, explicitly consume the forecast, and fail closed on omission, revision mismatch, post-persistence edits, or non-truthful persistence states
+- AND Decision Yes, chaining Yes, High risk, or an over-budget authored estimate MUST block apply until the orchestrator asks the user in Spanish to choose exactly `stacked-to-main`, `feature-branch-chain`, or maintainer-approved `size:exception`, states no apply starts until the answer, and records the current resolved strategy
+- AND a tasks-only request MUST NOT bypass this post-tasks guard, and no current selection may be inferred from prior preferences
+
 #### Scenario: Apply implements only the approved slice
 
 - GIVEN an approved task slice and existing apply-progress history

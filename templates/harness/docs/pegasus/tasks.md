@@ -1,3 +1,5 @@
+<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/tasks.md ownership=full-file -->
+
 # Tasks: {{PROJECT_NAME}}
 
 Use this template inside `docs/pegasus/changes/<change-id>/tasks.md` for change-specific SDD work. This task file is the source of truth for implementation slices; MCP memory may store task status, blockers, summaries, and artifact references only.
@@ -97,3 +99,5 @@ Estimated authored changed lines: TBD range
 - Do not edit application/source files from this phase.
 - Do not mark apply or verify complete from this phase.
 - Stop and ask before apply if any exact guard line above says a decision is needed.
+
+<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/tasks.md -->

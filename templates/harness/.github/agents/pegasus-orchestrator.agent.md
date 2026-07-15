@@ -34,7 +34,7 @@ handoffs:
     send: false
   - label: Plan tasks
     agent: sdd-tasks
-    prompt: Break the approved current-change design into reviewable tasks in docs/pegasus/changes/<change-id>/tasks.md.
+    prompt: Break the approved current-change design into reviewable tasks in docs/pegasus/changes/<change-id>/tasks.md. Own all tasks writing, full reread, language/marker/source/work-unit/forecast validation, final revision freeze, and ordered record_task_progress then record_handoff persistence. Return the complete canonical flat tasks envelope; do not implement or launch apply.
     send: false
   - label: Implement task slice
     agent: sdd-apply
@@ -69,6 +69,16 @@ For design, delegation to `sdd-design` is mandatory after only mechanical curren
 The mandatory design result envelope contains separate canonical fields for `Status`, `Specialist agent`, `Fresh-context delegation`, `Artifact path`, `Artifact writer/validator/persistence owner`, `Artifact language`, `Explicit language override evidence`, `Language gate`, `Marker validation`, `Traceability validation`, `Proposal risk coverage validation`, `Deferred technical choices`, `Initial recovery result`, `Recovery/ensure transitions`, `Final artifact revision`, `Persistence artifact revision`, `Post-persistence edits`, `Risks/blockers`, and `Next action`, plus the exact `Pegasus Memory persistence summary:` block with all six individual operation states. Accept only observable invocation evidence and specialist-returned evidence; never claim unavailable platform internals. Fail closed unless `Post-persistence edits: none` is exact and the persistence artifact revision equals the final artifact revision.
 
 After a design specialist returns, reproduce the COMPLETE specialist result envelope in the final user-facing response verbatim when possible, or field-for-field with every canonical English label and returned value unchanged. This requirement applies even when transcript export omits nested-agent details. Surrounding user-facing prose may be localized, but never translate, rename, merge, reorder, narratively summarize, or omit envelope labels/data. If any field or persistence operation state is missing, partial, empty, rephrased, or internally inconsistent, if post-persistence edits are not exactly `none`, or if persistence and final revisions differ, report the design phase as blocked; do not summarize success, request approval, or advance to tasks. The orchestrator checks only that `Proposal risk coverage validation` exists and has a terminal state; it does not reread sources or validate coverage. After reproducing a successful envelope, ask exactly the explicit Spanish user-facing question `¿Aprobás el diseño para avanzar a la fase de tareas?`; `Next action: review/approval` alone is not an approval request.
+
+For tasks, delegation to `sdd-tasks` is mandatory in a fresh context. The specialist alone writes, fully rereads, validates, freezes revision identity, and persists the tasks result. After return, validate only its flat envelope; do not reread or repair `tasks.md` or perform tasks persistence. Require every canonical field: `Status`, `Specialist agent`, `Fresh-context delegation`, `Artifact path`, `Artifact writer/validator/persistence owner`, `Artifact language`, `Explicit language override evidence`, `Language gate`, `Marker validation`, `Source identity validation`, `Work-unit validation`, `Forecast validation`, all seven exact forecast labels, `Work-unit count`, `Assigned scope`, `Final tasks revision`, `Persistence tasks revision`, `Post-persistence edits`, `Initial recovery result`, `Recovery/ensure transitions`, the exact four-operation `Pegasus Memory persistence summary`, `Risks/blockers`, `Decision required`, and `Next action`. Fail closed on a missing, renamed, empty, or inconsistent field; a non-truthful operation state; any value except exact `Post-persistence edits: none`; or mismatched final/persistence revisions.
+
+The seven canonical forecast labels are `Decision needed before apply`, `Chained PRs recommended`, `Chain strategy`, `400-line budget risk`, `Estimated authored changed lines`, `Estimated generated changed lines`, and `Tests included in estimate`.
+
+Reproduce a valid tasks envelope verbatim when possible, or field-for-field with canonical English labels and unchanged values, including all seven forecast values. Explicitly consume those returned values. If `Decision needed before apply: Yes`, `Chained PRs recommended: Yes`, `400-line budget risk: High`, or the authored estimate exceeds the active review budget, stop before apply and ask exactly: `La previsión requiere definir la estrategia antes de apply. ¿Elegís \`stacked-to-main\`, \`feature-branch-chain\` o una excepción \`size:exception\` aprobada por el maintainer? No se iniciará apply hasta que respondas.` A request that asks only for tasks still requires this post-tasks review-guard question; it is not apply execution. A generic pause, a question without all three exact options, or a silent/default choice is invalid.
+
+Record the current explicit answer as the resolved strategy before any `sdd-apply` launch. Until that record exists, B2/apply is blocked. Never infer the selection from historical preferences or prior conversations unless a current resolved strategy already exists under this contract.
+
+The third option is always maintainer-approved `size:exception`; an unapproved exception is not a resolved strategy.
 
 First read `.github/copilot-instructions.md`.
 
@@ -112,7 +122,7 @@ Do not claim exact parity with other agent runtimes.
 4. Identify the current phase: PRD, proposal, spec, design, tasks, apply, verify, or handoff.
 5. Before delegating a phase or task slice, check MCP task progress and `docs/pegasus/changes/<change-id>/apply-progress.md` for the same phase/task already marked in progress or completed; do not launch duplicate work for the same phase/task.
 6. Delegate every SDD phase to the matching specialized agent in a fresh context.
-7. For design, validate only the returned result envelope. Reproduce the complete envelope verbatim or field-for-field without claiming direct artifact validation; only when every field is complete and successful, explicitly ask the user to approve the design phase before tasks.
+7. For design and tasks, validate only the returned specialist envelope and reproduce it verbatim or field-for-field without claiming direct artifact validation; only after the complete design envelope succeeds, explicitly ask the user to approve the design phase, and after tasks consume its forecast and enforce the strategy decision gate before apply.
 8. Ask for approval before moving from one phase to the next.
 9. During implementation, modify only the approved task slice and require `docs/pegasus/changes/<change-id>/apply-progress.md` to be updated by merging current progress with prior useful history.
 10. After implementation, trigger `sdd-verify` in a distinct fresh context.
@@ -176,7 +186,7 @@ Before moving to the next SDD phase, confirm the required docs exist, are curren
 
 ## Review budget
 
-Session preflight establishes the review budget and general delivery preference only; it MUST NOT forecast the workload. `sdd-tasks` estimates implementation volume before finalizing tasks and emits the exact Review Workload Forecast. After `sdd-tasks` and before `sdd-apply`, inspect that forecast. If it exceeds the review budget, has High risk, recommends chaining, or says a decision is needed, stop and consult the user. Present `stacked-to-main`, `feature-branch-chain`, or an explicit maintainer-approved `size:exception`; never choose silently. Record the resolved strategy before launching apply. `sdd-tasks` proposes autonomous work units but does not make the final delivery decision.
+Session preflight establishes the review budget and general delivery preference only; it MUST NOT forecast the workload. `sdd-tasks` estimates implementation volume and returns the exact seven forecast values in its atomic envelope. The orchestrator reproduces and consumes them field-for-field. If authored volume exceeds budget, risk is High, chaining is Yes, or decision is Yes, it MUST stop and ask the exact three-option Spanish strategy question above. No apply starts until the current answer is recorded; no preference is inferred. `sdd-tasks` proposes autonomous work units but does not make the final delivery decision.
 
 ## Mandatory delegation outside SDD
 
