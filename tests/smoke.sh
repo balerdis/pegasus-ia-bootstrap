@@ -85,12 +85,12 @@ esac
 "$PYTHON_BIN" "$CLI" --help >/dev/null
 version_output="$($PYTHON_BIN "$CLI" --version)"
 case "$version_output" in
-  "Pegasus Harness Bootstrap 0.6.0") ;;
+  "Pegasus Harness Bootstrap 0.6.1") ;;
   *) printf 'expected clear Pegasus product version output\n' >&2; exit 1 ;;
 esac
-assert_file_contains "$ROOT/pyproject.toml" 'version = "0.6.0"'
-assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.6.0"'
-assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.6.0'
+assert_file_contains "$ROOT/pyproject.toml" 'version = "0.6.1"'
+assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.6.1"'
+assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.6.1'
 assert_file_contains "$ROOT/README.md" 'La conversación con el usuario, este README y los mensajes públicos localizados pueden estar en español.'
 assert_file_contains "$ROOT/README.md" 'los prompts, las instrucciones, la comunicación interna entre agentes, la prosa descriptiva persistente de Pegasus Memory y los artefactos generados usan inglés de forma predeterminada.'
 assert_file_contains "$ROOT/README.md" 'El idioma de un artefacto generado cambia únicamente cuando el usuario indica de manera explícita el idioma para ese artefacto'
@@ -148,7 +148,7 @@ case "$default_plan" in
   *) printf 'expected default target path in dry-run output\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
-   *"Installed CLI version: 0.6.0"*"Source template version: 0.6.0"*) ;;
+   *"Installed CLI version: 0.6.1"*"Source template version: 0.6.1"*) ;;
   *) printf 'expected bootstrap plan version evidence\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
@@ -618,7 +618,7 @@ manifest_text = json.dumps(manifest)
 for forbidden in ("active_change", "activeChange", "last_change", "lastChange", "operational_memory", "operationalMemory", "memory_state", "memoryState", "recovery_state", "recoveryState"):
     assert forbidden not in manifest_text
 assert manifest["workspace"]["project_name"] == "sample-project"
-assert manifest["template_version"] == "0.6.0"
+assert manifest["template_version"] == "0.6.1"
 assert manifest["uninstall"]["remove_only_managed"] is True
 paths = {record["path"]: record for record in manifest["install"]["files"]}
 assert "AGENTS.md" in paths
@@ -626,8 +626,8 @@ assert ".vscode/mcp.json" in paths
 assert paths["AGENTS.md"]["ownership"] == "marker-managed"
 assert paths[".vscode/mcp.json"]["ownership"] == "full-file"
 assert paths[".github/agents/pegasus-orchestrator.agent.md"]["ownership"] == "full-file"
-assert all(record["package_version"] == "0.6.0" for record in paths.values())
-assert all(record["template_version"] == "0.6.0" for record in paths.values())
+assert all(record["package_version"] == "0.6.1" for record in paths.values())
+assert all(record["template_version"] == "0.6.1" for record in paths.values())
 assert manifest["install"]["skipped_conflicts"] == []
 PY
 
@@ -864,6 +864,14 @@ assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Pegasus Memor
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Artifact language: <selected language>"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Language gate: <passed|blocked: exact unresolved issues>"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Deferred technical choices: <structured summary of every choice and next gate|None / Ninguna>"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Explicit language override evidence: <exact user instruction/reference|None — English default enforced>"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Marker and traceability validation: <passed|blocked: exact marker or per-entry traceability issues>"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Initial recovery result:"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Recovery/ensure transitions:"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Delegation evidence:"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "artifact writer/validator/persistence owner: sdd-design"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Spanish chat, Spanish approved sources"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "every flow step, alternative, affected area, testing row, rollout/rollback row, and risk row"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Narrative prose does not satisfy the final-response contract"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'record_task_progress` for phase `design` before `record_handoff`'
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'Use `completed` only when the design is ready for review with no blocking gaps'
@@ -901,6 +909,12 @@ assert_file_contains "$orchestrator" "thin coordinator, not a phase executor"
 assert_file_contains "$orchestrator" "Every SDD phase MUST run through its matching specialized agent in a fresh context"
 assert_file_contains "$orchestrator" "MUST NOT write phase artifacts, implement tasks, run phase tests/builds, or perform verification"
 assert_file_contains "$orchestrator" "If required delegation is unavailable, blocked, or fails, stop and report"
+assert_file_contains "$orchestrator" "validate only the returned specialist result envelope"
+assert_file_contains "$orchestrator" "MUST NOT read or reread"
+assert_file_contains "$orchestrator" "sole artifact writer, validator, and persistence owner"
+assert_file_contains "$orchestrator" "A missing or partial envelope blocks success and phase advancement"
+assert_file_contains "$orchestrator" "without claiming direct artifact validation"
+assert_file_contains "$orchestrator" "explicitly ask the user to approve the design phase"
 assert_file_contains "$orchestrator" "understanding requires reading 4 or more files"
 assert_file_contains "$orchestrator" "implementation touches 2 or more non-trivial files"
 assert_file_contains "$orchestrator" "tests/builds/installs/external tooling must run"
@@ -996,6 +1010,8 @@ assert_file_contains "$target/docs/pegasus/design.md" "## Design Goals / Non-Goa
 assert_file_contains "$target/docs/pegasus/design.md" "## Alternatives Considered"
 assert_file_contains "$target/docs/pegasus/design.md" "## Data / Control Flow"
 assert_file_contains "$target/docs/pegasus/design.md" "## Rollout / Rollback"
+assert_file_contains "$target/docs/pegasus/design.md" "Alternative | Why not chosen | Requirement / evidence traceability | Tradeoff | When to revisit"
+assert_file_contains "$target/docs/pegasus/design.md" "Topic | Plan | Requirement / evidence traceability | Trigger"
 assert_file_contains "$target/docs/pegasus/design.md" "## Technical Context Classification"
 assert_file_contains "$target/docs/pegasus/design.md" "## Material Technical Decisions and Gaps"
 assert_file_contains "$target/docs/pegasus/design.md" "Validation mapping for an explicit Spanish override only"
@@ -1036,6 +1052,15 @@ assert guidance.index("**Blocking path (approval/source or material technical bl
 assert guidance.index("record_observation") < guidance.index("record_task_progress") < guidance.index("record_handoff")
 assert guidance.index("Repair affected blocks, reread the whole artifact, revalidate markers, and rerun the gate") < guidance.index("An unresolved language gate failure blocks artifact persistence and success")
 assert "Use generic MCP terminology" not in guidance
+for field in (
+    "Status:", "Artifact path:", "Artifact language:", "Explicit language override evidence:",
+    "Language gate:", "Deferred technical choices:", "Marker and traceability validation:",
+    "Initial recovery result:", "Recovery/ensure transitions:", "Pegasus Memory persistence summary:",
+    "Risks/blockers:", "Next action:", "Delegation evidence:",
+):
+    assert field in guidance
+for section in ("flow step", "alternative", "affected area", "testing row", "rollout/rollback row", "risk row"):
+    assert section in guidance.lower()
 assert "<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/design.md ownership=full-file -->" in template
 assert "<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/design.md -->" in template
 for text in ("Technical Context Classification", "Material Technical Decisions and Gaps", "Validation mapping for an explicit Spanish override only"):
@@ -1362,7 +1387,7 @@ esac
 cmp "$TMP/recovery-manifest-before.json" "$recovery_target/.pegasus-bootstrap-ia/manifest.json" || { printf 'normal bootstrap rewrote historical manifest metadata\n' >&2; exit 1; }
 recovery_dry_output="$($PYTHON_BIN "$CLI" --target-path "$recovery_target" --sync-workspace --dry-run)"
 case "$recovery_dry_output" in
-   *"Installed CLI version: 0.6.0"*"Source template version: 0.6.0"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
+   *"Installed CLI version: 0.6.1"*"Source template version: 0.6.1"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
   *) printf 'expected empty-manifest dry-run recovery and version evidence\n' >&2; exit 1 ;;
 esac
 assert_file_contains "$recovery_target/.github/agents/sdd-spec.agent.md" 'STALE PEGASUS SPEC AGENT'
@@ -1383,8 +1408,8 @@ from pathlib import Path
 
 manifest = json.loads(Path(sys.argv[1]).read_text())
 records = {record["path"]: record for record in manifest["ownership"]["files"]}
-assert manifest["template_version"] == "0.6.0"
-assert manifest["package_version"] == "0.6.0"
+assert manifest["template_version"] == "0.6.1"
+assert manifest["package_version"] == "0.6.1"
 assert records[".github/agents/sdd-spec.agent.md"]["action"] == "recovered"
 assert not any(path.startswith("docs/pegasus/") for path in records)
 PY

@@ -560,6 +560,21 @@ The system MUST create a PRD template and production-ready SDD templates under `
 - AND root `docs/pegasus/design.md` MUST be described only as the canonical template, never as an active change artifact
 - AND it excludes implementation code and task checklist creation
 
+#### Scenario: Design specialist returns a complete gatekeeping envelope
+
+- GIVEN the orchestrator delegates design to `sdd-design` in a fresh context
+- WHEN the specialist completes or blocks the phase
+- THEN `sdd-design` MUST return status, artifact path, artifact language, explicit non-English override evidence, language gate, deferred technical choices, marker and per-entry traceability validation, initial recovery result, ordered recovery/ensure transitions, the exact six-state Pegasus Memory persistence summary, risks/blockers, next action, and delegation evidence
+- AND delegation evidence MUST identify `sdd-design`, the fresh-context invocation, and `sdd-design` as artifact writer, validator, and persistence owner using only observable or returned evidence
+- AND a missing or partial field MUST block success and phase advancement
+
+#### Scenario: English design default survives Spanish context
+
+- GIVEN chat and all approved design source artifacts are Spanish
+- WHEN the user does not explicitly name a non-English language for the design artifact
+- THEN `sdd-design` MUST produce an English design
+- AND any non-English result MUST include the exact user instruction or precise reference that explicitly selected that artifact language
+
 #### Scenario: Design requires approved isolated evidence and technical context
 
 - GIVEN design work is requested for a current change
@@ -624,7 +639,7 @@ The system MUST create a PRD template and production-ready SDD templates under `
 
 ### Requirement: Lightweight orchestration guardrails
 
-The generated Pegasus guidance MUST make `pegasus-orchestrator` a thin coordinator. It MUST delegate every SDD phase to its matching specialized agent in a fresh context and MUST stop when required delegation is unavailable, blocked, or fails. Specialized phase agents MUST execute directly and MUST NOT recursively delegate their phase. The orchestrator MUST NOT write phase artifacts, implement tasks, run phase tests/builds, or perform verification. `sdd-apply` MUST implement only one authorized slice and return control; a distinct fresh-context `sdd-verify` MUST verify it. Outside SDD, delegation MUST occur when understanding requires reading 4 or more files, implementation touches 2 or more non-trivial files, tests/builds/installs/external tooling must run, or complexity exceeds small mechanical coordination. The guidance MUST avoid duplicate launches by change, phase, and task-slice identity using MCP task progress and apply-progress, and MUST preserve useful history by merging updates.
+The generated Pegasus guidance MUST make `pegasus-orchestrator` a thin coordinator. It MUST delegate every SDD phase to its matching specialized agent in a fresh context and MUST stop when required delegation is unavailable, blocked, or fails. Specialized phase agents MUST execute directly and MUST NOT recursively delegate their phase. The orchestrator MUST NOT write phase artifacts, implement tasks, run phase tests/builds, or perform verification. For design, pre-delegation approval, path, phase, and duplicate-launch reads MAY remain mechanical. After specialist return, the orchestrator MUST validate only the returned result envelope and MUST NOT read or reread `design.md`, inspect source content, rerun marker/language/traceability/phase checks, or perform design persistence. It MUST summarize the specialist envelope without claiming direct artifact validation and explicitly request phase approval. `sdd-apply` MUST implement only one authorized slice and return control; a distinct fresh-context `sdd-verify` MUST verify it. Outside SDD, delegation MUST occur when understanding requires reading 4 or more files, implementation touches 2 or more non-trivial files, tests/builds/installs/external tooling must run, or complexity exceeds small mechanical coordination. The guidance MUST avoid duplicate launches by change, phase, and task-slice identity using MCP task progress and apply-progress, and MUST preserve useful history by merging updates.
 
 #### Scenario: Direct fix avoids unnecessary SDD
 

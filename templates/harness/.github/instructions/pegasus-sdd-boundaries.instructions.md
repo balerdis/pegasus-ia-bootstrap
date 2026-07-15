@@ -15,6 +15,8 @@ Treat proposal, spec, design, and tasks as gates:
 
 - The orchestrator coordinates only. Every SDD phase runs through its matching specialized agent in a fresh context; if delegation is unavailable, blocked, or fails, stop instead of executing the phase in orchestrator context.
 - Specialized phase agents execute directly and do not recursively delegate their assigned phase. Apply and verify always use distinct contexts.
+- After design delegation, the orchestrator validates only the specialist result envelope. It never rereads or revalidates `design.md`, reruns phase gates, or performs design persistence; `sdd-design` owns artifact writing, marker/language/traceability validation, and phase persistence.
+- Preserve visible delegated-agent/tool attribution when the runtime exposes it. Design closure reports only observable invocation and returned evidence, including the specialist name, fresh-context invocation, and artifact writer/validator/persistence owner.
 
 - Do not implement behavior that is outside active `docs/pegasus/changes/<change-id>/tasks.md`.
 - Do not bypass active `docs/pegasus/changes/<change-id>/spec.md`; acceptance scenarios are the contract.

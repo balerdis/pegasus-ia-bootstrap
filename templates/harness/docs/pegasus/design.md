@@ -73,9 +73,9 @@ Validation fixture for an explicit Spanish override: render this heading exactly
 
 ## Alternatives Considered
 
-| Alternative | Why not chosen | Evidence / tradeoff | When to revisit |
-|-------------|----------------|---------------------|-----------------|
-| TBD | TBD | TBD | TBD |
+| Alternative | Why not chosen | Requirement / evidence traceability | Tradeoff | When to revisit |
+|-------------|----------------|-------------------------------------|----------|-----------------|
+| TBD | TBD | Spec requirement or repository evidence | TBD | TBD |
 
 ## Affected Areas
 
@@ -103,11 +103,11 @@ TBD
 
 ## Rollout / Rollback
 
-| Topic | Plan | Evidence / trigger |
-|-------|------|--------------------|
-| Rollout | TBD | TBD |
-| Rollback | TBD | TBD |
-| Feature flag / migration | TBD | TBD |
+| Topic | Plan | Requirement / evidence traceability | Trigger |
+|-------|------|-------------------------------------|---------|
+| Rollout | TBD | Spec requirement or repository evidence | TBD |
+| Rollback | TBD | Spec requirement or repository evidence | TBD |
+| Feature flag / migration | TBD | Spec requirement or repository evidence | TBD |
 
 ## Risks and Open Questions
 

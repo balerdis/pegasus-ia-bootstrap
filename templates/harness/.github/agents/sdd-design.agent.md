@@ -50,7 +50,7 @@ Preserve existing Pegasus managed markers exactly and edit only between them. A 
 
 Before completed-path Pegasus Memory artifact persistence, reread the artifact and validate its exact first/final marker lines. Repair, reread, and revalidate failures. If validation still fails, do not persist the artifact or claim success; report `Design persistence: file-only — marker validation failed`.
 
-Select one artifact language under `.github/instructions/pegasus-sdd-boundaries.instructions.md`: an explicit user artifact-language request wins; otherwise use English. Chat, persona, approved-source language, and prior artifacts never infer an override. After marker validation, run a language/terminology gate before persistence. In Spanish mode, all human-readable headings, labels, tables, and prose MUST be coherent neutral professional Spanish with correct diacritics; reject untranslated structural vocabulary including `Inputs`, `Rationale`, `Tradeoffs`, `Unit`, and `Integration`. Require the exact heading `Decisiones y compensaciones`; reject legacy or awkward headings including `Costos y compromisos`, `Compensaciones`, and `Decisiones y costos y compromisos`. Reject both `Greenfield/no implementation evidence` and `Greenfield / no implementation evidence`, requiring `Greenfield / sin evidencia de implementación`. When naming the persistence product, reject standalone/generic `MCP`, `Contexto MCP`, `Memoria MCP`, and `Memoria Pegasus`; require `Pegasus Memory` or exact server annotation `pegasus-memory-mcp`. Allow `MCP` only in an explicit protocol discussion such as `protocolo MCP`, or inside the exact server annotation. Allow only explicit technical exceptions: managed markers, identifiers, code, paths, tool/server names including `Pegasus Memory` and `pegasus-memory-mcp`, and deliberately standardized terms. Repair affected blocks, reread the whole artifact, revalidate markers, and rerun the gate. An unresolved language gate failure blocks artifact persistence and success: do not call `record_artifact`; use the blocked control-state path with its exact failure reason, status `blocked`, and no full durable-success claim.
+Select one artifact language under `.github/instructions/pegasus-sdd-boundaries.instructions.md`: an explicit user instruction naming the design artifact language wins; otherwise English is mandatory. Spanish chat, Spanish approved sources, persona, selected or dominant source language, and prior artifacts never infer an override. For every non-English design, quote or precisely reference the user's explicit artifact-language instruction as override evidence; absent that evidence, use English. After marker validation, run a language/terminology gate before persistence. In Spanish mode, all human-readable headings, labels, tables, and prose MUST be coherent neutral professional Spanish with correct diacritics; reject untranslated structural vocabulary including `Inputs`, `Rationale`, `Tradeoffs`, `Unit`, and `Integration`. Require the exact heading `Decisiones y compensaciones`; reject legacy or awkward headings including `Costos y compromisos`, `Compensaciones`, and `Decisiones y costos y compromisos`. Reject both `Greenfield/no implementation evidence` and `Greenfield / no implementation evidence`, requiring `Greenfield / sin evidencia de implementación`. When naming the persistence product, reject standalone/generic `MCP`, `Contexto MCP`, `Memoria MCP`, and `Memoria Pegasus`; require `Pegasus Memory` or exact server annotation `pegasus-memory-mcp`. Allow `MCP` only in an explicit protocol discussion such as `protocolo MCP`, or inside the exact server annotation. Allow only explicit technical exceptions: managed markers, identifiers, code, paths, tool/server names including `Pegasus Memory` and `pegasus-memory-mcp`, and deliberately standardized terms. Repair affected blocks, reread the whole artifact, revalidate markers, and rerun the gate. An unresolved language gate failure blocks artifact persistence and success: do not call `record_artifact`; use the blocked control-state path with its exact failure reason, status `blocked`, and no full durable-success claim.
 
 Every `MCP` occurrence is validated independently. An exact `protocolo MCP` phrase or `pegasus-memory-mcp` annotation does not permit a separate standalone `MCP` occurrence elsewhere in the same artifact.
 
@@ -66,6 +66,7 @@ Update the design with:
 - Confirmed decisions, assumptions, and deferred non-blocking choices separated clearly.
 - A dedicated `Deferred Technical Choices` table with complete deferred fields, or an explicit `None` / `Ninguna` row only when permitted by the Greenfield stack-evidence rule.
 - Evidence-based affected areas, test strategy, rollout/rollback, risks, and material-gap dispositions.
+- Per-entry traceability for every flow step, alternative, affected area, testing row, rollout/rollback row, and risk row. Each entry names a spec requirement or explicit repository-evidence reference; a section heading, generic source statement, or traceability elsewhere does not satisfy an entry.
 
 ## Pegasus Memory closure contract
 
@@ -73,8 +74,12 @@ Narrative prose does not satisfy the final-response contract. The final response
 
 ```text
 Artifact language: <selected language>
+Explicit language override evidence: <exact user instruction/reference|None — English default enforced>
 Language gate: <passed|blocked: exact unresolved issues>
 Deferred technical choices: <structured summary of every choice and next gate|None / Ninguna>
+Marker and traceability validation: <passed|blocked: exact marker or per-entry traceability issues>
+Initial recovery result: <not_found|ambiguous|recovered|read_error|unavailable|other truthful result>
+Recovery/ensure transitions: <ordered transitions after initial recovery, or None>
 ```
 
 ```text
@@ -87,6 +92,21 @@ record_task_progress: <succeeded|not needed|failed: reason>
 record_handoff: <succeeded|not needed|failed: reason>
 ```
 
+Then include:
+
+```text
+Status: <completed|blocked>
+Artifact path: <path|not written>
+Risks/blockers: <concise summary|None>
+Next action: <review/approval|user answer|repair language gate|other exact action>
+Delegation evidence:
+specialist agent: sdd-design
+fresh-context invocation: confirmed by orchestrator invocation
+artifact writer/validator/persistence owner: sdd-design
+```
+
+These fields form the mandatory specialist result envelope. Return every field with a truthful value; missing or partial fields block orchestrator success and advancement. Report only invocation and work observable in this context or returned by tools; do not claim hidden platform internals.
+
 Use minimal ensure payloads: `ensure_change` defaults to `project_id` and `change_id`; use `kind` only if classification is needed, never `type`. The supported status enum is exactly `pending`, `in_progress`, `blocked`, `completed`.
 
 **Blocking path (approval/source or material technical blocker):** do not write/refine the design artifact, validate markers, run an artifact language gate, or call `record_artifact`. When Pegasus Memory is healthy, call/attempt `ensure_project`, `ensure_change`, `record_observation` with the exact blocker/question, `record_task_progress` with phase `design`, status `blocked`, blockers/gaps, and next action `user answer`, then `record_handoff`. The summary MUST state `record_artifact: not needed — design artifact was not written because of blocking gap`. State `Artifact language: not selected — blocking gap` and `Language gate: not run — design artifact was not written`. This is blocked-state persistence, not completed design persistence.
@@ -97,7 +117,7 @@ Use minimal ensure payloads: `ensure_change` defaults to `project_id` and `chang
 
 On both paths, `record_task_progress` for phase `design` occurs before `record_handoff`.
 
-Do not return until all six operations have truthful terminal statuses. If required completed-path `record_artifact` or `record_observation` fails, append `Design persistence: file-only — <reason>`. If both succeed but progress or handoff fails, append `Pegasus Memory persistence incomplete/partial — <failed operation>: <reason>`. On the blocking path, `record_artifact: not needed` is truthful, but ensure/observation/progress/handoff failures require `Pegasus Memory persistence incomplete/partial — <failed operation>: <reason>`. Any required failure prevents a full durable-success claim.
+Do not return until all six operations have truthful terminal statuses. Keep the initial recovery result separate from later `ensure_project`, `ensure_change`, retry, or recovery transitions. Never rewrite an initial `not_found` as recovered or report both as the same state; record the initial result once and list subsequent transitions in order. If required completed-path `record_artifact` or `record_observation` fails, append `Design persistence: file-only — <reason>`. If both succeed but progress or handoff fails, append `Pegasus Memory persistence incomplete/partial — <failed operation>: <reason>`. On the blocking path, `record_artifact: not needed` is truthful, but ensure/observation/progress/handoff failures require `Pegasus Memory persistence incomplete/partial — <failed operation>: <reason>`. Any required failure prevents a full durable-success claim.
 
 ## Stopping point
 

@@ -33,6 +33,8 @@ For design closure, use Pegasus Memory/`pegasus-memory-mcp` terminology only: re
 
 In Greenfield context without concrete implementation stack, framework, or runtime evidence, `None` / `Ninguna` is invalid. Record stack/framework/runtime selection as a structured non-blocking deferred choice needed before tasks/apply, while preserving logical architecture independently of it. Narrative prose is insufficient for design closure: require exact `Artifact language:`, `Language gate:`, `Deferred technical choices:`, and the six-state `Pegasus Memory persistence summary:` structures. Spanish design uses the exact heading `Decisiones y compensaciones` and rejects `Tradeoffs`, `Costos y compromisos`, `Compensaciones`, and awkward composite headings.
 
+The design result records `Initial recovery result:` independently from ordered `Recovery/ensure transitions:`. An initial missing-project result remains the initial result after ensure/recovery succeeds; never collapse both moments into contradictory current-state claims.
+
 Each design artifact checks `MCP` per occurrence: only exact `protocolo MCP` and exact `pegasus-memory-mcp` are allowed; an allowed occurrence never permits a separate standalone `MCP` elsewhere.
 
 The complete task-progress payload records phase `spec`, artifact path, review semantics in descriptive fields or notes, open gaps/blockers, and next action `user review/approval`; its status uses only the supported enum.
