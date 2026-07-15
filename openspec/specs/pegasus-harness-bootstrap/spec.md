@@ -566,12 +566,23 @@ The system MUST create a PRD template and production-ready SDD templates under `
 
 - GIVEN the orchestrator delegates design to `sdd-design` in a fresh context
 - WHEN the specialist completes or blocks the phase
-- THEN `sdd-design` MUST return separate canonical fields for status, specialist agent, fresh-context delegation, artifact path, artifact writer/validator/persistence owner, artifact language, explicit non-English override evidence, language gate, marker validation, traceability validation, proposal risk coverage validation, deferred technical choices, initial recovery result, ordered recovery/ensure transitions, risks/blockers, and next action, plus the exact six-state Pegasus Memory persistence summary
+- THEN `sdd-design` MUST return separate canonical fields for status, specialist agent, fresh-context delegation, artifact path, artifact writer/validator/persistence owner, artifact language, explicit non-English override evidence, language gate, marker validation, traceability validation, proposal risk coverage validation, deferred technical choices, initial recovery result, ordered recovery/ensure transitions, final artifact revision, persistence artifact revision, post-persistence edits, risks/blockers, and next action, plus the exact six-state Pegasus Memory persistence summary
 - AND specialist/delegation fields MUST identify `sdd-design`, the fresh-context invocation, and `sdd-design` as artifact writer, validator, and persistence owner using only observable or returned evidence
 - AND a missing or partial field MUST block success and phase advancement
 - AND the orchestrator MUST reproduce the complete returned envelope verbatim or field-for-field with canonical English labels and unchanged data, even when transcript export omits nested-agent details
 - AND it MUST NOT narratively summarize success, request approval, or advance when any field or operation state is missing or partial
 - AND proposal-risk coverage validation is specialist-owned; the orchestrator MUST check only that its field and terminal state exist
+- AND successful closure MUST report matching final/persistence revision identities and exact `Post-persistence edits: none`; omission, rephrasing, another value, or mismatch MUST fail closed
+- AND after complete envelope reproduction the orchestrator MUST ask `¿Aprobás el diseño para avanzar a la fase de tareas?`; `Next action: review/approval` alone MUST NOT satisfy explicit approval
+
+#### Scenario: Design closure is atomic across artifact and persistence
+
+- GIVEN `sdd-design` is closing a completed design
+- WHEN it prepares durable completion evidence
+- THEN it MUST finish every content/formatting edit, fully reread, validate markers, language, per-entry traceability, proposal-risk design/test or measurement coverage, deferred choices, and sources, and freeze a content hash or explicit revision token before persistence
+- AND after ensure preconditions it MUST persist exactly `record_artifact`, `record_observation`, `record_task_progress`, then `record_handoff`
+- AND no artifact edit, repair, formatting rewrite, or content mutation may occur after any persistence operation begins
+- AND if a later edit occurs or is required, all earlier completion/persistence evidence is stale; success MUST remain blocked until full reread/validation, a new frozen revision, and refreshed affected persistence records in the required order complete
 
 #### Scenario: English design default survives Spanish context
 

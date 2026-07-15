@@ -85,12 +85,12 @@ esac
 "$PYTHON_BIN" "$CLI" --help >/dev/null
 version_output="$($PYTHON_BIN "$CLI" --version)"
 case "$version_output" in
-  "Pegasus Harness Bootstrap 0.6.2") ;;
+  "Pegasus Harness Bootstrap 0.6.3") ;;
   *) printf 'expected clear Pegasus product version output\n' >&2; exit 1 ;;
 esac
-assert_file_contains "$ROOT/pyproject.toml" 'version = "0.6.2"'
-assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.6.2"'
-assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.6.2'
+assert_file_contains "$ROOT/pyproject.toml" 'version = "0.6.3"'
+assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.6.3"'
+assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.6.3'
 assert_file_contains "$ROOT/README.md" 'La conversación con el usuario, este README y los mensajes públicos localizados pueden estar en español.'
 assert_file_contains "$ROOT/README.md" 'los prompts, las instrucciones, la comunicación interna entre agentes, la prosa descriptiva persistente de Pegasus Memory y los artefactos generados usan inglés de forma predeterminada.'
 assert_file_contains "$ROOT/README.md" 'El idioma de un artefacto generado cambia únicamente cuando el usuario indica de manera explícita el idioma para ese artefacto'
@@ -148,7 +148,7 @@ case "$default_plan" in
   *) printf 'expected default target path in dry-run output\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
-   *"Installed CLI version: 0.6.2"*"Source template version: 0.6.2"*) ;;
+   *"Installed CLI version: 0.6.3"*"Source template version: 0.6.3"*) ;;
   *) printf 'expected bootstrap plan version evidence\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
@@ -618,7 +618,7 @@ manifest_text = json.dumps(manifest)
 for forbidden in ("active_change", "activeChange", "last_change", "lastChange", "operational_memory", "operationalMemory", "memory_state", "memoryState", "recovery_state", "recoveryState"):
     assert forbidden not in manifest_text
 assert manifest["workspace"]["project_name"] == "sample-project"
-assert manifest["template_version"] == "0.6.2"
+assert manifest["template_version"] == "0.6.3"
 assert manifest["uninstall"]["remove_only_managed"] is True
 paths = {record["path"]: record for record in manifest["install"]["files"]}
 assert "AGENTS.md" in paths
@@ -626,8 +626,8 @@ assert ".vscode/mcp.json" in paths
 assert paths["AGENTS.md"]["ownership"] == "marker-managed"
 assert paths[".vscode/mcp.json"]["ownership"] == "full-file"
 assert paths[".github/agents/pegasus-orchestrator.agent.md"]["ownership"] == "full-file"
-assert all(record["package_version"] == "0.6.2" for record in paths.values())
-assert all(record["template_version"] == "0.6.2" for record in paths.values())
+assert all(record["package_version"] == "0.6.3" for record in paths.values())
+assert all(record["template_version"] == "0.6.3" for record in paths.values())
 assert manifest["install"]["skipped_conflicts"] == []
 PY
 
@@ -886,6 +886,13 @@ assert_file_contains "$target/.github/agents/sdd-design.agent.md" "**Completed p
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "**Language-gate failure path:** the artifact may exist only as an unpersisted local draft"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "record_artifact: not needed — language validation failed before artifact persistence"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Never claim full durable success"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Treat completed-path closure as one atomic sequence"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'record_artifact` → `record_observation` → `record_task_progress` → `record_handoff`'
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "No artifact mutation is permitted after the first persistence operation begins"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "all earlier completion and persistence evidence is stale"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Final artifact revision:"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Persistence artifact revision:"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Post-persistence edits:"
 for design_status in ensure_project ensure_change record_artifact record_observation record_task_progress record_handoff; do
   assert_file_contains "$target/.github/agents/sdd-design.agent.md" "$design_status: <succeeded|not needed|failed: reason>"
 done
@@ -922,6 +929,8 @@ assert_file_contains "$orchestrator" "reproduce the COMPLETE specialist result e
 assert_file_contains "$orchestrator" "verbatim when possible, or field-for-field"
 assert_file_contains "$orchestrator" "do not summarize success, request approval, or advance to tasks"
 assert_file_contains "$orchestrator" 'checks only that `Proposal risk coverage validation` exists'
+assert_file_contains "$orchestrator" 'Fail closed unless `Post-persistence edits: none` is exact'
+assert_file_contains "$orchestrator" '¿Aprobás el diseño para avanzar a la fase de tareas?'
 assert_file_contains "$target/.github/copilot-instructions.md" "MUST reproduce the complete canonical envelope verbatim or field-for-field"
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "MUST reproduce the complete canonical specialist envelope verbatim or field-for-field"
 assert_file_contains "$target/.github/copilot-instructions.md" "Lossy narrative summarization MUST NOT substitute for complete envelope reproduction"
@@ -1072,6 +1081,7 @@ for field in (
     "Language gate:", "Marker validation:", "Traceability validation:",
     "Proposal risk coverage validation:", "Deferred technical choices:",
     "Initial recovery result:", "Recovery/ensure transitions:", "Pegasus Memory persistence summary:",
+    "Final artifact revision:", "Persistence artifact revision:", "Post-persistence edits:",
     "Risks/blockers:", "Next action:",
 ):
     assert field in guidance
@@ -1081,6 +1091,28 @@ assert "<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/design.
 assert "<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/design.md -->" in template
 for text in ("Technical Context Classification", "Material Technical Decisions and Gaps", "Validation mapping for an explicit Spanish override only"):
     assert text in template
+
+required_persistence = ["record_artifact", "record_observation", "record_task_progress", "record_handoff"]
+
+def valid_atomic_trace(events: list[str]) -> bool:
+    first_write = next((index for index, event in enumerate(events) if event in required_persistence), len(events))
+    if any(event == "edit_artifact" for event in events[first_write + 1:]):
+        return False
+    writes = [event for event in events if event in required_persistence]
+    return writes == required_persistence
+
+assert valid_atomic_trace([
+    "edit_artifact", "full_reread", "validate_all", "freeze_revision",
+    "ensure_project", "ensure_change", *required_persistence, "return_envelope",
+])
+for operation in required_persistence:
+    trace = ["edit_artifact", "full_reread", "validate_all", "freeze_revision"]
+    for current in required_persistence:
+        trace.append(current)
+        if current == operation:
+            trace.append("edit_artifact")
+    assert not valid_atomic_trace(trace), operation
+assert not valid_atomic_trace(["edit_artifact", "full_reread", "validate_all", "freeze_revision", "record_observation", "record_artifact", "record_task_progress", "record_handoff"])
 PY
 "$PYTHON_BIN" - "$target/.github/agents/pegasus-orchestrator.agent.md" <<'PY'
 import sys
@@ -1093,6 +1125,7 @@ fields = (
     "Explicit language override evidence", "Language gate", "Marker validation",
     "Traceability validation", "Proposal risk coverage validation",
     "Deferred technical choices", "Initial recovery result", "Recovery/ensure transitions",
+    "Final artifact revision", "Persistence artifact revision", "Post-persistence edits",
     "Risks/blockers", "Next action",
 )
 operations = (
@@ -1106,6 +1139,11 @@ def validate_envelope(text: str) -> bool:
     if not all(field in labels for field in fields):
         return False
     if "Pegasus Memory persistence summary:" not in lines:
+        return False
+    values = dict(line.split(": ", 1) for line in lines if ": " in line)
+    if values.get("Post-persistence edits") != "none":
+        return False
+    if values.get("Final artifact revision") != values.get("Persistence artifact revision"):
         return False
     return all(any(line.startswith(f"{operation}: ") for line in lines) for operation in operations)
 
@@ -1124,6 +1162,9 @@ complete = "\n".join([
     "Deferred technical choices: None",
     "Initial recovery result: not_found",
     "Recovery/ensure transitions: ensure_project succeeded -> ensure_change succeeded",
+    "Final artifact revision: sha256:abc123",
+    "Persistence artifact revision: sha256:abc123",
+    "Post-persistence edits: none",
     "Risks/blockers: None",
     "Next action: review/approval",
     "Pegasus Memory persistence summary:",
@@ -1133,13 +1174,21 @@ complete = "\n".join([
 def orchestrator_final(specialist_result: str) -> str:
     if not validate_envelope(specialist_result):
         return "Status: blocked\nRisks/blockers: incomplete specialist result envelope"
-    return specialist_result
+    return specialist_result + "\n¿Aprobás el diseño para avanzar a la fase de tareas?"
 
-assert orchestrator_final(complete) == complete
+assert orchestrator_final(complete) == complete + "\n¿Aprobás el diseño para avanzar a la fase de tareas?"
 partial = complete.replace("Proposal risk coverage validation: passed\n", "")
 assert not validate_envelope(partial)
 assert orchestrator_final(partial) != partial
 assert "blocked" in orchestrator_final(partial)
+mismatch = complete.replace("Persistence artifact revision: sha256:abc123", "Persistence artifact revision: sha256:def456")
+assert not validate_envelope(mismatch)
+edited = complete.replace("Post-persistence edits: none", "Post-persistence edits: detected: formatting rewrite")
+assert not validate_envelope(edited)
+rephrased = complete.replace("Post-persistence edits: none", "No edits after persistence: true")
+assert not validate_envelope(rephrased)
+assert "¿Aprobás el diseño para avanzar a la fase de tareas?" in orchestrator_final(complete)
+assert "Next action: review/approval" in complete
 assert "reproduce the COMPLETE specialist result envelope" in guidance
 assert "do not summarize success, request approval, or advance to tasks" in guidance
 PY
@@ -1509,7 +1558,7 @@ esac
 cmp "$TMP/recovery-manifest-before.json" "$recovery_target/.pegasus-bootstrap-ia/manifest.json" || { printf 'normal bootstrap rewrote historical manifest metadata\n' >&2; exit 1; }
 recovery_dry_output="$($PYTHON_BIN "$CLI" --target-path "$recovery_target" --sync-workspace --dry-run)"
 case "$recovery_dry_output" in
-   *"Installed CLI version: 0.6.2"*"Source template version: 0.6.2"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
+   *"Installed CLI version: 0.6.3"*"Source template version: 0.6.3"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
   *) printf 'expected empty-manifest dry-run recovery and version evidence\n' >&2; exit 1 ;;
 esac
 assert_file_contains "$recovery_target/.github/agents/sdd-spec.agent.md" 'STALE PEGASUS SPEC AGENT'
@@ -1530,8 +1579,8 @@ from pathlib import Path
 
 manifest = json.loads(Path(sys.argv[1]).read_text())
 records = {record["path"]: record for record in manifest["ownership"]["files"]}
-assert manifest["template_version"] == "0.6.2"
-assert manifest["package_version"] == "0.6.2"
+assert manifest["template_version"] == "0.6.3"
+assert manifest["package_version"] == "0.6.3"
 assert records[".github/agents/sdd-spec.agent.md"]["action"] == "recovered"
 assert not any(path.startswith("docs/pegasus/") for path in records)
 PY

@@ -1,4 +1,4 @@
-# Pegasus Harness Bootstrap 0.6.2
+# Pegasus Harness Bootstrap 0.6.3
 
 Herramienta local de inicialización para configurar un harness de Pegasus orientado a VS Code/Copilot en un workspace de destino. El workspace generado contiene guías, plantillas SDD, recursos de Copilot y archivos secundarios de compatibilidad heredada con Cursor; no genera código de aplicación, metadatos de Git, CI, despliegues ni recursos remotos.
 
@@ -16,7 +16,7 @@ Para consultar en cualquier momento la versión instalada del producto:
 
 ```sh
 pegasus-harness-bootstrap --version
-# Pegasus Harness Bootstrap 0.6.2
+# Pegasus Harness Bootstrap 0.6.3
 ```
 
 Para el uso cotidiano fuera de este checkout, instale la CLI con `pipx`:
@@ -33,7 +33,7 @@ Si una inicialización interrumpida anteriormente dejó un manifiesto válido co
 
 Después de una ejecución correcta, abra el workspace de destino en VS Code con GitHub Copilot y comience desde el agente personalizado del orquestador de Pegasus ubicado en `.github/agents/pegasus-orchestrator.agent.md`.
 
-La versión 0.6.2 preserva la delegación obligatoria y refuerza el límite del coordinador: `sdd-design` escribe, valida y persiste el diseño, mientras el orquestador reproduce completo el sobre de resultados devuelto antes de solicitar aprobación. Además, cada riesgo aprobado de la propuesta debe quedar cubierto por el diseño y por una prueba o medición aplicable. El diseño sigue usando inglés salvo que el usuario nombre explícitamente otro idioma para ese artefacto.
+La versión 0.6.3 hace atómico el cierre de `sdd-design`: el especialista termina y relee el artefacto, valida todos sus contratos, congela una identidad de revisión y recién entonces persiste en el orden requerido, sin permitir mutaciones posteriores. El sobre completo incluye esa identidad y confirma `Post-persistence edits: none`; el orquestador falla de forma cerrada ante omisiones, ediciones posteriores o revisiones divergentes, reproduce todos los campos y formula una pregunta explícita de aprobación.
 
 ## Idioma del producto y de los artefactos
 
