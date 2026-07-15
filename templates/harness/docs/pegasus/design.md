@@ -101,6 +101,14 @@ TBD
 | Integration | TBD | TBD | `docs/pegasus/changes/<change-id>/verify.md` |
 | Manual / runtime | TBD | TBD | `docs/pegasus/changes/<change-id>/verify.md` |
 
+## Proposal Risk Coverage
+
+Every approved proposal risk requires its own row. Map it to at least one design risk and, when mitigation depends on validation or measurement, at least one testing row. Use an explicit N/A rationale only when testing or measurement cannot mitigate the risk. Mobile rendering performance and other platform-specific performance risks MUST NOT be omitted.
+
+| Proposal risk reference | Design risk entry | Mitigation | Test / measurement entry or N/A rationale | Owner | Trigger |
+|-------------------------|-------------------|------------|--------------------------------------------|-------|---------|
+| Proposal `## Risks`: <exact risk text or stable ID> | Risks and Open Questions: <row reference> | TBD | Testing Strategy: <row reference> / N/A: <reason> | TBD | TBD / N/A |
+
 ## Rollout / Rollback
 
 | Topic | Plan | Requirement / evidence traceability | Trigger |
@@ -111,7 +119,7 @@ TBD
 
 ## Risks and Open Questions
 
-| Risk or question | Impact | Mitigation / owner | Evidence / traceability | Needed-by |
-|------------------|--------|--------------------|-------------------------|-----------|
-| TBD | TBD | TBD | TBD | TBD |
+| Risk or question | Impact | Mitigation | Source proposal risk / evidence | Owner / trigger | Needed-by |
+|------------------|--------|------------|---------------------------------|-----------------|-----------|
+| TBD | TBD | TBD | Proposal `## Risks`: exact risk reference / repository evidence | TBD | TBD |
 <!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/design.md -->

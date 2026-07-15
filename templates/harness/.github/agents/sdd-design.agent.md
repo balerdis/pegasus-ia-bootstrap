@@ -67,6 +67,8 @@ Update the design with:
 - A dedicated `Deferred Technical Choices` table with complete deferred fields, or an explicit `None` / `Ninguna` row only when permitted by the Greenfield stack-evidence rule.
 - Evidence-based affected areas, test strategy, rollout/rollback, risks, and material-gap dispositions.
 - Per-entry traceability for every flow step, alternative, affected area, testing row, rollout/rollback row, and risk row. Each entry names a spec requirement or explicit repository-evidence reference; a section heading, generic source statement, or traceability elsewhere does not satisfy an entry.
+- A complete `Proposal Risk Coverage` matrix. Every risk in the approved proposal MUST have at least one design-risk row with the exact proposal risk reference and mitigation. When mitigation depends on validation or measurement, it MUST also have at least one testing-strategy row; otherwise record an explicit N/A rationale. Include owner and trigger where relevant. Missing proposal risks, including mobile rendering performance risks, block completion.
+- Specialist-owned proposal-risk coverage validation after rereading the proposal, design risks, coverage matrix, and testing strategy. The orchestrator checks only the returned validation field and never performs this validation itself.
 
 ## Pegasus Memory closure contract
 
@@ -76,8 +78,10 @@ Narrative prose does not satisfy the final-response contract. The final response
 Artifact language: <selected language>
 Explicit language override evidence: <exact user instruction/reference|None — English default enforced>
 Language gate: <passed|blocked: exact unresolved issues>
+Marker validation: <passed|blocked: exact marker issues>
+Traceability validation: <passed|blocked: exact per-entry traceability issues>
+Proposal risk coverage validation: <passed|blocked: exact missing risk/design/test coverage>
 Deferred technical choices: <structured summary of every choice and next gate|None / Ninguna>
-Marker and traceability validation: <passed|blocked: exact marker or per-entry traceability issues>
 Initial recovery result: <not_found|ambiguous|recovered|read_error|unavailable|other truthful result>
 Recovery/ensure transitions: <ordered transitions after initial recovery, or None>
 ```
@@ -96,13 +100,12 @@ Then include:
 
 ```text
 Status: <completed|blocked>
+Specialist agent: sdd-design
+Fresh-context delegation: confirmed by orchestrator invocation
 Artifact path: <path|not written>
+Artifact writer/validator/persistence owner: sdd-design
 Risks/blockers: <concise summary|None>
 Next action: <review/approval|user answer|repair language gate|other exact action>
-Delegation evidence:
-specialist agent: sdd-design
-fresh-context invocation: confirmed by orchestrator invocation
-artifact writer/validator/persistence owner: sdd-design
 ```
 
 These fields form the mandatory specialist result envelope. Return every field with a truthful value; missing or partial fields block orchestrator success and advancement. Report only invocation and work observable in this context or returned by tools; do not claim hidden platform internals.
@@ -137,6 +140,7 @@ Stop when the design is ready for review and has no blocking gap. The final resp
 - [ ] Every material technical gap has a reconciled disposition.
 - [ ] Deferred choices are in the dedicated table with every required field, or an explicit `None` / `Ninguna` row permitted by the Greenfield stack-evidence rule.
 - [ ] Decisions trace to spec requirements or explicit evidence.
+- [ ] Every approved proposal risk has design-risk coverage and test/measurement coverage or an explicit N/A rationale; proposal-risk coverage validation passed.
 - [ ] Exact markers and artifact-language gate passed before persistence.
 - [ ] Pegasus Memory progress precedes handoff and truthfully reflects blockers.
 - [ ] No tasks or implementation content were created.

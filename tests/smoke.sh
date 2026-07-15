@@ -85,12 +85,12 @@ esac
 "$PYTHON_BIN" "$CLI" --help >/dev/null
 version_output="$($PYTHON_BIN "$CLI" --version)"
 case "$version_output" in
-  "Pegasus Harness Bootstrap 0.6.1") ;;
+  "Pegasus Harness Bootstrap 0.6.2") ;;
   *) printf 'expected clear Pegasus product version output\n' >&2; exit 1 ;;
 esac
-assert_file_contains "$ROOT/pyproject.toml" 'version = "0.6.1"'
-assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.6.1"'
-assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.6.1'
+assert_file_contains "$ROOT/pyproject.toml" 'version = "0.6.2"'
+assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.6.2"'
+assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.6.2'
 assert_file_contains "$ROOT/README.md" 'La conversación con el usuario, este README y los mensajes públicos localizados pueden estar en español.'
 assert_file_contains "$ROOT/README.md" 'los prompts, las instrucciones, la comunicación interna entre agentes, la prosa descriptiva persistente de Pegasus Memory y los artefactos generados usan inglés de forma predeterminada.'
 assert_file_contains "$ROOT/README.md" 'El idioma de un artefacto generado cambia únicamente cuando el usuario indica de manera explícita el idioma para ese artefacto'
@@ -148,7 +148,7 @@ case "$default_plan" in
   *) printf 'expected default target path in dry-run output\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
-   *"Installed CLI version: 0.6.1"*"Source template version: 0.6.1"*) ;;
+   *"Installed CLI version: 0.6.2"*"Source template version: 0.6.2"*) ;;
   *) printf 'expected bootstrap plan version evidence\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
@@ -618,7 +618,7 @@ manifest_text = json.dumps(manifest)
 for forbidden in ("active_change", "activeChange", "last_change", "lastChange", "operational_memory", "operationalMemory", "memory_state", "memoryState", "recovery_state", "recoveryState"):
     assert forbidden not in manifest_text
 assert manifest["workspace"]["project_name"] == "sample-project"
-assert manifest["template_version"] == "0.6.1"
+assert manifest["template_version"] == "0.6.2"
 assert manifest["uninstall"]["remove_only_managed"] is True
 paths = {record["path"]: record for record in manifest["install"]["files"]}
 assert "AGENTS.md" in paths
@@ -626,8 +626,8 @@ assert ".vscode/mcp.json" in paths
 assert paths["AGENTS.md"]["ownership"] == "marker-managed"
 assert paths[".vscode/mcp.json"]["ownership"] == "full-file"
 assert paths[".github/agents/pegasus-orchestrator.agent.md"]["ownership"] == "full-file"
-assert all(record["package_version"] == "0.6.1" for record in paths.values())
-assert all(record["template_version"] == "0.6.1" for record in paths.values())
+assert all(record["package_version"] == "0.6.2" for record in paths.values())
+assert all(record["template_version"] == "0.6.2" for record in paths.values())
 assert manifest["install"]["skipped_conflicts"] == []
 PY
 
@@ -865,11 +865,14 @@ assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Artifact lang
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Language gate: <passed|blocked: exact unresolved issues>"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Deferred technical choices: <structured summary of every choice and next gate|None / Ninguna>"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Explicit language override evidence: <exact user instruction/reference|None — English default enforced>"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Marker and traceability validation: <passed|blocked: exact marker or per-entry traceability issues>"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Marker validation: <passed|blocked: exact marker issues>"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Traceability validation: <passed|blocked: exact per-entry traceability issues>"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Proposal risk coverage validation: <passed|blocked: exact missing risk/design/test coverage>"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Initial recovery result:"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Recovery/ensure transitions:"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Delegation evidence:"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "artifact writer/validator/persistence owner: sdd-design"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Specialist agent: sdd-design"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Fresh-context delegation: confirmed by orchestrator invocation"
+assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Artifact writer/validator/persistence owner: sdd-design"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Spanish chat, Spanish approved sources"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "every flow step, alternative, affected area, testing row, rollout/rollback row, and risk row"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Narrative prose does not satisfy the final-response contract"
@@ -915,6 +918,14 @@ assert_file_contains "$orchestrator" "sole artifact writer, validator, and persi
 assert_file_contains "$orchestrator" "A missing or partial envelope blocks success and phase advancement"
 assert_file_contains "$orchestrator" "without claiming direct artifact validation"
 assert_file_contains "$orchestrator" "explicitly ask the user to approve the design phase"
+assert_file_contains "$orchestrator" "reproduce the COMPLETE specialist result envelope"
+assert_file_contains "$orchestrator" "verbatim when possible, or field-for-field"
+assert_file_contains "$orchestrator" "do not summarize success, request approval, or advance to tasks"
+assert_file_contains "$orchestrator" 'checks only that `Proposal risk coverage validation` exists'
+assert_file_contains "$target/.github/copilot-instructions.md" "MUST reproduce the complete canonical envelope verbatim or field-for-field"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "MUST reproduce the complete canonical specialist envelope verbatim or field-for-field"
+assert_file_contains "$target/.github/copilot-instructions.md" "Lossy narrative summarization MUST NOT substitute for complete envelope reproduction"
+assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "Lossy narrative summarization MUST NOT substitute for complete envelope reproduction"
 assert_file_contains "$orchestrator" "understanding requires reading 4 or more files"
 assert_file_contains "$orchestrator" "implementation touches 2 or more non-trivial files"
 assert_file_contains "$orchestrator" "tests/builds/installs/external tooling must run"
@@ -1022,6 +1033,9 @@ assert_file_contains "$target/docs/pegasus/design.md" "Why non-blocking"
 assert_file_contains "$target/docs/pegasus/design.md" "Evidence / traceability"
 assert_file_contains "$target/docs/pegasus/design.md" "canonical template only"
 assert_file_contains "$target/docs/pegasus/design.md" "## Deferred Technical Choices"
+assert_file_contains "$target/docs/pegasus/design.md" "## Proposal Risk Coverage"
+assert_file_contains "$target/docs/pegasus/design.md" "Mobile rendering performance"
+assert_file_contains "$target/docs/pegasus/design.md" "Proposal risk reference | Design risk entry | Mitigation | Test / measurement entry or N/A rationale | Owner | Trigger"
 assert_file_contains "$target/docs/pegasus/design.md" "Choice / topic | Status | Owner | Impact | Next step | Needed-by gate | Invariant architecture | Why non-blocking | Evidence / source"
 assert_file_contains "$target/docs/pegasus/design.md" "| None | N/A |"
 assert_file_contains "$target/docs/pegasus/design.md" 'in Greenfield context without concrete implementation stack, framework, or runtime evidence, `None` (or its selected-language translation) is invalid'
@@ -1053,10 +1067,12 @@ assert guidance.index("record_observation") < guidance.index("record_task_progre
 assert guidance.index("Repair affected blocks, reread the whole artifact, revalidate markers, and rerun the gate") < guidance.index("An unresolved language gate failure blocks artifact persistence and success")
 assert "Use generic MCP terminology" not in guidance
 for field in (
-    "Status:", "Artifact path:", "Artifact language:", "Explicit language override evidence:",
-    "Language gate:", "Deferred technical choices:", "Marker and traceability validation:",
+    "Status:", "Specialist agent:", "Fresh-context delegation:", "Artifact path:",
+    "Artifact writer/validator/persistence owner:", "Artifact language:", "Explicit language override evidence:",
+    "Language gate:", "Marker validation:", "Traceability validation:",
+    "Proposal risk coverage validation:", "Deferred technical choices:",
     "Initial recovery result:", "Recovery/ensure transitions:", "Pegasus Memory persistence summary:",
-    "Risks/blockers:", "Next action:", "Delegation evidence:",
+    "Risks/blockers:", "Next action:",
 ):
     assert field in guidance
 for section in ("flow step", "alternative", "affected area", "testing row", "rollout/rollback row", "risk row"):
@@ -1065,6 +1081,112 @@ assert "<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/design.
 assert "<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/design.md -->" in template
 for text in ("Technical Context Classification", "Material Technical Decisions and Gaps", "Validation mapping for an explicit Spanish override only"):
     assert text in template
+PY
+"$PYTHON_BIN" - "$target/.github/agents/pegasus-orchestrator.agent.md" <<'PY'
+import sys
+from pathlib import Path
+
+guidance = Path(sys.argv[1]).read_text()
+fields = (
+    "Status", "Specialist agent", "Fresh-context delegation", "Artifact path",
+    "Artifact writer/validator/persistence owner", "Artifact language",
+    "Explicit language override evidence", "Language gate", "Marker validation",
+    "Traceability validation", "Proposal risk coverage validation",
+    "Deferred technical choices", "Initial recovery result", "Recovery/ensure transitions",
+    "Risks/blockers", "Next action",
+)
+operations = (
+    "ensure_project", "ensure_change", "record_artifact", "record_observation",
+    "record_task_progress", "record_handoff",
+)
+
+def validate_envelope(text: str) -> bool:
+    lines = text.splitlines()
+    labels = {line.split(":", 1)[0] for line in lines if ":" in line}
+    if not all(field in labels for field in fields):
+        return False
+    if "Pegasus Memory persistence summary:" not in lines:
+        return False
+    return all(any(line.startswith(f"{operation}: ") for line in lines) for operation in operations)
+
+complete = "\n".join([
+    "Status: completed",
+    "Specialist agent: sdd-design",
+    "Fresh-context delegation: confirmed by orchestrator invocation",
+    "Artifact path: docs/pegasus/changes/mobile/design.md",
+    "Artifact writer/validator/persistence owner: sdd-design",
+    "Artifact language: English",
+    "Explicit language override evidence: None — English default enforced",
+    "Language gate: passed",
+    "Marker validation: passed",
+    "Traceability validation: passed",
+    "Proposal risk coverage validation: passed",
+    "Deferred technical choices: None",
+    "Initial recovery result: not_found",
+    "Recovery/ensure transitions: ensure_project succeeded -> ensure_change succeeded",
+    "Risks/blockers: None",
+    "Next action: review/approval",
+    "Pegasus Memory persistence summary:",
+    *[f"{operation}: succeeded" for operation in operations],
+])
+
+def orchestrator_final(specialist_result: str) -> str:
+    if not validate_envelope(specialist_result):
+        return "Status: blocked\nRisks/blockers: incomplete specialist result envelope"
+    return specialist_result
+
+assert orchestrator_final(complete) == complete
+partial = complete.replace("Proposal risk coverage validation: passed\n", "")
+assert not validate_envelope(partial)
+assert orchestrator_final(partial) != partial
+assert "blocked" in orchestrator_final(partial)
+assert "reproduce the COMPLETE specialist result envelope" in guidance
+assert "do not summarize success, request approval, or advance to tasks" in guidance
+PY
+"$PYTHON_BIN" - "$target/.github/copilot-instructions.md" "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" <<'PY'
+import sys
+from pathlib import Path
+
+active_guidance = "\n".join(Path(path).read_text() for path in sys.argv[1:])
+legacy_permissions = (
+    "The orchestrator summarizes this envelope",
+    "It MUST summarize the specialist envelope",
+)
+
+def permits_summarize_only(text: str) -> bool:
+    return any(permission in text for permission in legacy_permissions)
+
+assert not permits_summarize_only(active_guidance)
+negative_fixture = active_guidance + "\nIt MUST summarize the specialist envelope without claiming direct artifact validation."
+assert permits_summarize_only(negative_fixture)
+assert "Lossy narrative summarization MUST NOT substitute for complete envelope reproduction" in active_guidance
+PY
+"$PYTHON_BIN" - "$target/docs/pegasus/design.md" <<'PY'
+import sys
+from pathlib import Path
+
+template = Path(sys.argv[1]).read_text()
+
+def validate_risk_coverage(proposal_risks, design_risks, testing_rows, na_rationales):
+    missing_design = [risk for risk in proposal_risks if risk not in design_risks]
+    missing_test = [
+        risk for risk in proposal_risks
+        if risk not in testing_rows and not na_rationales.get(risk)
+    ]
+    return missing_design, missing_test
+
+mobile_risk = "Mobile rendering performance may miss the target frame rate"
+proposal = [mobile_risk, "Offline state may be lost"]
+design = {mobile_risk: "profile render loop", "Offline state may be lost": "durable local state"}
+tests = {mobile_risk: "measure frame time on target mobile device"}
+na = {"Offline state may be lost": "Persistence recovery is verified by integration behavior, not performance measurement"}
+assert validate_risk_coverage(proposal, design, tests, na) == ([], [])
+
+missing_design, missing_test = validate_risk_coverage(proposal, {proposal[1]: design[proposal[1]]}, {}, na)
+assert missing_design == [mobile_risk]
+assert missing_test == [mobile_risk]
+assert "## Proposal Risk Coverage" in template
+assert "Mobile rendering performance" in template
 PY
 "$PYTHON_BIN" - "$target/.github/agents/sdd-design.agent.md" "$target/docs/pegasus/design.md" <<'PY'
 import sys
@@ -1387,7 +1509,7 @@ esac
 cmp "$TMP/recovery-manifest-before.json" "$recovery_target/.pegasus-bootstrap-ia/manifest.json" || { printf 'normal bootstrap rewrote historical manifest metadata\n' >&2; exit 1; }
 recovery_dry_output="$($PYTHON_BIN "$CLI" --target-path "$recovery_target" --sync-workspace --dry-run)"
 case "$recovery_dry_output" in
-   *"Installed CLI version: 0.6.1"*"Source template version: 0.6.1"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
+   *"Installed CLI version: 0.6.2"*"Source template version: 0.6.2"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
   *) printf 'expected empty-manifest dry-run recovery and version evidence\n' >&2; exit 1 ;;
 esac
 assert_file_contains "$recovery_target/.github/agents/sdd-spec.agent.md" 'STALE PEGASUS SPEC AGENT'
@@ -1408,8 +1530,8 @@ from pathlib import Path
 
 manifest = json.loads(Path(sys.argv[1]).read_text())
 records = {record["path"]: record for record in manifest["ownership"]["files"]}
-assert manifest["template_version"] == "0.6.1"
-assert manifest["package_version"] == "0.6.1"
+assert manifest["template_version"] == "0.6.2"
+assert manifest["package_version"] == "0.6.2"
 assert records[".github/agents/sdd-spec.agent.md"]["action"] == "recovered"
 assert not any(path.startswith("docs/pegasus/") for path in records)
 PY

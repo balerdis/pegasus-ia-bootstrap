@@ -24,8 +24,9 @@ rules:
     - Use RFC 2119 keywords (MUST, SHOULD, MAY)
   design:
     - Document decisions with rationale
-    - Delegate design to fresh-context sdd-design; the orchestrator validates only its complete result envelope
+    - Delegate design to fresh-context sdd-design; the orchestrator validates completeness and reproduces the specialist result envelope verbatim or field-for-field
     - Require per-entry traceability for flow, alternatives, affected areas, testing, rollout/rollback, and risks
+    - Require specialist-owned coverage of every approved proposal risk in design risks and applicable testing or explicit N/A rationale
   tasks:
     - Keep tasks small and session-completable
   apply:
