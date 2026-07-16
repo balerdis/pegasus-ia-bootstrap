@@ -1,4 +1,4 @@
-# Pegasus Harness Bootstrap 0.6.5
+# Pegasus Harness Bootstrap 0.6.6
 
 Herramienta local de inicialización para configurar un harness de Pegasus orientado a VS Code/Copilot en un workspace de destino. El workspace generado contiene guías, plantillas SDD, recursos de Copilot y archivos secundarios de compatibilidad heredada con Cursor; no genera código de aplicación, metadatos de Git, CI, despliegues ni recursos remotos.
 
@@ -16,7 +16,7 @@ Para consultar en cualquier momento la versión instalada del producto:
 
 ```sh
 pegasus-harness-bootstrap --version
-# Pegasus Harness Bootstrap 0.6.5
+# Pegasus Harness Bootstrap 0.6.6
 ```
 
 Para el uso cotidiano fuera de este checkout, instale la CLI con `pipx`:
@@ -33,7 +33,7 @@ Si una inicialización interrumpida anteriormente dejó un manifiesto válido co
 
 Después de una ejecución correcta, abra el workspace de destino en VS Code con GitHub Copilot y comience desde el agente personalizado del orquestador de Pegasus ubicado en `.github/agents/pegasus-orchestrator.agent.md`.
 
-La versión 0.6.5 hace irreversible el cierre de `sdd-tasks`: congela SHA-256 antes de persistir, usa esa misma revisión en progreso y handoff, y prohíbe editar o recalcular después. Sin una decisión explícita actual, la estrategia permanece `pending` con evidencia `none`; el orquestador debe reproducir todo el sobre plano, conservar rangos numéricos y pedir exactamente las tres opciones antes de apply.
+La versión 0.6.6 completa el contrato de `sdd-tasks`: exige evidencia pendiente exacta, desglose reconciliado por tipo de línea, dependencias acíclicas y consistentes, ruta canónica completa, una única pregunta de estrategia y exactamente un handoff exitoso por revisión final cuando la invocación es observable.
 
 ## Idioma del producto y de los artefactos
 

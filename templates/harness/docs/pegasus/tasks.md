@@ -64,7 +64,14 @@ Test scope: TBD
 Focused test command: TBD
 Runtime validation: TBD or N/A with reason
 Rollback boundary: TBD
-Estimated authored changed lines: TBD range
+Depends on: none or comma-separated work-unit IDs
+Required by: none or comma-separated work-unit IDs
+Estimated authored code changed lines: 0 or TBD range
+Estimated authored test changed lines: 0 or TBD range
+Estimated authored docs changed lines: 0 or TBD range
+Estimated authored config changed lines: 0 or TBD range
+Estimated authored changed lines: TBD total range
+Estimated generated changed lines: none or TBD range
 
 - [ ] 1.1 TBD
 - [ ] 1.2 TBD
@@ -104,5 +111,7 @@ Estimated authored changed lines: TBD range
 - Do not mark apply or verify complete from this phase.
 - Stop and ask before apply if any exact guard line above says a decision is needed.
 - When a decision is needed and no explicit current user choice exists, keep `Chain strategy: pending`, `Strategy decision evidence: none`, and `Size-exception approval evidence: none`; never infer a choice from design, risk, delivery preference, memory, architecture, a previous session, defaults, or generic text. `size:exception` requires both a current user selection and a distinct recorded maintainer approval.
+- Every work unit states authored code, tests, docs, and config ranges separately, including explicit `0` values, plus one authored total and a generated range or `none`. Component minima and maxima must reconcile with the authored total range.
+- Treat `Depends on` and `Required by` as one dependency graph. Every referenced work unit must exist, inverse declarations must agree, and the graph must contain no contradiction, self-dependency, or cycle.
 
 <!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/tasks.md -->

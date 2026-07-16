@@ -85,12 +85,12 @@ esac
 "$PYTHON_BIN" "$CLI" --help >/dev/null
 version_output="$($PYTHON_BIN "$CLI" --version)"
 case "$version_output" in
-  "Pegasus Harness Bootstrap 0.6.5") ;;
+  "Pegasus Harness Bootstrap 0.6.6") ;;
   *) printf 'expected clear Pegasus product version output\n' >&2; exit 1 ;;
 esac
-assert_file_contains "$ROOT/pyproject.toml" 'version = "0.6.5"'
-assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.6.5"'
-assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.6.5'
+assert_file_contains "$ROOT/pyproject.toml" 'version = "0.6.6"'
+assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.6.6"'
+assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.6.6'
 assert_file_contains "$ROOT/README.md" 'La conversación con el usuario, este README y los mensajes públicos localizados pueden estar en español.'
 assert_file_contains "$ROOT/README.md" 'los prompts, las instrucciones, la comunicación interna entre agentes, la prosa descriptiva persistente de Pegasus Memory y los artefactos generados usan inglés de forma predeterminada.'
 assert_file_contains "$ROOT/README.md" 'El idioma de un artefacto generado cambia únicamente cuando el usuario indica de manera explícita el idioma para ese artefacto'
@@ -148,7 +148,7 @@ case "$default_plan" in
   *) printf 'expected default target path in dry-run output\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
-    *"Installed CLI version: 0.6.5"*"Source template version: 0.6.5"*) ;;
+    *"Installed CLI version: 0.6.6"*"Source template version: 0.6.6"*) ;;
   *) printf 'expected bootstrap plan version evidence\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
@@ -618,7 +618,7 @@ manifest_text = json.dumps(manifest)
 for forbidden in ("active_change", "activeChange", "last_change", "lastChange", "operational_memory", "operationalMemory", "memory_state", "memoryState", "recovery_state", "recoveryState"):
     assert forbidden not in manifest_text
 assert manifest["workspace"]["project_name"] == "sample-project"
-assert manifest["template_version"] == "0.6.5"
+assert manifest["template_version"] == "0.6.6"
 assert manifest["uninstall"]["remove_only_managed"] is True
 paths = {record["path"]: record for record in manifest["install"]["files"]}
 assert "AGENTS.md" in paths
@@ -626,8 +626,8 @@ assert ".vscode/mcp.json" in paths
 assert paths["AGENTS.md"]["ownership"] == "marker-managed"
 assert paths[".vscode/mcp.json"]["ownership"] == "full-file"
 assert paths[".github/agents/pegasus-orchestrator.agent.md"]["ownership"] == "full-file"
-assert all(record["package_version"] == "0.6.5" for record in paths.values())
-assert all(record["template_version"] == "0.6.5" for record in paths.values())
+assert all(record["package_version"] == "0.6.6" for record in paths.values())
+assert all(record["template_version"] == "0.6.6" for record in paths.values())
 assert manifest["install"]["skipped_conflicts"] == []
 PY
 
@@ -1237,6 +1237,7 @@ envelope_fields = (
     "Recovery/ensure transitions", "Risks/blockers", "Decision required", "Next action",
 )
 operations = ("ensure_project", "ensure_change", "record_task_progress", "record_handoff")
+canonical_artifact_path = "docs/pegasus/changes/mobile/tasks.md"
 
 def valid_current_strategy_evidence(strategy: str, evidence_id: str, evidence_events: dict[str, dict[str, object]]) -> bool:
     event = evidence_events.get(evidence_id, {})
@@ -1267,6 +1268,8 @@ def validate_envelope(text: str, evidence_events: dict[str, dict[str, object]] |
         return False
     if "Pegasus Memory persistence summary:" not in lines:
         return False
+    if values.get("Artifact path") != canonical_artifact_path:
+        return False
     if values.get("Post-persistence edits") != "none":
         return False
     if values.get("Final tasks revision") != values.get("Persistence tasks revision"):
@@ -1286,7 +1289,46 @@ def validate_envelope(text: str, evidence_events: dict[str, dict[str, object]] |
             return False
     elif approval_id != "none":
         return False
+    if values.get("record_handoff invocation") not in {"call-final-abc123", "not observable"}:
+        return False
     return all(values.get(operation) in {"succeeded", "not needed"} for operation in operations)
+
+def valid_estimate_breakdown(unit: dict[str, tuple[int, int] | None]) -> bool:
+    components = [unit.get(name) for name in ("code", "tests", "docs", "config")]
+    total = unit.get("total")
+    if any(value is None for value in components) or total is None or "generated" not in unit:
+        return False
+    minimum = sum(value[0] for value in components if value is not None)
+    maximum = sum(value[1] for value in components if value is not None)
+    return total[0] <= minimum <= total[1] and total[0] <= maximum <= total[1]
+
+def valid_dependency_graph(units: dict[str, dict[str, set[str]]]) -> bool:
+    names = set(units)
+    for name, links in units.items():
+        if name in links["depends"] or not links["depends"] <= names or not links["required_by"] <= names:
+            return False
+        if any(name not in units[dependency]["required_by"] for dependency in links["depends"]):
+            return False
+        if any(name not in units[dependent]["depends"] for dependent in links["required_by"]):
+            return False
+    visiting, visited = set(), set()
+    def visit(name: str) -> bool:
+        if name in visiting:
+            return False
+        if name in visited:
+            return True
+        visiting.add(name)
+        if not all(visit(dependency) for dependency in units[name]["depends"]):
+            return False
+        visiting.remove(name)
+        visited.add(name)
+        return True
+    return all(visit(name) for name in names)
+
+def exactly_one_handoff(events: list[tuple[str, str]]) -> bool:
+    invocations = {identity for kind, identity in events if kind == "invocation"}
+    successful = {identity for kind, identity in events if kind == "result:succeeded"}
+    return len(invocations) == 1 and invocations == successful
 
 def parse_tool_events(raw: str) -> list[tuple[str, str | None]]:
     parsed = []
@@ -1328,7 +1370,8 @@ complete = "\n".join([
     "Post-persistence edits: none", "Initial recovery result: found",
     "Recovery/ensure transitions: found -> ensure_project not needed -> ensure_change not needed",
     "Pegasus Memory persistence summary:", "ensure_project: not needed", "ensure_change: not needed",
-    "record_task_progress: succeeded", "record_handoff: succeeded", "Risks/blockers: High review load",
+    "record_task_progress: succeeded", "record_handoff: succeeded", "record_handoff invocation: call-final-abc123",
+    "Risks/blockers: High review load",
     "Decision required: Yes", "Next action: user strategy decision",
 ])
 assert validate_envelope(complete)
@@ -1349,6 +1392,30 @@ assert not validate_envelope(complete.replace("Forecast validation: passed\n", "
 assert not validate_envelope(complete.replace("Persistence tasks revision: sha256:abc123", "Persistence tasks revision: sha256:def456"))
 assert not validate_envelope(complete.replace("Post-persistence edits: none", "Post-persistence edits: detected: rewrite"))
 assert not validate_envelope(complete.replace("Chain strategy: pending", "Chain strategy: feature-branch-chain"))
+assert not validate_envelope(complete.replace(canonical_artifact_path, "tasks.md"))
+assert not validate_envelope(complete.replace(canonical_artifact_path, "docs/tasks.md"))
+assert not validate_envelope(complete.replace("Strategy decision evidence: none\n", ""))
+assert not validate_envelope(complete.replace("Size-exception approval evidence: none\n", ""))
+
+valid_breakdown = {"code": (120, 140), "tests": (50, 60), "docs": (0, 0), "config": (10, 15), "total": (180, 215), "generated": None}
+assert valid_estimate_breakdown(valid_breakdown)
+assert not valid_estimate_breakdown({key: value for key, value in valid_breakdown.items() if key != "docs"})
+assert not valid_estimate_breakdown({**valid_breakdown, "total": (100, 120)})
+valid_dependencies = {
+    "WU1": {"depends": set(), "required_by": {"WU2"}},
+    "WU2": {"depends": {"WU1"}, "required_by": {"WU3"}},
+    "WU3": {"depends": {"WU2"}, "required_by": set()},
+}
+assert valid_dependency_graph(valid_dependencies)
+contradiction = {name: {key: set(value) for key, value in links.items()} for name, links in valid_dependencies.items()}
+contradiction["WU1"]["required_by"] = set()
+assert not valid_dependency_graph(contradiction)
+cycle = {name: {key: set(value) for key, value in links.items()} for name, links in valid_dependencies.items()}
+cycle["WU1"]["depends"] = {"WU3"}
+cycle["WU3"]["required_by"] = {"WU1"}
+assert not valid_dependency_graph(cycle)
+assert exactly_one_handoff([("invocation", "call-final"), ("result:succeeded", "call-final")])
+assert not exactly_one_handoff([("invocation", "call-1"), ("result:succeeded", "call-1"), ("invocation", "call-2"), ("result:succeeded", "call-2")])
 
 evidence_events = {
     "current-stacked": {"source": "current_user", "session": "current", "kind": "strategy_selection", "strategy": "stacked-to-main", "explicit": True},
@@ -1399,6 +1466,9 @@ assert all(option in strategy_question for option in ("stacked-to-main", "featur
 generic_pause = "La previsión requiere una decisión. ¿Cómo seguimos?"
 assert not all(option in generic_pause for option in ("stacked-to-main", "feature-branch-chain", "size:exception"))
 assert "No se iniciará apply hasta que respondas." in strategy_question
+paraphrased_question = strategy_question.replace("Elegís", "Preferís")
+assert paraphrased_question != strategy_question
+assert orchestrator_guidance.replace("\\`", "`").count(strategy_question) == 1
 
 def orchestrator_flat_output(envelope: str) -> str:
     if not validate_envelope(envelope):
@@ -1420,6 +1490,8 @@ assert orchestrator_flat_output(generic_output).startswith("Status: blocked")
 lines = template.splitlines()
 assert lines[0] == "<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/tasks.md ownership=full-file -->"
 assert lines[-1] == "<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/tasks.md -->"
+for exact_pending_line in ("Strategy decision evidence: <exact current-session user quote/message reference|none>", "Size-exception approval evidence: <distinct current maintainer approval quote/message reference|none>"):
+    assert exact_pending_line in template
 PY
 "$PYTHON_BIN" - "$target/.github/copilot-instructions.md" "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" <<'PY'
 import sys
@@ -1787,7 +1859,7 @@ esac
 cmp "$TMP/recovery-manifest-before.json" "$recovery_target/.pegasus-bootstrap-ia/manifest.json" || { printf 'normal bootstrap rewrote historical manifest metadata\n' >&2; exit 1; }
 recovery_dry_output="$($PYTHON_BIN "$CLI" --target-path "$recovery_target" --sync-workspace --dry-run)"
 case "$recovery_dry_output" in
-    *"Installed CLI version: 0.6.5"*"Source template version: 0.6.5"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
+    *"Installed CLI version: 0.6.6"*"Source template version: 0.6.6"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
   *) printf 'expected empty-manifest dry-run recovery and version evidence\n' >&2; exit 1 ;;
 esac
 assert_file_contains "$recovery_target/.github/agents/sdd-spec.agent.md" 'STALE PEGASUS SPEC AGENT'
@@ -1808,8 +1880,8 @@ from pathlib import Path
 
 manifest = json.loads(Path(sys.argv[1]).read_text())
 records = {record["path"]: record for record in manifest["ownership"]["files"]}
-assert manifest["template_version"] == "0.6.5"
-assert manifest["package_version"] == "0.6.5"
+assert manifest["template_version"] == "0.6.6"
+assert manifest["package_version"] == "0.6.6"
 assert records[".github/agents/sdd-spec.agent.md"]["action"] == "recovered"
 assert not any(path.startswith("docs/pegasus/") for path in records)
 PY

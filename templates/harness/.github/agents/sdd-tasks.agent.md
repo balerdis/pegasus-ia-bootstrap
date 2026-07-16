@@ -47,14 +47,16 @@ Update `docs/pegasus/changes/<change-id>/tasks.md` with:
 - `Estimated authored changed lines: <range>`
 - `Estimated generated changed lines: <range|none>`
 - `Tests included in estimate: Yes`
-- Reviewable implementation slices with dependency/order.
+- Reviewable implementation slices with a logically consistent, acyclic dependency graph.
 - Verification expected per slice.
 - Risk notes and rollback boundary per slice.
 - Progress notes for handoff.
 
 ## Stopping point
 
-Authored estimates include code, tests, docs, config, and migrations. Generated goldens, snapshots, and fixtures are excluded from authored count but included in generated estimates and full snapshot identity. Every work unit MUST declare `Implementation scope:`, `Test scope:`, `Focused test command:`, `Runtime validation:`, `Rollback boundary:`, and `Estimated authored changed lines:` and keep tests with behavior.
+Authored estimates include code, tests, docs, config, and migrations. Generated goldens, snapshots, and fixtures are excluded from authored count but included in generated estimates and full snapshot identity. Every work unit MUST declare `Implementation scope:`, `Test scope:`, `Focused test command:`, `Runtime validation:`, `Rollback boundary:`, `Depends on:`, `Required by:`, separate `Estimated authored code changed lines:`, `Estimated authored test changed lines:`, `Estimated authored docs changed lines:`, and `Estimated authored config changed lines:`, plus `Estimated authored changed lines:` and `Estimated generated changed lines:`. Components may be `0` but may not be omitted; component minima/maxima must reasonably reconcile with the authored total range. Keep tests with behavior.
+
+Construct the work-unit dependency graph during validation. Every referenced ID MUST exist, `WU2 Depends on: WU1` MUST be mirrored by `WU1 Required by: WU2`, a unit declaring `Required by: none` MUST NOT have an inbound dependent, and self-dependencies, contradictory inverse declarations, and cycles block completion.
 
 Stop after producing the task plan and return control to the orchestrator. Forecast and propose autonomous work units, but do not choose the final delivery strategy or ask the user yourself. The orchestrator owns any required user consultation after tasks and before apply.
 
@@ -63,16 +65,16 @@ Stop after producing the task plan and return control to the orchestrator. Forec
 `sdd-tasks` is the sole tasks artifact writer, validator, and persistence owner. Execute this concrete closure algorithm exactly once and in order:
 
 1. Finish every tasks artifact edit.
-2. Then fully reread the artifact and validate artifact language, exact first/last managed markers, current-change source identity, exactly seven forecast lines and values, work-unit completeness/count/assigned scope, authored/generated estimate separation, test inclusion, and the strategy/evidence rule below.
+2. Then fully reread the artifact and validate artifact language, exact first/last managed markers, current-change source identity, exactly seven forecast lines and values, both exact pending evidence lines when pending, work-unit completeness/count/assigned scope, per-unit authored code/test/docs/config breakdown and reconciled total, generated estimate, the complete acyclic dependency graph, test inclusion, and the strategy/evidence rule below.
 3. Compute and freeze the SHA-256 `Final tasks revision` from that validated final content before any completion persistence call. Set `Persistence tasks revision` in every persistence payload and the envelope to that same frozen value.
 4. Only now satisfy `ensure_project` and `ensure_change` preconditions when needed.
 5. Call `record_task_progress` for phase `tasks`, carrying the frozen revision.
-6. Call `record_handoff`, carrying the same frozen revision.
+6. Call `record_handoff` exactly once for this final revision, carrying the same frozen revision. Record one observable invocation identity and its result when the platform exposes identity; an invocation display followed by its result is one invocation, not two.
 7. Return the complete envelope.
 
 In short, after freeze and any required ensures, persist `record_task_progress` for phase `tasks`, then `record_handoff`, with the same frozen revision in both payloads.
 
-Calling or attempting `record_task_progress` or `record_handoff` before the SHA-256 revision is frozen is prohibited. After the freeze there are no artifact edits and no hash recomputation; a required later edit blocks this closure instead of restarting or refreshing persistence inside the same run.
+Calling or attempting `record_task_progress` or `record_handoff` before the SHA-256 revision is frozen is prohibited. After the freeze there are no artifact edits and no hash recomputation; a required later edit blocks this closure instead of restarting or refreshing persistence inside the same run. Completed closure requires exactly one successful `record_handoff` invocation for the final revision. Reject known duplicate invocation identities or multiple confirmed invocations; do not count one invocation event plus its corresponding result event as duplicates.
 
 When `Decision needed before apply: Yes` and no explicit current user strategy decision is recorded, `Chain strategy` MUST be exactly `pending`, `Strategy decision evidence` MUST be exactly `none`, and `Size-exception approval evidence` MUST be exactly `none`. A resolved strategy requires an observable current-session user message that explicitly selects that exact strategy; record its exact quote or message reference. Evidence from a design recommendation, memory, cached preference, architecture, previous conversation/session, default, inference, or fabricated/generic text is invalid. `size:exception` additionally requires a distinct observable current fact recording maintainer approval; user selection alone is insufficient. A non-`pending` strategy with invalid/missing selection evidence, or a `size:exception` without distinct maintainer approval evidence, fails forecast validation and blocks persistence, envelope completion, and apply.
 
@@ -114,12 +116,13 @@ ensure_project: <succeeded|not needed|failed: reason>
 ensure_change: <succeeded|not needed|failed: reason>
 record_task_progress: <succeeded|not needed|failed: reason>
 record_handoff: <succeeded|not needed|failed: reason>
+record_handoff invocation: <one observable invocation identity|not observable>
 Risks/blockers: <None|exact risks/blockers>
 Decision required: <Yes|No>
 Next action: <user strategy decision|ready for apply authorization|exact blocker>
 ```
 
-The envelope forecast values MUST exactly reproduce the seven artifact forecast lines. Before user choice, it MUST include exact `Chain strategy: pending`, `Strategy decision evidence: none`, and `Size-exception approval evidence: none`. Persistence states must be truthful: never report `succeeded` for an omitted operation. Completed closure requires matching frozen SHA-256 revisions and exact `Post-persistence edits: none`.
+The envelope forecast values MUST exactly reproduce the seven artifact forecast lines. Before user choice, both the artifact and envelope MUST include the exact standalone lines `Strategy decision evidence: none` and `Size-exception approval evidence: none`. Persistence states must be truthful: never report `succeeded` for an omitted operation. Completed closure requires matching frozen SHA-256 revisions, exact `Post-persistence edits: none`, and exactly one successful `record_handoff` invocation for that final revision when invocation count is observable.
 
 ## Forbidden scope
 
