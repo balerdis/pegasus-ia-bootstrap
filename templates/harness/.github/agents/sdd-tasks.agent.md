@@ -11,7 +11,7 @@ Execute the assigned tasks phase directly in this context. Do not delegate or la
 
 Follow `.github/instructions/pegasus-sdd-boundaries.instructions.md` for artifact and internal-communication language. Tasks output defaults to English unless the user explicitly names another language for that artifact.
 
-Break the approved current-change spec and design into small, reviewable implementation slices in `docs/pegasus/changes/<change-id>/tasks.md`.
+Break the approved current-change spec and design into small, reviewable implementation slices at the canonical output path supplied by the orchestrator.
 
 Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health` succeeds, proactively save task progress, blockers, review budget assessment, chained/sliced PR decisions, next approved slice, and artifact references through MCP; merge updates instead of replacing useful history.
 
@@ -20,6 +20,7 @@ Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health`
 - `docs/pegasus/changes/<change-id>/spec.md` exists and is approved.
 - `docs/pegasus/changes/<change-id>/design.md` exists and is approved.
 - The user or orchestrator identifies the change/request to plan.
+- The orchestrator supplies the current change ID and required canonical output path as separate explicit data values.
 
 If the design is not approved, stop. Session preflight review budget and delivery preference are inputs, not the workload forecast or final delivery decision.
 
@@ -65,12 +66,13 @@ Stop after producing the task plan and return control to the orchestrator. Forec
 `sdd-tasks` is the sole tasks artifact writer, validator, and persistence owner. Execute this concrete closure algorithm exactly once and in order:
 
 1. Finish every tasks artifact edit.
-2. Then fully reread the artifact and validate artifact language, exact first/last managed markers, current-change source identity, exactly seven forecast lines and values, both exact pending evidence lines when pending, work-unit completeness/count/assigned scope, per-unit authored code/test/docs/config breakdown and reconciled total, generated estimate, the complete acyclic dependency graph, test inclusion, and the strategy/evidence rule below.
-3. Compute and freeze the SHA-256 `Final tasks revision` from that validated final content before any completion persistence call. Set `Persistence tasks revision` in every persistence payload and the envelope to that same frozen value.
-4. Only now satisfy `ensure_project` and `ensure_change` preconditions when needed.
-5. Call `record_task_progress` for phase `tasks`, carrying the frozen revision.
-6. Call `record_handoff` exactly once for this final revision, carrying the same frozen revision. Record one observable invocation identity and its result when the platform exposes identity; an invocation display followed by its result is one invocation, not two.
-7. Return the complete envelope.
+2. Construct the envelope `Artifact path` directly as `docs/pegasus/changes/` + the supplied current change ID + `/tasks.md`; never copy, shorten, or derive it from a tool result, returned filename, basename, or artifact metadata.
+3. Then fully reread the artifact and validate artifact language, exact first/last managed markers, current-change source identity, exact equality between the constructed `Artifact path` and the supplied canonical output path, exactly seven forecast lines and values, both exact pending evidence lines when pending, work-unit completeness/count/assigned scope, per-unit authored code/test/docs/config breakdown and reconciled total, generated estimate, the complete acyclic dependency graph, test inclusion, and the strategy/evidence rule below. A short, absolute, or different-change path blocks persistence and return.
+4. Compute and freeze the SHA-256 `Final tasks revision` from that validated final content before any completion persistence call. Set `Persistence tasks revision` in every persistence payload and the envelope to that same frozen value.
+5. Only now satisfy `ensure_project` and `ensure_change` preconditions when needed.
+6. Call `record_task_progress` for phase `tasks`, carrying the frozen revision.
+7. Call `record_handoff` exactly once for this final revision, carrying the same frozen revision. Record one observable invocation identity and its result when the platform exposes identity; an invocation display followed by its result is one invocation, not two.
+8. Return the complete envelope.
 
 In short, after freeze and any required ensures, persist `record_task_progress` for phase `tasks`, then `record_handoff`, with the same frozen revision in both payloads.
 
@@ -86,7 +88,7 @@ Return this mandatory flat envelope with every canonical English label on its ow
 Status: <completed|blocked>
 Specialist agent: sdd-tasks
 Fresh-context delegation: confirmed by orchestrator invocation
-Artifact path: docs/pegasus/changes/<change-id>/tasks.md
+Artifact path: <exact constructed canonical output path>
 Artifact writer/validator/persistence owner: sdd-tasks
 Artifact language: <selected language>
 Explicit language override evidence: <exact user instruction/reference|None — English default enforced>

@@ -85,12 +85,12 @@ esac
 "$PYTHON_BIN" "$CLI" --help >/dev/null
 version_output="$($PYTHON_BIN "$CLI" --version)"
 case "$version_output" in
-  "Pegasus Harness Bootstrap 0.6.6") ;;
+  "Pegasus Harness Bootstrap 0.6.7") ;;
   *) printf 'expected clear Pegasus product version output\n' >&2; exit 1 ;;
 esac
-assert_file_contains "$ROOT/pyproject.toml" 'version = "0.6.6"'
-assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.6.6"'
-assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.6.6'
+assert_file_contains "$ROOT/pyproject.toml" 'version = "0.6.7"'
+assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.6.7"'
+assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.6.7'
 assert_file_contains "$ROOT/README.md" 'La conversación con el usuario, este README y los mensajes públicos localizados pueden estar en español.'
 assert_file_contains "$ROOT/README.md" 'los prompts, las instrucciones, la comunicación interna entre agentes, la prosa descriptiva persistente de Pegasus Memory y los artefactos generados usan inglés de forma predeterminada.'
 assert_file_contains "$ROOT/README.md" 'El idioma de un artefacto generado cambia únicamente cuando el usuario indica de manera explícita el idioma para ese artefacto'
@@ -148,7 +148,7 @@ case "$default_plan" in
   *) printf 'expected default target path in dry-run output\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
-    *"Installed CLI version: 0.6.6"*"Source template version: 0.6.6"*) ;;
+    *"Installed CLI version: 0.6.7"*"Source template version: 0.6.7"*) ;;
   *) printf 'expected bootstrap plan version evidence\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
@@ -618,7 +618,7 @@ manifest_text = json.dumps(manifest)
 for forbidden in ("active_change", "activeChange", "last_change", "lastChange", "operational_memory", "operationalMemory", "memory_state", "memoryState", "recovery_state", "recoveryState"):
     assert forbidden not in manifest_text
 assert manifest["workspace"]["project_name"] == "sample-project"
-assert manifest["template_version"] == "0.6.6"
+assert manifest["template_version"] == "0.6.7"
 assert manifest["uninstall"]["remove_only_managed"] is True
 paths = {record["path"]: record for record in manifest["install"]["files"]}
 assert "AGENTS.md" in paths
@@ -626,8 +626,8 @@ assert ".vscode/mcp.json" in paths
 assert paths["AGENTS.md"]["ownership"] == "marker-managed"
 assert paths[".vscode/mcp.json"]["ownership"] == "full-file"
 assert paths[".github/agents/pegasus-orchestrator.agent.md"]["ownership"] == "full-file"
-assert all(record["package_version"] == "0.6.6" for record in paths.values())
-assert all(record["template_version"] == "0.6.6" for record in paths.values())
+assert all(record["package_version"] == "0.6.7" for record in paths.values())
+assert all(record["template_version"] == "0.6.7" for record in paths.values())
 assert manifest["install"]["skipped_conflicts"] == []
 PY
 
@@ -904,6 +904,9 @@ assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Estimated auth
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Estimated generated changed lines: <range|none>"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Tests included in estimate: Yes"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "sole tasks artifact writer, validator, and persistence owner"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" 'Construct the envelope `Artifact path` directly'
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" 'never copy, shorten, or derive it from a tool result'
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" 'exact equality between the constructed `Artifact path` and the supplied canonical output path'
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "fully reread the artifact"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "exactly seven forecast lines and values"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" 'persist `record_task_progress` for phase `tasks`, then `record_handoff`'
@@ -962,6 +965,9 @@ assert_file_contains "$orchestrator" "Explicitly consume those returned values"
 assert_file_contains "$orchestrator" 'La previsión requiere definir la estrategia antes de apply.'
 assert_file_contains "$orchestrator" 'No se iniciará apply hasta que respondas.'
 assert_file_contains "$orchestrator" "A request that asks only for tasks still requires this post-tasks review-guard question"
+assert_file_contains "$orchestrator" 'Current change ID: <change-id>'
+assert_file_contains "$orchestrator" 'Required canonical output path: docs/pegasus/changes/<change-id>/tasks.md'
+assert_file_contains "$orchestrator" 'Backtick characters are not required in a flat export.'
 assert_file_contains "$orchestrator" "Until that record exists, B2/apply is blocked"
 assert_file_contains "$orchestrator" "change ID plus phase and, for apply, task-slice ID"
 if grep -Eq '^  - (edit|execute)$' "$orchestrator"; then
@@ -1215,6 +1221,7 @@ assert "reproduce the COMPLETE specialist result envelope" in guidance
 assert "do not summarize success, request approval, or advance to tasks" in guidance
 PY
 "$PYTHON_BIN" - "$target/.github/agents/sdd-tasks.agent.md" "$target/.github/agents/pegasus-orchestrator.agent.md" "$ROOT/templates/harness/docs/pegasus/tasks.md" <<'PY'
+import re
 import sys
 from pathlib import Path
 
@@ -1238,6 +1245,42 @@ envelope_fields = (
 )
 operations = ("ensure_project", "ensure_change", "record_task_progress", "record_handoff")
 canonical_artifact_path = "docs/pegasus/changes/mobile/tasks.md"
+
+handoff_match = re.search(r'(?m)^  - label: Plan tasks\n    agent: sdd-tasks\n    prompt: "([^"]+)"$', orchestrator_guidance)
+assert handoff_match
+delegated_prompt = handoff_match.group(1).replace(r"\n", "\n")
+required_prompt_data = (
+    "Current change ID: <change-id>",
+    "Required canonical output path: docs/pegasus/changes/<change-id>/tasks.md",
+    "Approved artifact references:",
+    "docs/pegasus/changes/<change-id>/prd.md",
+    "docs/pegasus/changes/<change-id>/proposal.md",
+    "docs/pegasus/changes/<change-id>/spec.md",
+    "docs/pegasus/changes/<change-id>/design.md",
+    "Scope: tasks only.",
+    "Boundary: Do not implement or launch apply.",
+)
+for required in required_prompt_data:
+    assert required in delegated_prompt
+
+forbidden_prompt_hints = (
+    r"forecast", r"chain strategy", r"stacked-to-main", r"feature-branch-chain", r"size:exception",
+    r"budget risk", r"\b(?:low|medium|high) risk\b", r"estimated .*changed lines", r"\b[0-9,]+-[0-9,]+\b",
+    r"tests included", r"work-unit count", r"strategy decision evidence", r"size-exception approval evidence",
+    r"decision evidence none", r"strategy pending",
+)
+def valid_tasks_delegation_prompt(prompt: str) -> bool:
+    return all(required in prompt for required in required_prompt_data) and not any(
+        re.search(pattern, prompt, re.IGNORECASE) for pattern in forbidden_prompt_hints
+    )
+
+assert valid_tasks_delegation_prompt(delegated_prompt)
+for forbidden_fixture in (
+    "Forecast validation: passed", "Chain strategy: pending", "400-line budget risk: High",
+    "Estimated authored changed lines: 590-720", "Tests included in estimate: Yes",
+    "Work-unit count: 3", "Strategy decision evidence: none", "Size-exception approval evidence: none",
+):
+    assert not valid_tasks_delegation_prompt(f"{delegated_prompt}\n{forbidden_fixture}"), forbidden_fixture
 
 def valid_current_strategy_evidence(strategy: str, evidence_id: str, evidence_events: dict[str, dict[str, object]]) -> bool:
     event = evidence_events.get(evidence_id, {})
@@ -1394,6 +1437,8 @@ assert not validate_envelope(complete.replace("Post-persistence edits: none", "P
 assert not validate_envelope(complete.replace("Chain strategy: pending", "Chain strategy: feature-branch-chain"))
 assert not validate_envelope(complete.replace(canonical_artifact_path, "tasks.md"))
 assert not validate_envelope(complete.replace(canonical_artifact_path, "docs/tasks.md"))
+assert not validate_envelope(complete.replace(canonical_artifact_path, "/workspace/docs/pegasus/changes/mobile/tasks.md"))
+assert not validate_envelope(complete.replace(canonical_artifact_path, "docs/pegasus/changes/other-change/tasks.md"))
 assert not validate_envelope(complete.replace("Strategy decision evidence: none\n", ""))
 assert not validate_envelope(complete.replace("Size-exception approval evidence: none\n", ""))
 
@@ -1452,6 +1497,16 @@ for invalid_id in (
     assert not validate_envelope(resolved_envelope("stacked-to-main", invalid_id), evidence_events), invalid_id
 
 strategy_question = "La previsión requiere definir la estrategia antes de apply. ¿Elegís `stacked-to-main`, `feature-branch-chain` o una excepción `size:exception` aprobada por el maintainer? No se iniciará apply hasta que respondas."
+plain_strategy_question = strategy_question.replace("`", "")
+def valid_exported_strategy_question(question: str) -> bool:
+    return question.replace("`", "") == plain_strategy_question
+
+assert valid_exported_strategy_question(strategy_question)
+assert valid_exported_strategy_question(plain_strategy_question)
+assert not valid_exported_strategy_question(plain_strategy_question.replace("feature-branch-chain", "feature-chain"))
+assert not valid_exported_strategy_question(plain_strategy_question.replace("stacked-to-main, feature-branch-chain", "feature-branch-chain, stacked-to-main"))
+assert not valid_exported_strategy_question(plain_strategy_question.replace("Elegís", "Preferís"))
+assert not valid_exported_strategy_question(plain_strategy_question.replace(" No se iniciará apply hasta que respondas.", ""))
 def may_launch_apply(envelope: str, evidence_events: dict[str, dict[str, object]]) -> bool:
     values = dict(line.split(": ", 1) for line in envelope.splitlines() if ": " in line)
     gated = values.get("Decision needed before apply") == "Yes" or values.get("Chained PRs recommended") == "Yes" or values.get("400-line budget risk") == "High"
@@ -1859,7 +1914,7 @@ esac
 cmp "$TMP/recovery-manifest-before.json" "$recovery_target/.pegasus-bootstrap-ia/manifest.json" || { printf 'normal bootstrap rewrote historical manifest metadata\n' >&2; exit 1; }
 recovery_dry_output="$($PYTHON_BIN "$CLI" --target-path "$recovery_target" --sync-workspace --dry-run)"
 case "$recovery_dry_output" in
-    *"Installed CLI version: 0.6.6"*"Source template version: 0.6.6"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
+    *"Installed CLI version: 0.6.7"*"Source template version: 0.6.7"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
   *) printf 'expected empty-manifest dry-run recovery and version evidence\n' >&2; exit 1 ;;
 esac
 assert_file_contains "$recovery_target/.github/agents/sdd-spec.agent.md" 'STALE PEGASUS SPEC AGENT'
@@ -1880,8 +1935,8 @@ from pathlib import Path
 
 manifest = json.loads(Path(sys.argv[1]).read_text())
 records = {record["path"]: record for record in manifest["ownership"]["files"]}
-assert manifest["template_version"] == "0.6.6"
-assert manifest["package_version"] == "0.6.6"
+assert manifest["template_version"] == "0.6.7"
+assert manifest["package_version"] == "0.6.7"
 assert records[".github/agents/sdd-spec.agent.md"]["action"] == "recovered"
 assert not any(path.startswith("docs/pegasus/") for path in records)
 PY
