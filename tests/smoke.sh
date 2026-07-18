@@ -58,9 +58,11 @@ expected_files=(
   ".github/references/shared/result-envelope.md"
   ".github/references/shared/status-readiness.md"
   ".github/references/shared/skill-resolution.md"
+  ".github/references/orchestration/routing.md"
   ".github/references/phases/apply.md"
   ".github/references/phases/verify.md"
   ".github/references/results/apply-result-v1.md"
+  ".github/references/results/orchestrator-result-v1.md"
   ".github/references/results/verify-result-v1.md"
   ".github/agents/sdd-verify.agent.md"
   ".github/agents/session-handoff.agent.md"
@@ -99,7 +101,9 @@ expected = {
     prefix + "shared/skill-resolution.md",
     prefix + "phases/apply.md",
     prefix + "phases/verify.md",
+    prefix + "orchestration/routing.md",
     prefix + "results/apply-result-v1.md",
+    prefix + "results/orchestrator-result-v1.md",
     prefix + "results/verify-result-v1.md",
 }
 with ZipFile(wheel) as archive:
@@ -395,6 +399,9 @@ references="$target/.github/references"
 apply_reference="$references/phases/apply.md"
 verify_agent="$target/.github/agents/sdd-verify.agent.md"
 verify_reference="$references/phases/verify.md"
+orchestrator_agent="$target/.github/agents/pegasus-orchestrator.agent.md"
+orchestrator_reference="$references/orchestration/routing.md"
+sdd_router="$target/.github/prompts/sdd-phases.prompt.md"
 persistence_reference="$references/shared/persistence.md"
 assert_file_contains "$apply_agent" 'exactly one authorized task-slice identity'
 assert_file_contains "$apply_agent" 'If the workload forecast requires a decision'
@@ -430,6 +437,22 @@ apply_body_lines=$(awk 'BEGIN { frontmatter=0; body=0 } /^---$/ { frontmatter++;
 [ "$apply_body_lines" -le 30 ] || { printf 'sdd-apply macro exceeds 30 body lines\n' >&2; exit 1; }
 verify_body_lines=$(awk 'BEGIN { frontmatter=0; body=0 } /^---$/ { frontmatter++; next } frontmatter >= 2 { body++ } END { print body }' "$verify_agent")
 [ "$verify_body_lines" -le 30 ] || { printf 'sdd-verify macro exceeds 30 body lines\n' >&2; exit 1; }
+orchestrator_body_lines=$(awk 'BEGIN { frontmatter=0; body=0 } /^---$/ { frontmatter++; next } frontmatter >= 2 { body++ } END { print body }' "$orchestrator_agent")
+[ "$orchestrator_body_lines" -le 35 ] || { printf 'orchestrator macro exceeds 35 body lines\n' >&2; exit 1; }
+assert_file_contains "$orchestrator_agent" 'You are the user-facing coordinator, never a phase executor.'
+assert_file_contains "$orchestrator_agent" 'Every owned phase MUST use one fresh matching specialist delegation.'
+assert_file_contains "$orchestrator_agent" 'immediately return `blocked-missing-reference`'
+assert_file_contains "$orchestrator_agent" 'alternate, renamed, backup, neighboring, or similarly named copies'
+assert_file_contains "$orchestrator_agent" 'Missing delegation capability, an unavailable specialist, a failed launch, or an absent/invalid result MUST block'
+assert_file_contains "$orchestrator_agent" 'Before ANY `agent` dispatch, derive the exact launch identity'
+assert_file_contains "$orchestrator_agent" 'establish from canonical allowed state that it is not in progress, not completed, and authorized exactly once'
+assert_file_contains "$orchestrator_agent" 'Missing, unreadable, ambiguous, stale, or contradictory duplicate state blocks before delegation.'
+assert_file_contains "$orchestrator_agent" 'Never infer clear state, rely on user wording, or dispatch then report the gate state afterward.'
+assert_file_contains "$orchestrator_agent" 'Never claim a delegation, specialist action, artifact mutation, validation, test, install, persistence operation, or success that did not observably occur.'
+assert_file_contains "$orchestrator_reference" 'Unresolved strategy blocks Apply launch.'
+assert_file_contains "$orchestrator_reference" 'Never launch a duplicate.'
+assert_file_contains "$sdd_router" 'This prompt is launch-only.'
+assert_file_contains "$sdd_router" 'Launch exactly one fresh `pegasus-orchestrator`'
 if grep -Eq '^## (Input contract|Required reads|Output contract|Stopping point|Forbidden scope|Merge/update rules|Phase-specific checklist)$' "$verify_agent"; then
   printf 'sdd-verify macro retains duplicated normative workflow body\n' >&2
   exit 1
@@ -445,8 +468,8 @@ data_files = config["tool"]["setuptools"]["data-files"]
 expected = {
     "shared/authority.md", "shared/phase-common.md", "shared/delegation-ownership.md",
     "shared/persistence.md", "shared/result-envelope.md", "shared/status-readiness.md",
-    "shared/skill-resolution.md", "phases/apply.md", "phases/verify.md",
-    "results/apply-result-v1.md", "results/verify-result-v1.md",
+    "shared/skill-resolution.md", "orchestration/routing.md", "phases/apply.md", "phases/verify.md",
+    "results/apply-result-v1.md", "results/orchestrator-result-v1.md", "results/verify-result-v1.md",
 }
 base = root / "templates/harness/.github/references"
 actual = set()
@@ -467,7 +490,7 @@ import sys
 
 canonical, generated = map(Path, sys.argv[1:])
 references = sorted((canonical / ".github/references").rglob("*.md"))
-for source_path in [canonical / ".github/agents/sdd-apply.agent.md", canonical / ".github/agents/sdd-verify.agent.md", *references]:
+for source_path in [canonical / ".github/agents/pegasus-orchestrator.agent.md", canonical / ".github/agents/sdd-apply.agent.md", canonical / ".github/agents/sdd-verify.agent.md", canonical / ".github/prompts/sdd-phases.prompt.md", *references]:
     relative = source_path.relative_to(canonical)
     source = source_path.read_text(encoding="utf-8").rstrip("\n")
     installed = (generated / relative).read_text(encoding="utf-8").splitlines()
@@ -484,17 +507,18 @@ verify_agent = (root / ".github/agents/sdd-verify.agent.md").read_text(encoding=
 reference_root = root / ".github/references"
 expected = [
     "shared/authority.md", "shared/phase-common.md", "shared/delegation-ownership.md",
-    "shared/skill-resolution.md", "shared/persistence.md", "phases/apply.md",
+    "shared/skill-resolution.md", "shared/persistence.md", "orchestration/routing.md", "phases/apply.md",
     "phases/verify.md", "shared/status-readiness.md", "shared/result-envelope.md",
-    "results/apply-result-v1.md", "results/verify-result-v1.md",
+    "results/apply-result-v1.md", "results/orchestrator-result-v1.md", "results/verify-result-v1.md",
 ]
 actual_files = {path.relative_to(reference_root).as_posix() for path in reference_root.rglob("*.md")}
 assert actual_files == set(expected), (actual_files, set(expected))
 assert not (reference_root / "pegasus-shared-authority.md").exists()
 assert not (reference_root / "sdd-apply-phase.md").exists()
 
-apply_expected = [path for path in expected if path not in {"phases/verify.md", "results/verify-result-v1.md"}]
-verify_expected = [path for path in expected if path not in {"phases/apply.md", "results/apply-result-v1.md"}]
+orchestrator_only = {"orchestration/routing.md", "results/orchestrator-result-v1.md"}
+apply_expected = [path for path in expected if path not in orchestrator_only | {"phases/verify.md", "results/verify-result-v1.md"}]
+verify_expected = [path for path in expected if path not in orchestrator_only | {"phases/apply.md", "results/apply-result-v1.md"}]
 for agent, paths in ((apply_agent, apply_expected), (verify_agent, verify_expected)):
     positions = [agent.index(f".github/references/{path}") for path in paths]
     assert positions == sorted(positions), positions
@@ -545,9 +569,11 @@ owners = {
     "shared/result-envelope.md": "invariant specialist result-envelope semantics only",
     "shared/status-readiness.md": "generic status selection and readiness claims",
     "shared/skill-resolution.md": "exact skill paths supplied in its invocation context",
+    "orchestration/routing.md": "orchestration routing, dispatch, authorization, and returned-result validation only",
     "phases/apply.md": "detailed `sdd-apply` workflow",
     "phases/verify.md": "only the detailed `sdd-verify` workflow",
     "results/apply-result-v1.md": "Apply v1 result schema",
+    "results/orchestrator-result-v1.md": "only the coordinator result schema",
     "results/verify-result-v1.md": "only the Verify v1 result schema",
 }
 texts = {path: (reference_root / path).read_text(encoding="utf-8") for path in owners}
@@ -622,21 +648,6 @@ fi
 assert_file_contains "$target/docs/pegasus/apply-progress.md" "Current In-Progress Work"
 assert_file_contains "$target/docs/pegasus/apply-progress.md" "Merge updates into the existing useful history"
 assert_file_contains "$target/.github/references/phases/verify.md" "Treat fresh context as an operational rule, not a runtime guarantee."
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Launch deduplication"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "MCP persistence summary:"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "ensure_project: <succeeded|not needed|failed: reason>"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Preserve existing Pegasus managed markers exactly and edit only content between them"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "reread and validate those exact first/last marker lines before any MCP persistence call"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "if validation fails, repair the markers, reread, and validate again before persistence"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Preserve target-language standard orthography and diacritics"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "The current change PRD is the only default product-content source"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Do not search, read, inspect, or reuse neighboring or unrelated change artifacts"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "When that happens, disclose in Related Change Traceability"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "that it was not an implicit scope source"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "A blocking material gap requires one concise user question and a stop before proposal writing/finalization"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "An ambiguous MCP response never resolves a material gap"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Require reconciliation of every material gap before marker validation and MCP persistence"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "without claiming no open questions while any unresolved gap remains"
 assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" 'Record operational memory through `pegasus-memory-mcp`'
 assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "Before the first recovery or save attempt, call the MCP \`health\` tool"
 assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "do not claim persistent memory was saved"
@@ -688,27 +699,6 @@ assert "Artifact language: <language>" in memory
 assert "required public warnings" in memory
 PY
 assert_file_contains "$target/AGENTS.md" "pegasus-harness:start path=AGENTS.md ownership=marker-managed"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "pegasus-harness:start path=.github/agents/pegasus-orchestrator.agent.md ownership=full-file"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "call the \`pegasus-memory-mcp\` \`health\` tool before the first recovery attempt"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "call \`health\` before the first save"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Natural-language PRD intent"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "quiero armar un PRD para esta idea"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Before editing or finalizing any PRD, identify open product/business decisions."
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "do not silently decide product scope"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'Before invoking any git command, first check whether the workspace root contains a `.git` directory.'
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'If `.git` is absent, never attempt `git diff`, `git status`, `git log`, or any other git validation; do not try and fall back.'
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'include a small MCP persistence summary with one line each for `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation`'
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'call `ensure_change` by default with only `project_id` and `change_id`'
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'never send `type` or both `kind` and `type`, even if equal'
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'Do not send nested `metadata`, arrays, decisions, questions/answers, or artifact summaries to `ensure_change`'
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Tell the user the PRD file path (\`docs/pegasus/prd.md\`, \`docs/pegasus/changes/<change-id>/prd.md\`, or the full path when useful) and ask them to review it."
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Wait for explicit user approval of the PRD before moving to proposal, spec, design, tasks, apply, or verify."
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "A conversational statement alone never overrides a PRD that still says Draft"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'save those details afterward with `record_observation` or `record_artifact`'
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Do not implement code, create technical design, write tasks, or advance to proposal/spec/design/tasks/apply during PRD flow."
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "ensure_project"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "ensure_change"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "project_not_found"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "# Pegasus Memory operational persistence"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Call its \`health\` tool before the first recovery or save attempt"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Save proactively after important changes"
@@ -766,7 +756,7 @@ assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'The only allowed database mutation is an explicit Pegasus Memory schema migration performed by Pegasus Memory itself'
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'must not reset, delete, recreate, or overwrite the Pegasus Memory database'
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'Clean test memory must be created as explicit test setup, never as a sync side effect.'
-for memory_guided_agent in doc-designer sdd-proposal sdd-spec sdd-design sdd-tasks session-handoff memory-maintainer pegasus-orchestrator; do
+for memory_guided_agent in doc-designer sdd-proposal sdd-spec sdd-design sdd-tasks session-handoff memory-maintainer; do
   assert_file_contains "$target/.github/agents/$memory_guided_agent.agent.md" "pegasus-memory.instructions.md"
 done
 assert_file_contains "$persistence_reference" "pegasus-memory.instructions.md"
@@ -781,11 +771,8 @@ assert_file_contains "$verify_reference" "persist verification evidence, deviati
 assert_file_contains "$verify_reference" "Merge the verification entry"
 assert_file_contains "$target/.github/agents/session-handoff.agent.md" "handoff/session summary"
 assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "Proactively save decisions, bugfixes, discoveries/gotchas"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "## Memory state"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "never expose MCP recovery mechanics as user-facing requirements"
 assert_file_contains "$target/.github/prompts/handoff.prompt.md" "handoff/session summary"
 assert_file_contains "$target/.github/prompts/memory-update.prompt.md" "Before ending or pausing, save a concise handoff/session summary after MCP \`health\` succeeds"
-assert_file_contains "$target/.github/prompts/sdd-phases.prompt.md" "proactively save decisions, discoveries, bugfixes, config changes, user constraints, artifact status, task progress, verification evidence, and handoff/session summaries"
 "$PYTHON_BIN" - "$target/.github" <<'PY'
 import sys
 from pathlib import Path
@@ -948,11 +935,6 @@ assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.m
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "complete task-progress payload records phase \`spec\`"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Pegasus Memory persistence incomplete/partial — <failed operation>: <reason>"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "prevents a full durable-completion or Pegasus Memory-success claim"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "call or attempt \`record_task_progress\` for phase \`spec\` before \`record_handoff\`"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "truthful terminal statuses for all six operations"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "never invent \`succeeded\` for an omitted call"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Pegasus Memory persistence incomplete/partial — <failed operation>: <reason>"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "forbids any full durable-completion or Pegasus Memory-success claim"
 "$PYTHON_BIN" - "$target/.github/agents/sdd-spec.agent.md" <<'PY'
 import sys
 from pathlib import Path
@@ -1026,7 +1008,6 @@ from pathlib import Path
 target = Path(sys.argv[1])
 payload_guidance = (
     target / ".github/agents/sdd-spec.agent.md",
-    target / ".github/agents/pegasus-orchestrator.agent.md",
     target / ".github/instructions/pegasus-memory.instructions.md",
     target / ".github/instructions/pegasus-workflow.instructions.md",
     target / ".github/copilot-instructions.md",
@@ -1044,7 +1025,6 @@ from pathlib import Path
 
 target = Path(sys.argv[1])
 guidance = (
-    target / ".github/agents/pegasus-orchestrator.agent.md",
     target / ".github/agents/memory-maintainer.agent.md",
     target / ".github/instructions/pegasus-memory.instructions.md",
     target / ".github/instructions/pegasus-workflow.instructions.md",
@@ -1153,42 +1133,39 @@ assert_file_contains "$verify_reference" "Do not make unrelated changes"
 assert_file_contains "$verify_reference" "edit implementation unless the user separately authorizes a later remediation run"
 
 orchestrator="$target/.github/agents/pegasus-orchestrator.agent.md"
-assert_file_contains "$orchestrator" "thin coordinator, not a phase executor"
-assert_file_contains "$orchestrator" "Every SDD phase MUST run through its matching specialized agent in a fresh context"
-assert_file_contains "$orchestrator" "MUST NOT write phase artifacts, implement tasks, run phase tests/builds, or perform verification"
-assert_file_contains "$orchestrator" "If required delegation is unavailable, blocked, or fails, stop and report"
-assert_file_contains "$orchestrator" "validate only the returned specialist result envelope"
-assert_file_contains "$orchestrator" "MUST NOT read or reread"
-assert_file_contains "$orchestrator" "sole artifact writer, validator, and persistence owner"
-assert_file_contains "$orchestrator" "A missing or partial envelope blocks success and phase advancement"
-assert_file_contains "$orchestrator" "without claiming direct artifact validation"
-assert_file_contains "$orchestrator" "explicitly ask the user to approve the design phase"
-assert_file_contains "$orchestrator" "reproduce the COMPLETE specialist result envelope"
-assert_file_contains "$orchestrator" "verbatim when possible, or field-for-field"
-assert_file_contains "$orchestrator" "do not summarize success, request approval, or advance to tasks"
-assert_file_contains "$orchestrator" 'checks only that `Proposal risk coverage validation` exists'
-assert_file_contains "$orchestrator" 'Fail closed unless `Post-persistence edits: none` is exact'
-assert_file_contains "$orchestrator" '¿Aprobás el diseño para avanzar a la fase de tareas?'
+assert_file_contains "$orchestrator" "user-facing coordinator, never a phase executor"
+assert_file_contains "$orchestrator" "Every owned phase MUST use one fresh matching specialist delegation"
+assert_file_contains "$orchestrator" "MUST NOT write or repair phase artifacts, implementation, tests, verification, install output, or specialist persistence"
+assert_file_contains "$orchestrator" "Validate only routing inputs and returned envelopes"
+assert_file_contains "$orchestrator_reference" "The coordinator may read only what is necessary to determine active change, current phase, in-file approval, launch identity, duplicate state, authorization, and strategy"
+assert_file_contains "$orchestrator_reference" "Reproduce the valid envelope field-for-field with unchanged canonical labels and values"
+assert_file_contains "$orchestrator_reference" '¿Aprobás el diseño para avanzar a la fase de tareas?'
 assert_file_contains "$target/.github/copilot-instructions.md" "MUST reproduce the complete canonical envelope verbatim or field-for-field"
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "MUST reproduce the complete canonical specialist envelope verbatim or field-for-field"
 assert_file_contains "$target/.github/copilot-instructions.md" "Lossy narrative summarization MUST NOT substitute for complete envelope reproduction"
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "Lossy narrative summarization MUST NOT substitute for complete envelope reproduction"
-assert_file_contains "$orchestrator" "understanding requires reading 4 or more files"
-assert_file_contains "$orchestrator" "implementation touches 2 or more non-trivial files"
-assert_file_contains "$orchestrator" "tests/builds/installs/external tooling must run"
-assert_file_contains "$orchestrator" "stacked-to-main"
-assert_file_contains "$orchestrator" "feature-branch-chain"
-assert_file_contains "$orchestrator" 'maintainer-approved `size:exception`'
-assert_file_contains "$orchestrator" "Copy the entire validated four-line v2 tasks block"
-assert_file_contains "$orchestrator" "strategy narrative may state only the guard consequence derived from decoded values"
-assert_file_contains "$orchestrator" 'La previsión requiere definir la estrategia antes de apply.'
-assert_file_contains "$orchestrator" 'No se iniciará apply hasta que respondas.'
-assert_file_contains "$orchestrator" "A request that asks only for tasks still requires this post-tasks review-guard question"
-assert_file_contains "$orchestrator" 'Current change ID: <change-id>'
-assert_file_contains "$orchestrator" 'Required canonical output path: docs/pegasus/changes/<change-id>/tasks.md'
-assert_file_contains "$orchestrator" 'Backtick characters are not required in a flat export.'
-assert_file_contains "$orchestrator" "Until that record exists, B2/apply is blocked"
-assert_file_contains "$orchestrator" "change ID plus phase and, for apply, task-slice ID"
+assert_file_contains "$orchestrator_reference" "four or more files"
+assert_file_contains "$orchestrator_reference" "two or more non-trivial changed files"
+assert_file_contains "$orchestrator_reference" "tests/builds/installs/external tooling"
+assert_file_contains "$orchestrator_reference" "stacked-to-main"
+assert_file_contains "$orchestrator_reference" "feature-branch-chain"
+assert_file_contains "$orchestrator_reference" 'maintainer-approved `size:exception`'
+assert_file_contains "$orchestrator_reference" "Copy a valid four-line block byte-for-byte"
+assert_file_contains "$orchestrator_reference" 'La previsión requiere definir la estrategia antes de apply.'
+assert_file_contains "$orchestrator_reference" 'No se iniciará apply hasta que respondas.'
+assert_file_contains "$orchestrator_reference" "Unresolved strategy blocks Apply launch"
+assert_file_contains "$orchestrator_reference" "change ID plus phase and, for Apply, task-slice ID"
+"$PYTHON_BIN" - "$orchestrator" <<'PY'
+from pathlib import Path
+import sys
+
+macro = Path(sys.argv[1]).read_text(encoding="utf-8")
+gate = macro.index("Before ANY `agent` dispatch")
+dispatch = macro.index("Missing delegation capability")
+assert gate < dispatch, "duplicate gate must precede dispatch handling"
+assert "Missing, unreadable, ambiguous, stale, or contradictory duplicate state blocks before delegation." in macro
+assert "Never infer clear state, rely on user wording, or dispatch then report the gate state afterward." in macro
+PY
 if grep -Eq '^  - (edit|execute)$' "$orchestrator"; then
   printf 'orchestrator must not expose phase execution tools\n' >&2
   exit 1
@@ -1232,13 +1209,6 @@ lines = Path(sys.argv[1]).read_text().splitlines()
 assert lines[0] == "<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/spec.md ownership=full-file -->"
 assert lines[-1] == "<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/spec.md -->"
 PY
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "For spec work, inspect the current change's PRD and proposal directly"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Spec persistence: file-only"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "## Spec language quality gate"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "an explicit user artifact-language request wins"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "make no Pegasus Memory persistence call or success claim"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "require \`Creado:\` and \`Destino:\`; reject \`Created:\`, \`Target:\`"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "This scan is structural only and MUST allow standardized \`GIVEN\` / \`WHEN\` / \`THEN\`"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "For spec work, select one artifact language before writing"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Repair only affected language blocks, reread the entire artifact, revalidate markers, and rerun the gate"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Spec persistence: file-only — language validation failed: <exact issues>"
@@ -1301,12 +1271,10 @@ assert_file_contains "$target/.github/agents/sdd-design.agent.md" "canonical sta
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "A missing deferred field is blocking"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'The final response uses the exact `Deferred technical choices:` label'
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "every deferred choice (or \`None\` / \`Ninguna\`), its needed-by gate"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "dedicated \`Deferred Technical Choices\` table"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Reconcile deferred technical choices before marker, language, and persistence gates"
 assert_file_contains "$target/docs/pegasus/design.md" "Pegasus Memory product naming"
 assert_file_contains "$target/docs/pegasus/design.md" "Validate every \`MCP\` occurrence independently"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Allow \`MCP\` only in an explicit protocol discussion"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "standalone/generic \`MCP\`"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "does not permit a separate standalone \`MCP\` occurrence"
 assert_file_contains "$ROOT/templates/harness/docs/pegasus/design.md" '<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/design.md ownership=full-file -->'
 assert_file_contains "$ROOT/templates/harness/docs/pegasus/design.md" '<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/design.md -->'
@@ -1362,7 +1330,7 @@ for operation in required_persistence:
     assert not valid_atomic_trace(trace), operation
 assert not valid_atomic_trace(["edit_artifact", "full_reread", "validate_all", "freeze_revision", "record_observation", "record_artifact", "record_task_progress", "record_handoff"])
 PY
-"$PYTHON_BIN" - "$target/.github/agents/pegasus-orchestrator.agent.md" <<'PY'
+"$PYTHON_BIN" - "$orchestrator_reference" <<'PY'
 import sys
 from pathlib import Path
 
@@ -1437,10 +1405,10 @@ rephrased = complete.replace("Post-persistence edits: none", "No edits after per
 assert not validate_envelope(rephrased)
 assert "¿Aprobás el diseño para avanzar a la fase de tareas?" in orchestrator_final(complete)
 assert "Next action: review/approval" in complete
-assert "reproduce the COMPLETE specialist result envelope" in guidance
-assert "do not summarize success, request approval, or advance to tasks" in guidance
+assert "Reproduce the valid envelope field-for-field" in guidance
+assert "Do not reread Design or rerun its checks" in guidance
 PY
-"$PYTHON_BIN" - "$target/.github/agents/sdd-tasks.agent.md" "$target/.github/agents/pegasus-orchestrator.agent.md" "$ROOT/templates/harness/docs/pegasus/tasks.md" <<'PY'
+"$PYTHON_BIN" - "$target/.github/agents/sdd-tasks.agent.md" "$orchestrator_reference" "$ROOT/templates/harness/docs/pegasus/tasks.md" <<'PY'
 import re
 import sys
 from pathlib import Path
@@ -1466,41 +1434,7 @@ envelope_fields = (
 operations = ("ensure_project", "ensure_change", "record_task_progress", "record_handoff")
 canonical_artifact_path = "docs/pegasus/changes/mobile/tasks.md"
 
-handoff_match = re.search(r'(?m)^  - label: Plan tasks\n    agent: sdd-tasks\n    prompt: "([^"]+)"$', orchestrator_guidance)
-assert handoff_match
-delegated_prompt = handoff_match.group(1).replace(r"\n", "\n")
-required_prompt_data = (
-    "Current change ID: <change-id>",
-    "Required canonical output path: docs/pegasus/changes/<change-id>/tasks.md",
-    "Approved artifact references:",
-    "docs/pegasus/changes/<change-id>/prd.md",
-    "docs/pegasus/changes/<change-id>/proposal.md",
-    "docs/pegasus/changes/<change-id>/spec.md",
-    "docs/pegasus/changes/<change-id>/design.md",
-    "Scope: tasks only.",
-    "Boundary: Do not implement or launch apply.",
-)
-for required in required_prompt_data:
-    assert required in delegated_prompt
-
-forbidden_prompt_hints = (
-    r"forecast", r"chain strategy", r"stacked-to-main", r"feature-branch-chain", r"size:exception",
-    r"budget risk", r"\b(?:low|medium|high) risk\b", r"estimated .*changed lines", r"\b[0-9,]+-[0-9,]+\b",
-    r"tests included", r"work-unit count", r"strategy decision evidence", r"size-exception approval evidence",
-    r"decision evidence none", r"strategy pending",
-)
-def valid_tasks_delegation_prompt(prompt: str) -> bool:
-    return all(required in prompt for required in required_prompt_data) and not any(
-        re.search(pattern, prompt, re.IGNORECASE) for pattern in forbidden_prompt_hints
-    )
-
-assert valid_tasks_delegation_prompt(delegated_prompt)
-for forbidden_fixture in (
-    "Forecast validation: passed", "Chain strategy: pending", "400-line budget risk: High",
-    "Estimated authored changed lines: 590-720", "Tests included in estimate: Yes",
-    "Work-unit count: 3", "Strategy decision evidence: none", "Size-exception approval evidence: none",
-):
-    assert not valid_tasks_delegation_prompt(f"{delegated_prompt}\n{forbidden_fixture}"), forbidden_fixture
+assert "send the active change ID and fully expanded `docs/pegasus/changes/<change-id>/tasks.md` as separate routing data" in orchestrator_guidance
 
 def valid_current_strategy_evidence(strategy: str, evidence_id: str, evidence_events: dict[str, dict[str, object]]) -> bool:
     event = evidence_events.get(evidence_id, {})
@@ -1799,7 +1733,7 @@ assert lines[-1] == "<!-- pegasus-harness:end path=docs/pegasus/changes/<change-
 for exact_pending_line in ("Strategy decision evidence: <exact current-session user quote/message reference|none>", "Size-exception approval evidence: <distinct current maintainer approval quote/message reference|none>"):
     assert exact_pending_line in template
 PY
-"$PYTHON_BIN" - "$target/.github/agents/sdd-tasks.agent.md" "$target/.github/agents/pegasus-orchestrator.agent.md" <<'PY'
+"$PYTHON_BIN" - "$target/.github/agents/sdd-tasks.agent.md" "$orchestrator_reference" <<'PY'
 import hashlib
 import json
 import sys
@@ -2059,7 +1993,6 @@ for name in (
     ".github/agents/sdd-tasks.agent.md",
     ".github/references/phases/apply.md",
     ".github/references/phases/verify.md",
-    ".github/prompts/sdd-phases.prompt.md",
     ".github/prompts/handoff.prompt.md",
     ".cursor/rules/pegasus-workflow.mdc",
     ".cursor/rules/pegasus-memory.mdc",
@@ -2101,7 +2034,6 @@ lines = Path(sys.argv[1]).read_text().splitlines()
 assert lines[0] == "<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/design.md ownership=full-file -->"
 assert lines[-1] == "<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/design.md -->"
 PY
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Create only the current change technical design from its approved in-file PRD, proposal, and spec"
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'Before design, read the current change'"'"'s approved in-file PRD, proposal, and spec'
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'For design closure, use Pegasus Memory/`pegasus-memory-mcp` terminology'
 assert_file_contains "$target/.github/copilot-instructions.md" "Before design, require current-change in-file approval for PRD, proposal, and spec"
@@ -2124,7 +2056,7 @@ if grep -Fq 'stop before writing, finalizing, or Pegasus Memory persistence' "$R
   printf 'stable spec contains generic blocked-persistence wording\n' >&2
   exit 1
 fi
-"$PYTHON_BIN" - "$target/.github/agents/sdd-tasks.agent.md" "$apply_reference" "$verify_reference" "$target/.github/prompts/sdd-phases.prompt.md" <<'PY'
+"$PYTHON_BIN" - "$target/.github/agents/sdd-tasks.agent.md" "$apply_reference" "$verify_reference" <<'PY'
 import sys
 from pathlib import Path
 
@@ -2147,20 +2079,11 @@ assert_file_contains "$target/docs/pegasus/verify.md" "## Changed Files Reviewed
 assert_file_contains "$target/docs/pegasus/verify.md" "## Test Coverage / Manual Checks"
 assert_file_contains "$target/docs/pegasus/verify.md" "## Final Verdict"
 assert_file_contains "$target/docs/pegasus/verify.md" "Merge-not-overwrite instructions"
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'Before invoking any git command, first check whether the workspace root contains a `.git` directory.'
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'If `.git` is absent, never attempt `git diff`, `git status`, `git log`, or any other git validation; do not try and fall back.'
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'include a small MCP persistence summary with one line each for `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation`'
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'marking every call as `succeeded`, `not needed`, or `failed: <reason>`'
 assert_file_contains "$target/.github/copilot-instructions.md" 'before any git command first check for `.git` and never run `git diff`, `git status`, or other git validation in non-git workspaces'
 assert_file_contains "$target/.github/copilot-instructions.md" 'include a small MCP persistence summary marking `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation` as `succeeded`, `not needed`, or `failed: <reason>`'
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'before any git command first check for `.git` and never run `git diff`, `git status`, or other git validation in non-git workspaces'
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'For PRD closure, include a small MCP persistence summary with one line each for `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation`'
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'For proposal closure, the final response MUST contain this exact block even when MCP is unavailable'
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'do not mention git validation as attempted'
-assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" 'The only acceptable database mutation is an explicit Pegasus Memory schema migration performed by Pegasus Memory itself'
-assert_file_contains "$target/.github/prompts/sdd-phases.prompt.md" "approved PRD and approved proposal"
-assert_file_contains "$target/.github/prompts/sdd-phases.prompt.md" "Apply may record preliminary notes/evidence, but it does not replace the verify phase"
-assert_file_contains "$target/.github/prompts/sdd-phases.prompt.md" "Do not make unrelated implementation changes during verify"
 
 if grep -R -E 'review-risk|review-readability' "$target/.github" >/dev/null; then
   printf 'generated Copilot assets include excluded reviewer agents\n' >&2
