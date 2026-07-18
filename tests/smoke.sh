@@ -85,12 +85,12 @@ esac
 "$PYTHON_BIN" "$CLI" --help >/dev/null
 version_output="$($PYTHON_BIN "$CLI" --version)"
 case "$version_output" in
-  "Pegasus Harness Bootstrap 0.6.8") ;;
+  "Pegasus Harness Bootstrap 0.6.9") ;;
   *) printf 'expected clear Pegasus product version output\n' >&2; exit 1 ;;
 esac
-assert_file_contains "$ROOT/pyproject.toml" 'version = "0.6.8"'
-assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.6.8"'
-assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.6.8'
+assert_file_contains "$ROOT/pyproject.toml" 'version = "0.6.9"'
+assert_file_contains "$ROOT/pegasus_harness_bootstrap/__init__.py" '__version__ = "0.6.9"'
+assert_file_contains "$ROOT/README.md" '# Pegasus Harness Bootstrap 0.6.9'
 assert_file_contains "$ROOT/README.md" 'La conversación con el usuario, este README y los mensajes públicos localizados pueden estar en español.'
 assert_file_contains "$ROOT/README.md" 'los prompts, las instrucciones, la comunicación interna entre agentes, la prosa descriptiva persistente de Pegasus Memory y los artefactos generados usan inglés de forma predeterminada.'
 assert_file_contains "$ROOT/README.md" 'El idioma de un artefacto generado cambia únicamente cuando el usuario indica de manera explícita el idioma para ese artefacto'
@@ -148,7 +148,7 @@ case "$default_plan" in
   *) printf 'expected default target path in dry-run output\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
-    *"Installed CLI version: 0.6.8"*"Source template version: 0.6.8"*) ;;
+    *"Installed CLI version: 0.6.9"*"Source template version: 0.6.9"*) ;;
   *) printf 'expected bootstrap plan version evidence\n' >&2; exit 1 ;;
 esac
 case "$default_plan" in
@@ -618,7 +618,7 @@ manifest_text = json.dumps(manifest)
 for forbidden in ("active_change", "activeChange", "last_change", "lastChange", "operational_memory", "operationalMemory", "memory_state", "memoryState", "recovery_state", "recoveryState"):
     assert forbidden not in manifest_text
 assert manifest["workspace"]["project_name"] == "sample-project"
-assert manifest["template_version"] == "0.6.8"
+assert manifest["template_version"] == "0.6.9"
 assert manifest["uninstall"]["remove_only_managed"] is True
 paths = {record["path"]: record for record in manifest["install"]["files"]}
 assert "AGENTS.md" in paths
@@ -626,8 +626,8 @@ assert ".vscode/mcp.json" in paths
 assert paths["AGENTS.md"]["ownership"] == "marker-managed"
 assert paths[".vscode/mcp.json"]["ownership"] == "full-file"
 assert paths[".github/agents/pegasus-orchestrator.agent.md"]["ownership"] == "full-file"
-assert all(record["package_version"] == "0.6.8" for record in paths.values())
-assert all(record["template_version"] == "0.6.8" for record in paths.values())
+assert all(record["package_version"] == "0.6.9" for record in paths.values())
+assert all(record["template_version"] == "0.6.9" for record in paths.values())
 assert manifest["install"]["skipped_conflicts"] == []
 PY
 
@@ -911,17 +911,17 @@ assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "fully reread t
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "exactly seven forecast lines and values"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" 'persist `record_task_progress` for phase `tasks`, then `record_handoff`'
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "completion is blocked"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Final tasks revision:"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Persistence tasks revision:"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Post-persistence edits:"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" '"final_tasks_revision"'
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" '"persistence_tasks_revision"'
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" '"post_persistence_edits"'
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Strategy decision evidence:"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Size-exception approval evidence:"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "design recommendation, memory, cached preference, architecture, previous conversation/session, default, inference, or fabricated/generic text"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "user selection alone is insufficient"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Calling or attempting \`record_task_progress\` or \`record_handoff\` before the SHA-256 revision is frozen is prohibited"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "no artifact edits and no hash recomputation"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Work-unit count:"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Assigned scope:"
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" '"work_unit_count"'
+assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" '"assigned_scope"'
 for work_unit_field in "Implementation scope:" "Test scope:" "Focused test command:" "Runtime validation:" "Rollback boundary:" "Estimated authored changed lines:"; do
   assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "$work_unit_field"
 done
@@ -960,8 +960,8 @@ assert_file_contains "$orchestrator" "tests/builds/installs/external tooling mus
 assert_file_contains "$orchestrator" "stacked-to-main"
 assert_file_contains "$orchestrator" "feature-branch-chain"
 assert_file_contains "$orchestrator" 'maintainer-approved `size:exception`'
-assert_file_contains "$orchestrator" "Copy the entire validated delimited tasks block"
-assert_file_contains "$orchestrator" "state only the guard consequence derived from validated values"
+assert_file_contains "$orchestrator" "Copy the entire validated four-line v2 tasks block"
+assert_file_contains "$orchestrator" "strategy narrative may state only the guard consequence derived from decoded values"
 assert_file_contains "$orchestrator" 'La previsión requiere definir la estrategia antes de apply.'
 assert_file_contains "$orchestrator" 'No se iniciará apply hasta que respondas.'
 assert_file_contains "$orchestrator" "A request that asks only for tasks still requires this post-tasks review-guard question"
@@ -1341,9 +1341,29 @@ def valid_estimate_breakdown(unit: dict[str, tuple[int, int] | None]) -> bool:
     total = unit.get("total")
     if any(value is None for value in components) or total is None or "generated" not in unit:
         return False
+    if any(value[0] < 0 or value[0] > value[1] for value in (*components, total)):
+        return False
     minimum = sum(value[0] for value in components if value is not None)
     maximum = sum(value[1] for value in components if value is not None)
-    return total[0] <= minimum <= total[1] and total[0] <= maximum <= total[1]
+    return total == (minimum, maximum)
+
+def valid_global_estimate(units: list[dict[str, tuple[int, int] | None]], forecast: tuple[int, int]) -> bool:
+    if not all(valid_estimate_breakdown(unit) for unit in units):
+        return False
+    totals = [unit["total"] for unit in units]
+    return forecast == (sum(total[0] for total in totals), sum(total[1] for total in totals))
+
+valid_units = [
+    {"code": (100, 120), "tests": (40, 50), "docs": (10, 15), "config": (0, 0), "total": (150, 185), "generated": None},
+    {"code": (120, 140), "tests": (50, 60), "docs": (5, 10), "config": (5, 5), "total": (180, 215), "generated": None},
+    {"code": (90, 110), "tests": (50, 60), "docs": (100, 130), "config": (20, 20), "total": (260, 320), "generated": None},
+]
+assert valid_global_estimate(valid_units, (590, 720))
+assert not valid_estimate_breakdown({**valid_units[0], "config": (5, 4)})
+b1_068_wu3 = {"code": (90, 110), "tests": (50, 60), "docs": (55, 55), "config": (0, 0), "total": (195, 210), "generated": None}
+assert sum(b1_068_wu3[name][1] for name in ("code", "tests", "docs", "config")) == 225
+assert not valid_estimate_breakdown(b1_068_wu3)
+assert not valid_global_estimate([*valid_units[:2], b1_068_wu3], (525, 610))
 
 def valid_dependency_graph(units: dict[str, dict[str, set[str]]]) -> bool:
     names = set(units)
@@ -1418,8 +1438,19 @@ complete = "\n".join([
     "Decision required: Yes", "Next action: user strategy decision",
 ])
 assert validate_envelope(complete)
-for field in (*envelope_fields, *operations):
-    assert field in specialist_guidance, field
+v2_keys = (
+    "status", "specialist_agent", "fresh_context_delegation", "artifact_path", "artifact_owner",
+    "artifact_language", "language_override_evidence", "language_gate", "marker_validation",
+    "source_identity_validation", "work_unit_validation", "forecast_validation",
+    "decision_needed_before_apply", "chained_prs_recommended", "chain_strategy",
+    "strategy_decision_evidence", "size_exception_approval_evidence", "budget_risk_400_line",
+    "estimated_authored_changed_lines", "estimated_generated_changed_lines", "tests_included_in_estimate",
+    "work_unit_count", "assigned_scope", "final_tasks_revision", "persistence_tasks_revision",
+    "post_persistence_edits", "initial_recovery_result", "recovery_ensure_transitions",
+    *operations, "record_handoff_invocation", "risks_blockers", "decision_required", "next_action",
+)
+for field in v2_keys:
+    assert f'"{field}"' in specialist_guidance, field
 assert all(field in orchestrator_guidance for field in forecast_fields)
 valid_events = "\n".join((
     "edit_artifact", "full_reread", "validate_all", "freeze_sha256",
@@ -1550,84 +1581,102 @@ for exact_pending_line in ("Strategy decision evidence: <exact current-session u
 PY
 "$PYTHON_BIN" - "$target/.github/agents/sdd-tasks.agent.md" "$target/.github/agents/pegasus-orchestrator.agent.md" <<'PY'
 import hashlib
+import json
 import sys
 from pathlib import Path
 
 specialist, orchestrator = (Path(path).read_text() for path in sys.argv[1:])
-begin = "=== PEGASUS SPECIALIST RESULT BEGIN v1 ==="
-end = "=== PEGASUS SPECIALIST RESULT END v1 ==="
-labels = [
-    "Status", "Specialist agent", "Fresh-context delegation", "Artifact path",
-    "Artifact writer/validator/persistence owner", "Artifact language",
-    "Explicit language override evidence", "Language gate", "Marker validation",
-    "Source identity validation", "Work-unit validation", "Forecast validation",
-    "Decision needed before apply", "Chained PRs recommended", "Chain strategy",
-    "Strategy decision evidence", "Size-exception approval evidence", "400-line budget risk",
-    "Estimated authored changed lines", "Estimated generated changed lines",
-    "Tests included in estimate", "Work-unit count", "Assigned scope", "Final tasks revision",
-    "Persistence tasks revision", "Post-persistence edits", "Initial recovery result",
-    "Recovery/ensure transitions", "Pegasus Memory persistence summary", "ensure_project",
-    "ensure_change", "record_task_progress", "record_handoff", "record_handoff invocation",
-    "Risks/blockers", "Decision required", "Next action",
+begin = "=== PEGASUS SPECIALIST RESULT BEGIN v2 ==="
+end = "=== PEGASUS SPECIALIST RESULT END v2 ==="
+legacy_begin = "=== PEGASUS SPECIALIST RESULT BEGIN v1 ==="
+legacy_end = "=== PEGASUS SPECIALIST RESULT END v1 ==="
+keys = [
+    "schema", "status", "specialist_agent", "fresh_context_delegation", "artifact_path",
+    "artifact_owner", "artifact_language", "language_override_evidence", "language_gate",
+    "marker_validation", "source_identity_validation", "work_unit_validation", "forecast_validation",
+    "decision_needed_before_apply", "chained_prs_recommended", "chain_strategy",
+    "strategy_decision_evidence", "size_exception_approval_evidence", "budget_risk_400_line",
+    "estimated_authored_changed_lines", "estimated_generated_changed_lines",
+    "tests_included_in_estimate", "work_unit_count", "assigned_scope", "final_tasks_revision",
+    "persistence_tasks_revision", "post_persistence_edits", "initial_recovery_result",
+    "recovery_ensure_transitions", "ensure_project", "ensure_change", "record_task_progress",
+    "record_handoff", "record_handoff_invocation", "risks_blockers", "decision_required", "next_action",
 ]
-values = {label: "value" for label in labels}
+values = {key: "value" for key in keys}
 values.update({
-    "Status": "completed", "Specialist agent": "sdd-tasks",
-    "Artifact path": "docs/pegasus/changes/mobile/tasks.md",
-    "Final tasks revision": "sha256:artifact", "Persistence tasks revision": "sha256:artifact",
-    "Post-persistence edits": "none", "Chain strategy": "pending",
-    "Strategy decision evidence": "none", "Size-exception approval evidence": "none",
+    "schema": "pegasus-specialist-result/v2", "status": "completed", "specialist_agent": "sdd-tasks",
+    "artifact_path": "docs/pegasus/changes/mobile/tasks.md",
+    "final_tasks_revision": "sha256:artifact", "persistence_tasks_revision": "sha256:artifact",
+    "post_persistence_edits": "none", "chain_strategy": "pending",
+    "strategy_decision_evidence": "none", "size_exception_approval_evidence": "none",
     "ensure_project": "not needed", "ensure_change": "not needed",
     "record_task_progress": "succeeded", "record_handoff": "succeeded",
 })
-payload = "".join(f"{label}: {values[label]}\n" for label in labels)
-revision = "sha256:" + hashlib.sha256(payload.encode()).hexdigest()
-block = f"{begin}\nSpecialist result block revision: {revision}\n{payload}{end}"
+
+def canonical(data: dict[str, str]) -> str:
+    raw = json.dumps(data, ensure_ascii=True, separators=(",", ":"))
+    return raw.replace("/", "\\u002f")
+
+serialized = canonical(values)
+revision = "sha256:" + hashlib.sha256((serialized + "\n").encode()).hexdigest()
+block = f"{begin}\nSpecialist result block revision: {revision}\n{serialized}\n{end}"
 
 def validate_block(text: str) -> str | None:
-    if text.count(begin) != 1 or text.count(end) != 1:
+    if legacy_begin in text or legacy_end in text or text.count(begin) != 1 or text.count(end) != 1:
         return None
-    start, rest = text.split(begin + "\n", 1)
-    body, outside = rest.split("\n" + end, 1)
-    if start or any(line.startswith(tuple(f"{label}:" for label in labels)) for line in outside.splitlines()):
+    lines = text.splitlines()
+    if len(lines) != 4 or lines[0] != begin or lines[3] != end:
         return None
-    lines = body.splitlines()
-    if not lines or not lines[0].startswith("Specialist result block revision: sha256:"):
+    if not lines[1].startswith("Specialist result block revision: sha256:"):
         return None
-    field_lines = lines[1:]
-    if len(field_lines) != len(labels):
+    serialized_line = lines[2]
+    if "/" in serialized_line:
         return None
-    if [line.split(":", 1)[0] for line in field_lines] != labels:
+    expected = "sha256:" + hashlib.sha256((serialized_line + "\n").encode()).hexdigest()
+    if lines[1] != f"Specialist result block revision: {expected}":
         return None
-    field_payload = "\n".join(field_lines) + "\n"
-    expected = "sha256:" + hashlib.sha256(field_payload.encode()).hexdigest()
-    if lines[0] != f"Specialist result block revision: {expected}":
+    pairs = []
+    try:
+        parsed = json.loads(serialized_line, object_pairs_hook=lambda value: pairs.extend(value) or dict(value))
+    except (json.JSONDecodeError, UnicodeDecodeError):
         return None
-    parsed = dict(line.split(": ", 1) for line in field_lines if ": " in line)
-    if parsed.get("Artifact path") != "docs/pegasus/changes/mobile/tasks.md":
+    if [key for key, _ in pairs] != keys or len({key for key, _ in pairs}) != len(keys):
         return None
-    if parsed.get("Final tasks revision") != parsed.get("Persistence tasks revision"):
+    if not all(isinstance(value, str) and not any(0xD800 <= ord(char) <= 0xDFFF for char in value) for value in parsed.values()):
         return None
-    return begin + "\n" + body + "\n" + end
+    if canonical(parsed) != serialized_line:
+        return None
+    if parsed.get("schema") != "pegasus-specialist-result/v2" or parsed.get("artifact_path") != "docs/pegasus/changes/mobile/tasks.md":
+        return None
+    if parsed.get("final_tasks_revision") != parsed.get("persistence_tasks_revision"):
+        return None
+    return text
 
 assert validate_block(block) == block
-assert validate_block(block.replace("\n", "\r\n").replace("\r\n", "\n")) == block
-assert validate_block(block.replace("docs/pegasus/changes/mobile/tasks.md", "tasks.md")) is None
-assert validate_block(block.replace("Work-unit count: value\n", "")) is None
-assert validate_block(block.replace("Work-unit count: value\nAssigned scope: value", "Assigned scope: value\nWork-unit count: value")) is None
-assert validate_block(block.replace("Work-unit count: value", "Work-unit count: value\nWork-unit count: value")) is None
+assert "docs/pegasus/changes/mobile/tasks.md" not in block
+rendered_copy = block.replace("docs/pegasus/changes/mobile/tasks.md", "tasks.md")
+assert rendered_copy == block and validate_block(rendered_copy) == block
+assert validate_block(block.replace("docs\\u002fpegasus\\u002fchanges\\u002fmobile\\u002ftasks.md", "tasks.md")) is None
+assert validate_block(block.replace('"work_unit_count":"value",', "")) is None
+assert validate_block(block.replace('"work_unit_count":"value","assigned_scope":"value"', '"assigned_scope":"value","work_unit_count":"value"')) is None
+assert validate_block(block.replace('"work_unit_count":"value"', '"work_unit_count":"value","work_unit_count":"value"')) is None
 assert validate_block(block.replace(begin + "\n", "")) is None
 assert validate_block(block + "\n" + block) is None
-assert validate_block(block + "\nArtifact path: docs/pegasus/changes/mobile/tasks.md") is None
+assert validate_block(block + "\nartifact_path: docs/pegasus/changes/mobile/tasks.md") is None
 assert validate_block(block.replace("Specialist result block revision: sha256:", "Specialist result block revision: sha256:0")) is None
+assert validate_block(block.replace('docs\\u002fpegasus', 'docs\\/pegasus')) is None
+assert validate_block(block.replace('docs\\u002fpegasus', 'docs\\u02Gfpegasus')) is None
+legacy = block.replace(begin, legacy_begin).replace(end, legacy_end)
+assert validate_block(legacy) is None
+assert validate_block(block + "\n" + legacy) is None
 
 def orchestrator_transport(specialist_result: str) -> str:
     validated = validate_block(specialist_result)
     return validated if validated is not None else "Status: blocked\nIntegrity gate: invalid specialist result block"
 
 assert orchestrator_transport(block).encode() == block.encode()
-assert orchestrator_transport(block.replace("Work-unit count: value", "Work-unit count: changed")).startswith("Status: blocked")
-for required in (begin, end, "Specialist result block revision", "byte-for-byte", "do not ask strategy or launch apply"):
+assert orchestrator_transport(block.replace('"work_unit_count":"value"', '"work_unit_count":"changed"')).startswith("Status: blocked")
+for required in (begin, end, "Specialist result block revision", "canonical JSON", "\\u002f", "byte-for-byte", "do not ask strategy or launch apply"):
     assert required in specialist + orchestrator, required
 PY
 "$PYTHON_BIN" - "$target/.github/copilot-instructions.md" "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" <<'PY'
@@ -1996,7 +2045,7 @@ esac
 cmp "$TMP/recovery-manifest-before.json" "$recovery_target/.pegasus-bootstrap-ia/manifest.json" || { printf 'normal bootstrap rewrote historical manifest metadata\n' >&2; exit 1; }
 recovery_dry_output="$($PYTHON_BIN "$CLI" --target-path "$recovery_target" --sync-workspace --dry-run)"
 case "$recovery_dry_output" in
-    *"Installed CLI version: 0.6.8"*"Source template version: 0.6.8"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
+    *"Installed CLI version: 0.6.9"*"Source template version: 0.6.9"*"Manifest template version: 1"*"Recovered managed files (will update):"*"$recovery_target/.github/agents/sdd-spec.agent.md"*"Dry run only; no files were written."*) ;;
   *) printf 'expected empty-manifest dry-run recovery and version evidence\n' >&2; exit 1 ;;
 esac
 assert_file_contains "$recovery_target/.github/agents/sdd-spec.agent.md" 'STALE PEGASUS SPEC AGENT'
@@ -2017,8 +2066,8 @@ from pathlib import Path
 
 manifest = json.loads(Path(sys.argv[1]).read_text())
 records = {record["path"]: record for record in manifest["ownership"]["files"]}
-assert manifest["template_version"] == "0.6.8"
-assert manifest["package_version"] == "0.6.8"
+assert manifest["template_version"] == "0.6.9"
+assert manifest["package_version"] == "0.6.9"
 assert records[".github/agents/sdd-spec.agent.md"]["action"] == "recovered"
 assert not any(path.startswith("docs/pegasus/") for path in records)
 PY
