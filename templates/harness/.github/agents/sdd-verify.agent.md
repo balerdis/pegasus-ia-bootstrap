@@ -7,77 +7,14 @@ tools: ['read', 'search', 'edit', 'execute']
 
 # SDD Verify Agent
 
-Execute the assigned verify phase directly in this fresh context. Do not delegate or launch another agent for this phase.
+You own and execute the assigned verification directly in this fresh context. Do not delegate, launch another agent, recursively invoke verify, or invoke apply. Verification judges the full SDD contract; it does not remediate implementation.
 
-Follow `.github/instructions/pegasus-sdd-boundaries.instructions.md` for artifact and internal-communication language. Verify output defaults to English unless the user explicitly names another language for that artifact.
+Before phase work, require exactly one change identity, exactly one implemented task-slice identity, and exactly one evidence-scope identity defining the implementation changes and runtime/manual evidence to inspect. If any identity is missing, ambiguous, inconsistent, or not ready for verification, return blocked before verification work.
 
-Verify from fresh context when possible, then judge implementation against the full SDD contract, not only against tests.
+Load these workspace-root-relative references manually in exact order: (1) `.github/references/shared/authority.md` and (2) `.github/references/shared/phase-common.md` immediately after identity authorization; (3) `.github/references/shared/delegation-ownership.md` before any execution; (4) `.github/references/shared/skill-resolution.md` before resolving injected skill paths; (5) `.github/references/shared/persistence.md` before memory recovery or persistence; (6) `.github/references/phases/verify.md` before reading change artifacts, changed files, or running checks; (7) `.github/references/shared/status-readiness.md` before setting status/readiness; (8) `.github/references/shared/result-envelope.md` and (9) `.github/references/results/verify-result-v1.md` before producing any result. Steps 4 and 5 are conditionally operational: still load their contracts in order, then report `no-match` when no skill path was injected and the truthful unavailable/not-needed state when memory operations do not apply.
 
-Follow `.github/instructions/pegasus-memory.instructions.md`. After MCP `health` succeeds, proactively save verification evidence, commands/results, deviations, final verdict, remediation needs, handoff notes, and artifact references through MCP; merge updates instead of replacing useful history.
+Every exact path above is required. If any is missing or unreadable, immediately return `blocked-missing-reference` naming that path. Do not search for, inspect, or use alternate, renamed, backup, neighboring, or similarly named copies.
 
-## Input contract
+Instruction precedence is: current macro > phase reference > shared reference > workspace default > global fallback. Lower levels cannot weaken higher safety gates. A same-level conflict is `blocked` before verification work.
 
-- `docs/pegasus/changes/<change-id>/tasks.md` identifies the implemented slice or completed tasks.
-- `docs/pegasus/changes/<change-id>/apply-progress.md` records the apply work to verify.
-- `docs/pegasus/changes/<change-id>/verify.md` exists or will be created from the template.
-- Implementation changes are available to inspect.
-
-When possible, also re-read PRD, proposal, spec, design, and changed files from fresh context before judging completion.
-
-## Required reads
-
-Read before running or recording verification:
-
-- `.github/copilot-instructions.md`
-- `.github/instructions/pegasus-sdd-boundaries.instructions.md`
-- `docs/pegasus/changes/<change-id>/prd.md`
-- `docs/pegasus/changes/<change-id>/proposal.md`
-- `docs/pegasus/changes/<change-id>/spec.md`
-- `docs/pegasus/changes/<change-id>/design.md`
-- `docs/pegasus/changes/<change-id>/tasks.md`
-- `docs/pegasus/changes/<change-id>/apply-progress.md`
-- Existing `docs/pegasus/changes/<change-id>/verify.md`
-- Changed implementation files when available.
-
-## Output contract
-
-Update `docs/pegasus/changes/<change-id>/verify.md` with merge-not-overwrite discipline:
-
-- Fresh-context status and changed files reviewed.
-- Compliance matrix against PRD, proposal, spec, design, and tasks.
-- Commands, results, and runtime/manual evidence.
-- Deviations, risks, and unresolved questions.
-- Test coverage or manual check summary.
-- Final verdict for the verified slice.
-- MCP memory updates for durable observations, task status, artifact status, and handoff notes after `health` succeeds.
-
-## Stopping point
-
-Stop after recording the verification verdict and any caveats. If remediation is needed, report it and wait for the user/orchestrator to launch apply again.
-
-## Forbidden scope
-
-- Do not make unrelated implementation changes.
-- Do not edit implementation code unless the user separately asks for remediation.
-- Do not treat passing tests as sufficient when PRD/proposal/spec/design/tasks disagree.
-- Do not overwrite prior verification history.
-- Do not fall back to Markdown memory if MCP is unavailable.
-
-## Merge/update rules
-
-- Append or merge new verification entries into existing useful history.
-- Preserve prior commands, failures, deviations, and caveats.
-- Mark superseded evidence clearly instead of deleting it.
-- If final verdict is blocked or failed, leave enough detail for the next apply slice.
-
-## Phase-specific checklist
-
-- [ ] Fresh-context verification was used where possible.
-- [ ] PRD/proposal/spec/design/tasks were checked, not only tests.
-- [ ] Changed files were reviewed or unavailable status was explained.
-- [ ] Runtime evidence includes commands/results or manual checks.
-- [ ] Compliance matrix is complete for the slice.
-- [ ] Deviations and risks are recorded.
-- [ ] No unrelated implementation changes were made.
-- [ ] Final verdict is explicit: Pass, Pass with caveats, Blocked, or Fail.
-- [ ] MCP `health` was called first, and durable observations were saved through MCP after `health` succeeded; if MCP was unavailable, the exact unavailable warning was shown: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`.
+Verify only the authorized identities, record the truthful verdict and evidence, then return control. Output contract: `PEGASUS_VERIFY_RESULT_V1`. Never report verification, persistence, evidence, or completion that did not occur; blocked output must identify the unmet gate and contain no verification-success claim.

@@ -51,6 +51,17 @@ expected_files=(
   ".github/agents/sdd-design.agent.md"
   ".github/agents/sdd-tasks.agent.md"
   ".github/agents/sdd-apply.agent.md"
+  ".github/references/shared/authority.md"
+  ".github/references/shared/phase-common.md"
+  ".github/references/shared/delegation-ownership.md"
+  ".github/references/shared/persistence.md"
+  ".github/references/shared/result-envelope.md"
+  ".github/references/shared/status-readiness.md"
+  ".github/references/shared/skill-resolution.md"
+  ".github/references/phases/apply.md"
+  ".github/references/phases/verify.md"
+  ".github/references/results/apply-result-v1.md"
+  ".github/references/results/verify-result-v1.md"
   ".github/agents/sdd-verify.agent.md"
   ".github/agents/session-handoff.agent.md"
   ".github/agents/memory-maintainer.agent.md"
@@ -66,6 +77,41 @@ expected_files=(
   "docs/pegasus/apply-progress.md"
   "docs/pegasus/verify.md"
 )
+
+assert_wheel_reference_paths() {
+  local wheel_dir="$TMP/wheel-dist"
+  mkdir -p "$wheel_dir"
+  "$VENV/bin/python" -m pip wheel --no-deps --wheel-dir "$wheel_dir" "$ROOT" >/dev/null
+  "$VENV/bin/python" - "$wheel_dir" <<'PY'
+from pathlib import Path
+import sys
+from zipfile import ZipFile
+
+wheel = next(Path(sys.argv[1]).glob("*.whl"))
+prefix = "pegasus_ia_bootstrap-0.6.9.data/data/share/pegasus-ia-bootstrap/templates/harness/.github/references/"
+expected = {
+    prefix + "shared/authority.md",
+    prefix + "shared/phase-common.md",
+    prefix + "shared/delegation-ownership.md",
+    prefix + "shared/persistence.md",
+    prefix + "shared/result-envelope.md",
+    prefix + "shared/status-readiness.md",
+    prefix + "shared/skill-resolution.md",
+    prefix + "phases/apply.md",
+    prefix + "phases/verify.md",
+    prefix + "results/apply-result-v1.md",
+    prefix + "results/verify-result-v1.md",
+}
+with ZipFile(wheel) as archive:
+    actual = {name for name in archive.namelist() if name.startswith(prefix)}
+assert actual == expected, (actual, expected)
+PY
+}
+
+assert_wheel_reference_paths
+if [ "${1:-}" = "wheel" ]; then
+  exit 0
+fi
 
 chmod +x "$CLI"
 
@@ -344,6 +390,172 @@ assert_file_contains "$target/AGENTS.md" ".github/agents/pegasus-orchestrator.ag
 assert_file_contains "$target/.github/copilot-instructions.md" "Primary entry point"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "name: pegasus-orchestrator"
 assert_file_contains "$target/.github/agents/sdd-apply.agent.md" "user-invocable: false"
+apply_agent="$target/.github/agents/sdd-apply.agent.md"
+references="$target/.github/references"
+apply_reference="$references/phases/apply.md"
+verify_agent="$target/.github/agents/sdd-verify.agent.md"
+verify_reference="$references/phases/verify.md"
+persistence_reference="$references/shared/persistence.md"
+assert_file_contains "$apply_agent" 'exactly one authorized task-slice identity'
+assert_file_contains "$apply_agent" 'If the workload forecast requires a decision'
+assert_file_contains "$apply_agent" '.github/references/shared/authority.md'
+assert_file_contains "$apply_agent" '.github/references/shared/skill-resolution.md'
+assert_file_contains "$apply_agent" '.github/references/phases/apply.md'
+assert_file_contains "$apply_agent" '.github/references/results/apply-result-v1.md'
+assert_file_contains "$apply_agent" 'immediately return `blocked-missing-reference`'
+assert_file_contains "$apply_agent" 'Do not search for, inspect, or use alternate, renamed, backup, neighboring, or similarly named copies.'
+assert_file_contains "$apply_agent" 'current macro > phase reference > shared reference > workspace default > global fallback'
+assert_file_contains "$apply_agent" 'PEGASUS_APPLY_RESULT_V1'
+assert_file_contains "$apply_reference" 'MCP task progress and apply-progress before editing'
+assert_file_contains "$apply_reference" 'preliminary apply evidence does not replace verification'
+assert_file_contains "$apply_reference" 'Merge, rather than replace'
+assert_file_contains "$apply_reference" '## Scope And Authority'
+assert_file_contains "$verify_agent" 'exactly one change identity'
+assert_file_contains "$verify_agent" 'exactly one implemented task-slice identity'
+assert_file_contains "$verify_agent" 'exactly one evidence-scope identity'
+assert_file_contains "$verify_agent" '.github/references/phases/verify.md'
+assert_file_contains "$verify_agent" '.github/references/results/verify-result-v1.md'
+assert_file_contains "$verify_agent" 'immediately return `blocked-missing-reference`'
+assert_file_contains "$verify_agent" 'Do not search for, inspect, or use alternate, renamed, backup, neighboring, or similarly named copies.'
+assert_file_contains "$verify_agent" 'current macro > phase reference > shared reference > workspace default > global fallback'
+assert_file_contains "$verify_agent" 'PEGASUS_VERIFY_RESULT_V1'
+assert_file_contains "$verify_reference" 'fresh context as an operational rule, not a runtime guarantee'
+assert_file_contains "$verify_reference" 'Compare implementation against PRD, proposal, spec requirements/scenarios, design constraints, tasks, and apply-progress'
+assert_file_contains "$verify_reference" 'Do not make unrelated changes or edit implementation unless the user separately authorizes a later remediation run.'
+if grep -R -Eq '^applyTo:' "$target/.github/references"; then
+  printf 'references must remain manually loaded\n' >&2
+  exit 1
+fi
+apply_body_lines=$(awk 'BEGIN { frontmatter=0; body=0 } /^---$/ { frontmatter++; next } frontmatter >= 2 { body++ } END { print body }' "$apply_agent")
+[ "$apply_body_lines" -le 30 ] || { printf 'sdd-apply macro exceeds 30 body lines\n' >&2; exit 1; }
+verify_body_lines=$(awk 'BEGIN { frontmatter=0; body=0 } /^---$/ { frontmatter++; next } frontmatter >= 2 { body++ } END { print body }' "$verify_agent")
+[ "$verify_body_lines" -le 30 ] || { printf 'sdd-verify macro exceeds 30 body lines\n' >&2; exit 1; }
+if grep -Eq '^## (Input contract|Required reads|Output contract|Stopping point|Forbidden scope|Merge/update rules|Phase-specific checklist)$' "$verify_agent"; then
+  printf 'sdd-verify macro retains duplicated normative workflow body\n' >&2
+  exit 1
+fi
+"$PYTHON_BIN" - "$ROOT" <<'PY'
+from pathlib import Path
+import sys
+import tomllib
+
+root = Path(sys.argv[1])
+config = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
+data_files = config["tool"]["setuptools"]["data-files"]
+expected = {
+    "shared/authority.md", "shared/phase-common.md", "shared/delegation-ownership.md",
+    "shared/persistence.md", "shared/result-envelope.md", "shared/status-readiness.md",
+    "shared/skill-resolution.md", "phases/apply.md", "phases/verify.md",
+    "results/apply-result-v1.md", "results/verify-result-v1.md",
+}
+base = root / "templates/harness/.github/references"
+actual = set()
+destination_root = "share/pegasus-ia-bootstrap/templates/harness/.github/references/"
+for destination, patterns in data_files.items():
+    if not destination.startswith(destination_root):
+        continue
+    relative_destination = destination.removeprefix(destination_root)
+    for pattern in patterns:
+        actual.update(
+            f"{relative_destination}/{path.name}" for path in root.glob(pattern)
+        )
+assert actual == expected, (actual, expected)
+PY
+"$PYTHON_BIN" - "$ROOT/templates/harness" "$target" <<'PY'
+from pathlib import Path
+import sys
+
+canonical, generated = map(Path, sys.argv[1:])
+references = sorted((canonical / ".github/references").rglob("*.md"))
+for source_path in [canonical / ".github/agents/sdd-apply.agent.md", canonical / ".github/agents/sdd-verify.agent.md", *references]:
+    relative = source_path.relative_to(canonical)
+    source = source_path.read_text(encoding="utf-8").rstrip("\n")
+    installed = (generated / relative).read_text(encoding="utf-8").splitlines()
+    assert "\n".join(installed[1:-1]) == source, str(relative)
+PY
+"$PYTHON_BIN" - "$ROOT/templates/harness" <<'PY'
+from pathlib import Path
+import re
+import sys
+
+root = Path(sys.argv[1])
+apply_agent = (root / ".github/agents/sdd-apply.agent.md").read_text(encoding="utf-8")
+verify_agent = (root / ".github/agents/sdd-verify.agent.md").read_text(encoding="utf-8")
+reference_root = root / ".github/references"
+expected = [
+    "shared/authority.md", "shared/phase-common.md", "shared/delegation-ownership.md",
+    "shared/skill-resolution.md", "shared/persistence.md", "phases/apply.md",
+    "phases/verify.md", "shared/status-readiness.md", "shared/result-envelope.md",
+    "results/apply-result-v1.md", "results/verify-result-v1.md",
+]
+actual_files = {path.relative_to(reference_root).as_posix() for path in reference_root.rglob("*.md")}
+assert actual_files == set(expected), (actual_files, set(expected))
+assert not (reference_root / "pegasus-shared-authority.md").exists()
+assert not (reference_root / "sdd-apply-phase.md").exists()
+
+apply_expected = [path for path in expected if path not in {"phases/verify.md", "results/verify-result-v1.md"}]
+verify_expected = [path for path in expected if path not in {"phases/apply.md", "results/apply-result-v1.md"}]
+for agent, paths in ((apply_agent, apply_expected), (verify_agent, verify_expected)):
+    positions = [agent.index(f".github/references/{path}") for path in paths]
+    assert positions == sorted(positions), positions
+for literal in (
+    "exactly one authorized task-slice identity", "current resolved strategy",
+    "Every exact path above is required", "blocked-missing-reference",
+    "alternate, renamed, backup, neighboring, or similarly named copies",
+    "current macro > phase reference > shared reference > workspace default > global fallback",
+    "same-level conflict", "PEGASUS_APPLY_RESULT_V1", "no implementation-success claim",
+):
+    assert literal in apply_agent, literal
+for literal in (
+    "exactly one change identity", "exactly one implemented task-slice identity",
+    "exactly one evidence-scope identity", "Every exact path above is required",
+    "blocked-missing-reference", "alternate, renamed, backup, neighboring, or similarly named copies",
+    "current macro > phase reference > shared reference > workspace default > global fallback",
+    "same-level conflict", "PEGASUS_VERIFY_RESULT_V1", "no verification-success claim",
+):
+    assert literal in verify_agent, literal
+
+edges = {path: set() for path in expected}
+for relative in expected:
+    text = (reference_root / relative).read_text(encoding="utf-8")
+    assert not re.search(r"^applyTo:", text, re.MULTILINE), relative
+    for target in re.findall(r"\.github/references/([^`\s]+\.md)", text):
+        assert target in edges, (relative, target)
+        edges[relative].add(target)
+
+visiting, visited = set(), set()
+def visit(node):
+    assert node not in visiting, f"reference cycle at {node}"
+    if node in visited:
+        return
+    visiting.add(node)
+    for child in edges[node]:
+        visit(child)
+    visiting.remove(node)
+    visited.add(node)
+for node in edges:
+    visit(node)
+assert visited == set(expected)
+
+owners = {
+    "shared/authority.md": "instruction precedence and conflict handling only",
+    "shared/phase-common.md": "behavior common to specialist phase execution",
+    "shared/delegation-ownership.md": "specialist execution and ownership boundaries",
+    "shared/persistence.md": "generic Pegasus Memory recovery and persistence behavior",
+    "shared/result-envelope.md": "invariant specialist result-envelope semantics only",
+    "shared/status-readiness.md": "generic status selection and readiness claims",
+    "shared/skill-resolution.md": "exact skill paths supplied in its invocation context",
+    "phases/apply.md": "detailed `sdd-apply` workflow",
+    "phases/verify.md": "only the detailed `sdd-verify` workflow",
+    "results/apply-result-v1.md": "Apply v1 result schema",
+    "results/verify-result-v1.md": "only the Verify v1 result schema",
+}
+texts = {path: (reference_root / path).read_text(encoding="utf-8") for path in owners}
+for relative, phrase in owners.items():
+    assert phrase in texts[relative], (relative, phrase)
+    for other in set(owners) - {relative}:
+        assert phrase not in texts[other], (relative, other, phrase)
+PY
 assert_file_contains "$target/.github/agents/doc-designer.agent.md" "PRD and discovery contract"
 assert_file_contains "$target/.github/agents/doc-designer.agent.md" "Do not write technical design"
 assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "Proposal-only contract"
@@ -409,7 +621,7 @@ if grep -Fq '| None identified, or TBD | TBD | TBD | TBD | TBD | TBD |' "$target
 fi
 assert_file_contains "$target/docs/pegasus/apply-progress.md" "Current In-Progress Work"
 assert_file_contains "$target/docs/pegasus/apply-progress.md" "Merge updates into the existing useful history"
-assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "Verify from fresh context when possible"
+assert_file_contains "$target/.github/references/phases/verify.md" "Treat fresh context as an operational rule, not a runtime guarantee."
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "Launch deduplication"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "MCP persistence summary:"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "ensure_project: <succeeded|not needed|failed: reason>"
@@ -554,18 +766,19 @@ assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'The only allowed database mutation is an explicit Pegasus Memory schema migration performed by Pegasus Memory itself'
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'must not reset, delete, recreate, or overwrite the Pegasus Memory database'
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'Clean test memory must be created as explicit test setup, never as a sync side effect.'
-for memory_guided_agent in doc-designer sdd-proposal sdd-spec sdd-design sdd-tasks sdd-apply sdd-verify session-handoff memory-maintainer pegasus-orchestrator; do
+for memory_guided_agent in doc-designer sdd-proposal sdd-spec sdd-design sdd-tasks session-handoff memory-maintainer pegasus-orchestrator; do
   assert_file_contains "$target/.github/agents/$memory_guided_agent.agent.md" "pegasus-memory.instructions.md"
 done
+assert_file_contains "$persistence_reference" "pegasus-memory.instructions.md"
 assert_file_contains "$target/.github/agents/doc-designer.agent.md" "PRD/product discoveries"
 assert_file_contains "$target/.github/agents/sdd-proposal.agent.md" "proposal status, assumptions, scope decisions, risks"
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "requirement decisions, scenario coverage, open questions"
 assert_file_contains "$target/.github/agents/sdd-design.agent.md" "architecture decisions, tradeoffs, alternatives, risks"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "task progress, blockers, review budget assessment"
-assert_file_contains "$target/.github/agents/sdd-apply.agent.md" "implementation progress, blockers, changed files, tests/checks run"
-assert_file_contains "$target/.github/agents/sdd-apply.agent.md" "merge updates instead of replacing useful history"
-assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "verification evidence, commands/results, deviations, final verdict"
-assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "merge updates instead of replacing useful history"
+assert_file_contains "$apply_reference" "current/completed work, changed files, preliminary commands/results"
+assert_file_contains "$persistence_reference" "Merge durable observations, task progress, artifact references, blockers, evidence, and handoff state"
+assert_file_contains "$verify_reference" "persist verification evidence, deviations, verdict, remediation needs"
+assert_file_contains "$verify_reference" "Merge the verification entry"
 assert_file_contains "$target/.github/agents/session-handoff.agent.md" "handoff/session summary"
 assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "Proactively save decisions, bugfixes, discoveries/gotchas"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "## Memory state"
@@ -661,7 +874,7 @@ if "$PYTHON_BIN" "$CLI" --new-change missing-manifest --target-path "$TMP/not-in
   exit 1
 fi
 
-for agent in sdd-spec sdd-design sdd-tasks sdd-apply sdd-verify; do
+for agent in sdd-spec sdd-design sdd-tasks; do
   agent_file="$target/.github/agents/$agent.agent.md"
   assert_file_contains "$agent_file" "## Input contract"
   assert_file_contains "$agent_file" "## Required reads"
@@ -669,6 +882,12 @@ for agent in sdd-spec sdd-design sdd-tasks sdd-apply sdd-verify; do
   assert_file_contains "$agent_file" "## Stopping point"
   assert_file_contains "$agent_file" "## Forbidden scope"
   assert_file_contains "$agent_file" "## Phase-specific checklist"
+done
+for heading in "## Input Contract" "## Required Reads" "## Duplicate And Execution Rules" "## Progress Updates" "## Stop And Return"; do
+  assert_file_contains "$apply_reference" "$heading"
+done
+for heading in "## Inputs And Fresh Reads" "## Verification Workflow" "## Updates And Status" "## Stop And Return"; do
+  assert_file_contains "$verify_reference" "$heading"
 done
 
 assert_file_contains "$target/.github/agents/sdd-spec.agent.md" "approved PRD and approved proposal"
@@ -926,12 +1145,12 @@ for work_unit_field in "Implementation scope:" "Test scope:" "Focused test comma
   assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "$work_unit_field"
 done
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Do not implement code"
-assert_file_contains "$target/.github/agents/sdd-apply.agent.md" "approved next task slice"
-assert_file_contains "$target/.github/agents/sdd-apply.agent.md" "duplicate-check result"
-assert_file_contains "$target/.github/agents/sdd-apply.agent.md" 'preliminary apply evidence as a replacement for `sdd-verify`'
-assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "Compliance matrix against PRD, proposal, spec, design, and tasks"
-assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "No unrelated implementation changes were made"
-assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "Do not edit implementation code unless the user separately asks for remediation"
+assert_file_contains "$apply_reference" "approved next slice"
+assert_file_contains "$apply_reference" "duplicate-check result"
+assert_file_contains "$apply_reference" 'preliminary apply evidence does not replace verification'
+assert_file_contains "$verify_reference" "Record a compliance matrix"
+assert_file_contains "$verify_reference" "Do not make unrelated changes"
+assert_file_contains "$verify_reference" "edit implementation unless the user separately authorizes a later remediation run"
 
 orchestrator="$target/.github/agents/pegasus-orchestrator.agent.md"
 assert_file_contains "$orchestrator" "thin coordinator, not a phase executor"
@@ -974,9 +1193,10 @@ if grep -Eq '^  - (edit|execute)$' "$orchestrator"; then
   printf 'orchestrator must not expose phase execution tools\n' >&2
   exit 1
 fi
-for phase_agent in doc-designer sdd-proposal sdd-spec sdd-design sdd-tasks sdd-apply sdd-verify session-handoff; do
+for phase_agent in doc-designer sdd-proposal sdd-spec sdd-design sdd-tasks sdd-apply session-handoff; do
   assert_file_contains "$target/.github/agents/$phase_agent.agent.md" "Do not delegate or launch another agent for this phase."
 done
+assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "Do not delegate, launch another agent, recursively invoke verify, or invoke apply."
 assert_file_contains "$target/.github/agents/sdd-apply.agent.md" "return blocked before writing"
 assert_file_contains "$target/.github/agents/sdd-apply.agent.md" 'distinct fresh-context `sdd-verify`'
 assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "directly in this fresh context"
@@ -1837,8 +2057,8 @@ for path in surfaces:
 required = "docs/pegasus/changes/<change-id>/"
 for name in (
     ".github/agents/sdd-tasks.agent.md",
-    ".github/agents/sdd-apply.agent.md",
-    ".github/agents/sdd-verify.agent.md",
+    ".github/references/phases/apply.md",
+    ".github/references/phases/verify.md",
     ".github/prompts/sdd-phases.prompt.md",
     ".github/prompts/handoff.prompt.md",
     ".cursor/rules/pegasus-workflow.mdc",
@@ -1904,7 +2124,7 @@ if grep -Fq 'stop before writing, finalizing, or Pegasus Memory persistence' "$R
   printf 'stable spec contains generic blocked-persistence wording\n' >&2
   exit 1
 fi
-"$PYTHON_BIN" - "$target/.github/agents/sdd-tasks.agent.md" "$target/.github/agents/sdd-apply.agent.md" "$target/.github/agents/sdd-verify.agent.md" "$target/.github/prompts/sdd-phases.prompt.md" <<'PY'
+"$PYTHON_BIN" - "$target/.github/agents/sdd-tasks.agent.md" "$apply_reference" "$verify_reference" "$target/.github/prompts/sdd-phases.prompt.md" <<'PY'
 import sys
 from pathlib import Path
 
