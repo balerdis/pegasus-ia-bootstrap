@@ -72,7 +72,8 @@ Stop after producing the task plan and return control to the orchestrator. Forec
 5. Only now satisfy `ensure_project` and `ensure_change` preconditions when needed.
 6. Call `record_task_progress` for phase `tasks`, carrying the frozen revision.
 7. Call `record_handoff` exactly once for this final revision, carrying the same frozen revision. Record one observable invocation identity and its result when the platform exposes identity; an invocation display followed by its result is one invocation, not two.
-8. Return the complete envelope.
+8. Build the immutable specialist result block below. Compute `Specialist result block revision` as lowercase SHA-256 over the exact UTF-8 bytes from `Status:` through `Next action:`, including their line endings and one final LF, but excluding both delimiters and the revision line. Freeze the complete delimited block after inserting that digest.
+9. Return exactly one complete block as the authoritative result. Do not add another envelope, artifact-path field, or envelope summary outside it.
 
 In short, after freeze and any required ensures, persist `record_task_progress` for phase `tasks`, then `record_handoff`, with the same frozen revision in both payloads.
 
@@ -82,9 +83,11 @@ When `Decision needed before apply: Yes` and no explicit current user strategy d
 
 If any content or formatting edit occurs or becomes necessary after freeze or after persistence begins, completion is blocked. Do not edit, recompute the hash, refresh persistence, or claim success in that run. Report the mutation/blocker with truthful operation states; a new closure attempt must start from edits before reread and validation.
 
-Return this mandatory flat envelope with every canonical English label on its own line. Narrative summaries, renamed labels, and omissions are invalid:
+Return this mandatory immutable block with every canonical English label on its own line and in the shown order. The plain ASCII delimiters are identity-bearing lines that remain visible in Markdown and flat transcript exports; code fences are illustrative only and are not part of the block. Narrative summaries, renamed/reordered labels, duplicate fields, omissions, and content outside the block that reconstructs any envelope field are invalid:
 
 ```text
+=== PEGASUS SPECIALIST RESULT BEGIN v1 ===
+Specialist result block revision: sha256:<lowercase SHA-256 of the exact payload defined above>
 Status: <completed|blocked>
 Specialist agent: sdd-tasks
 Fresh-context delegation: confirmed by orchestrator invocation
@@ -122,9 +125,10 @@ record_handoff invocation: <one observable invocation identity|not observable>
 Risks/blockers: <None|exact risks/blockers>
 Decision required: <Yes|No>
 Next action: <user strategy decision|ready for apply authorization|exact blocker>
+=== PEGASUS SPECIALIST RESULT END v1 ===
 ```
 
-The envelope forecast values MUST exactly reproduce the seven artifact forecast lines. Before user choice, both the artifact and envelope MUST include the exact standalone lines `Strategy decision evidence: none` and `Size-exception approval evidence: none`. Persistence states must be truthful: never report `succeeded` for an omitted operation. Completed closure requires matching frozen SHA-256 revisions, exact `Post-persistence edits: none`, and exactly one successful `record_handoff` invocation for that final revision when invocation count is observable.
+The block payload forecast values MUST exactly reproduce the seven artifact forecast lines. Before user choice, both the artifact and block MUST include the exact standalone lines `Strategy decision evidence: none` and `Size-exception approval evidence: none`. Persistence states must be truthful: never report `succeeded` for an omitted operation. Completed closure requires matching frozen SHA-256 revisions, exact `Post-persistence edits: none`, exactly one successful `record_handoff` invocation for that final revision when invocation count is observable, and a block revision matching the returned payload bytes.
 
 ## Forbidden scope
 
