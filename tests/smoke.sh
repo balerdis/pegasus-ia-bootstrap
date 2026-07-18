@@ -60,11 +60,13 @@ expected_files=(
   ".github/references/shared/skill-resolution.md"
   ".github/references/orchestration/routing.md"
   ".github/references/phases/apply.md"
+  ".github/references/phases/design.md"
   ".github/references/phases/prd.md"
   ".github/references/phases/proposal.md"
   ".github/references/phases/spec.md"
   ".github/references/phases/verify.md"
   ".github/references/results/apply-result-v1.md"
+  ".github/references/results/design-result-v1.md"
   ".github/references/results/orchestrator-result-v1.md"
   ".github/references/results/prd-result-v1.md"
   ".github/references/results/proposal-result-v1.md"
@@ -106,12 +108,14 @@ expected = {
     prefix + "shared/status-readiness.md",
     prefix + "shared/skill-resolution.md",
     prefix + "phases/apply.md",
+    prefix + "phases/design.md",
     prefix + "phases/prd.md",
     prefix + "phases/proposal.md",
     prefix + "phases/spec.md",
     prefix + "phases/verify.md",
     prefix + "orchestration/routing.md",
     prefix + "results/apply-result-v1.md",
+    prefix + "results/design-result-v1.md",
     prefix + "results/orchestrator-result-v1.md",
     prefix + "results/prd-result-v1.md",
     prefix + "results/proposal-result-v1.md",
@@ -415,6 +419,9 @@ proposal_agent="$target/.github/agents/sdd-proposal.agent.md"
 proposal_reference="$references/phases/proposal.md"
 spec_agent="$target/.github/agents/sdd-spec.agent.md"
 spec_reference="$references/phases/spec.md"
+design_agent="$target/.github/agents/sdd-design.agent.md"
+design_reference="$references/phases/design.md"
+design_result_reference="$references/results/design-result-v1.md"
 verify_agent="$target/.github/agents/sdd-verify.agent.md"
 verify_reference="$references/phases/verify.md"
 orchestrator_agent="$target/.github/agents/pegasus-orchestrator.agent.md"
@@ -471,6 +478,12 @@ assert_file_contains "$spec_agent" 'PEGASUS_SPEC_RESULT_V1'
 assert_file_contains "$spec_reference" 'Every normative requirement MUST trace'
 assert_file_contains "$spec_reference" 'at least one OpenSpec-style `GIVEN` / `WHEN` / `THEN` acceptance scenario'
 assert_file_contains "$spec_reference" 'Return control for human Spec review/approval before Design.'
+assert_file_contains "$design_agent" 'exactly one active change identity'
+assert_file_contains "$design_agent" 'Conversational approval cannot override artifact state.'
+assert_file_contains "$design_agent" '.github/references/phases/design.md'
+assert_file_contains "$design_agent" '.github/references/results/design-result-v1.md'
+assert_file_contains "$design_agent" 'immediately return `blocked-missing-reference`'
+assert_file_contains "$design_agent" 'PEGASUS_DESIGN_RESULT_V1'
 if grep -R -Eq '^applyTo:' "$target/.github/references"; then
   printf 'references must remain manually loaded\n' >&2
   exit 1
@@ -485,6 +498,8 @@ proposal_body_lines=$(awk 'BEGIN { frontmatter=0; body=0 } /^---$/ { frontmatter
 [ "$proposal_body_lines" -le 30 ] || { printf 'sdd-proposal macro exceeds 30 body lines\n' >&2; exit 1; }
 spec_body_lines=$(awk 'BEGIN { frontmatter=0; body=0 } /^---$/ { frontmatter++; next } frontmatter >= 2 { body++ } END { print body }' "$spec_agent")
 [ "$spec_body_lines" -le 30 ] || { printf 'sdd-spec macro exceeds 30 body lines\n' >&2; exit 1; }
+design_body_lines=$(awk 'BEGIN { frontmatter=0; body=0 } /^---$/ { frontmatter++; next } frontmatter >= 2 { body++ } END { print body }' "$design_agent")
+[ "$design_body_lines" -le 30 ] || { printf 'sdd-design macro exceeds 30 body lines\n' >&2; exit 1; }
 orchestrator_body_lines=$(awk 'BEGIN { frontmatter=0; body=0 } /^---$/ { frontmatter++; next } frontmatter >= 2 { body++ } END { print body }' "$orchestrator_agent")
 [ "$orchestrator_body_lines" -le 35 ] || { printf 'orchestrator macro exceeds 35 body lines\n' >&2; exit 1; }
 assert_file_contains "$orchestrator_agent" 'You are the user-facing coordinator, never a phase executor.'
@@ -509,6 +524,10 @@ if grep -Eq '^## (Input contract|Required reads|Output contract|Stopping point|F
   printf 'sdd-spec macro retains duplicated normative workflow body\n' >&2
   exit 1
 fi
+if grep -Eq '^## (Input contract|Required reads|Technical context and material gaps|Managed artifact and language rules|Output contract|Pegasus Memory closure contract|Stopping point|Forbidden scope|Phase-specific checklist)$' "$design_agent"; then
+  printf 'sdd-design macro retains duplicated normative workflow body\n' >&2
+  exit 1
+fi
 "$PYTHON_BIN" - "$ROOT" <<'PY'
 from pathlib import Path
 import sys
@@ -520,10 +539,10 @@ data_files = config["tool"]["setuptools"]["data-files"]
 expected = {
     "shared/authority.md", "shared/phase-common.md", "shared/delegation-ownership.md",
     "shared/persistence.md", "shared/result-envelope.md", "shared/status-readiness.md",
-    "shared/skill-resolution.md", "orchestration/routing.md", "phases/apply.md", "phases/prd.md",
+    "shared/skill-resolution.md", "orchestration/routing.md", "phases/apply.md", "phases/design.md", "phases/prd.md",
     "phases/proposal.md", "phases/spec.md", "phases/verify.md", "results/apply-result-v1.md",
     "results/orchestrator-result-v1.md", "results/prd-result-v1.md", "results/proposal-result-v1.md",
-    "results/spec-result-v1.md", "results/verify-result-v1.md",
+    "results/design-result-v1.md", "results/spec-result-v1.md", "results/verify-result-v1.md",
 }
 base = root / "templates/harness/.github/references"
 actual = set()
@@ -544,7 +563,7 @@ import sys
 
 canonical, generated = map(Path, sys.argv[1:])
 references = sorted((canonical / ".github/references").rglob("*.md"))
-for source_path in [canonical / ".github/agents/pegasus-orchestrator.agent.md", canonical / ".github/agents/doc-designer.agent.md", canonical / ".github/agents/sdd-proposal.agent.md", canonical / ".github/agents/sdd-spec.agent.md", canonical / ".github/agents/sdd-apply.agent.md", canonical / ".github/agents/sdd-verify.agent.md", canonical / ".github/prompts/sdd-phases.prompt.md", *references]:
+for source_path in [canonical / ".github/agents/pegasus-orchestrator.agent.md", canonical / ".github/agents/doc-designer.agent.md", canonical / ".github/agents/sdd-proposal.agent.md", canonical / ".github/agents/sdd-spec.agent.md", canonical / ".github/agents/sdd-design.agent.md", canonical / ".github/agents/sdd-apply.agent.md", canonical / ".github/agents/sdd-verify.agent.md", canonical / ".github/prompts/sdd-phases.prompt.md", *references]:
     relative = source_path.relative_to(canonical)
     source = source_path.read_text(encoding="utf-8").rstrip("\n")
     installed = (generated / relative).read_text(encoding="utf-8").splitlines()
@@ -560,14 +579,15 @@ apply_agent = (root / ".github/agents/sdd-apply.agent.md").read_text(encoding="u
 prd_agent = (root / ".github/agents/doc-designer.agent.md").read_text(encoding="utf-8")
 proposal_agent = (root / ".github/agents/sdd-proposal.agent.md").read_text(encoding="utf-8")
 spec_agent = (root / ".github/agents/sdd-spec.agent.md").read_text(encoding="utf-8")
+design_agent = (root / ".github/agents/sdd-design.agent.md").read_text(encoding="utf-8")
 verify_agent = (root / ".github/agents/sdd-verify.agent.md").read_text(encoding="utf-8")
 reference_root = root / ".github/references"
 expected = [
     "shared/authority.md", "shared/phase-common.md", "shared/delegation-ownership.md",
-    "shared/skill-resolution.md", "shared/persistence.md", "orchestration/routing.md", "phases/apply.md",
+    "shared/skill-resolution.md", "shared/persistence.md", "orchestration/routing.md", "phases/apply.md", "phases/design.md",
     "phases/prd.md", "phases/proposal.md", "phases/spec.md", "phases/verify.md", "shared/status-readiness.md",
     "shared/result-envelope.md", "results/apply-result-v1.md", "results/orchestrator-result-v1.md",
-    "results/prd-result-v1.md", "results/proposal-result-v1.md", "results/spec-result-v1.md", "results/verify-result-v1.md",
+    "results/design-result-v1.md", "results/prd-result-v1.md", "results/proposal-result-v1.md", "results/spec-result-v1.md", "results/verify-result-v1.md",
 ]
 actual_files = {path.relative_to(reference_root).as_posix() for path in reference_root.rglob("*.md")}
 assert actual_files == set(expected), (actual_files, set(expected))
@@ -580,9 +600,10 @@ verify_expected = [path for path in expected if path not in orchestrator_only | 
 prd_expected = [path for path in expected if path.startswith("shared/") or path in {"phases/prd.md", "results/prd-result-v1.md"}]
 proposal_expected = [path for path in expected if path.startswith("shared/") or path in {"phases/proposal.md", "results/proposal-result-v1.md"}]
 spec_expected = [path for path in expected if path.startswith("shared/") or path in {"phases/spec.md", "results/spec-result-v1.md"}]
+design_expected = [path for path in expected if path.startswith("shared/") or path in {"phases/design.md", "results/design-result-v1.md"}]
 apply_expected = [path for path in apply_expected if path.startswith("shared/") or path in {"phases/apply.md", "results/apply-result-v1.md"}]
 verify_expected = [path for path in verify_expected if path.startswith("shared/") or path in {"phases/verify.md", "results/verify-result-v1.md"}]
-for agent, paths in ((prd_agent, prd_expected), (proposal_agent, proposal_expected), (spec_agent, spec_expected), (apply_agent, apply_expected), (verify_agent, verify_expected)):
+for agent, paths in ((prd_agent, prd_expected), (proposal_agent, proposal_expected), (spec_agent, spec_expected), (design_agent, design_expected), (apply_agent, apply_expected), (verify_agent, verify_expected)):
     positions = [agent.index(f".github/references/{path}") for path in paths]
     assert positions == sorted(positions), positions
 for literal in (
@@ -609,9 +630,19 @@ for literal in (
     "same-level conflict", "PEGASUS_SPEC_RESULT_V1", "no Spec-success or approval-readiness claim",
 ):
     assert literal in spec_agent, literal
+for literal in (
+    "exactly one active change identity", "proposal.md`, `spec.md`, and sibling `design.md` identities",
+    "Conversational approval cannot override artifact state", "Every exact path above is required",
+    "blocked-missing-reference", "alternate, renamed, backup, neighboring, or similarly named copies",
+    "current macro > phase reference > shared reference > workspace default > global fallback",
+    "same-level conflict", "PEGASUS_DESIGN_RESULT_V1", "no Design-success, durable-persistence, or approval-readiness claim",
+):
+    assert literal in design_agent, literal
 
 assert "tools: ['read', 'search', 'edit']" in spec_agent
 assert "agent" not in spec_agent.split("tools:", 1)[1].split("---", 1)[0]
+assert "tools: ['read', 'search', 'edit']" in design_agent
+assert "agent" not in design_agent.split("tools:", 1)[1].split("---", 1)[0]
 
 edges = {path: set() for path in expected}
 for relative in expected:
@@ -648,12 +679,14 @@ owners = {
     "phases/prd.md": "detailed `doc-designer` PRD discovery and documentation workflow",
     "phases/proposal.md": "detailed `sdd-proposal` workflow",
     "phases/spec.md": "only the detailed `sdd-spec` workflow",
+    "phases/design.md": "only the detailed `sdd-design` workflow",
     "phases/verify.md": "only the detailed `sdd-verify` workflow",
     "results/apply-result-v1.md": "Apply v1 result schema",
     "results/orchestrator-result-v1.md": "only the coordinator result schema",
     "results/prd-result-v1.md": "only the PRD v1 phase-specific fields and schema",
     "results/proposal-result-v1.md": "only the Proposal v1 phase-specific fields and schema",
     "results/spec-result-v1.md": "only the Spec v1 phase-specific fields and schema",
+    "results/design-result-v1.md": "only the Design v1 phase-specific fields, canonical labels, and schema",
     "results/verify-result-v1.md": "only the Verify v1 result schema",
 }
 texts = {path: (reference_root / path).read_text(encoding="utf-8") for path in owners}
@@ -688,7 +721,7 @@ protected = [
 protected.extend(str(path.relative_to(root)) for path in sorted((root / "templates/harness/.github/references/shared").glob("*.md")))
 for relative in protected:
     base = subprocess.run(
-        ["git", "show", f"81657c4:{relative}"], cwd=root, check=True, capture_output=True
+        ["git", "show", f"71a9f0a:{relative}"], cwd=root, check=True, capture_output=True
     ).stdout
     assert (root / relative).read_bytes() == base, f"protected file changed: {relative}"
 PY
@@ -834,16 +867,18 @@ assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'The only allowed database mutation is an explicit Pegasus Memory schema migration performed by Pegasus Memory itself'
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'must not reset, delete, recreate, or overwrite the Pegasus Memory database'
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'Clean test memory must be created as explicit test setup, never as a sync side effect.'
-for memory_guided_agent in sdd-design sdd-tasks session-handoff memory-maintainer; do
+for memory_guided_agent in sdd-tasks session-handoff memory-maintainer; do
   assert_file_contains "$target/.github/agents/$memory_guided_agent.agent.md" "pegasus-memory.instructions.md"
 done
+assert_file_contains "$design_reference" "pegasus-memory.instructions.md"
 assert_file_contains "$prd_reference" 'Call Pegasus Memory `health` before recovery.'
 assert_file_contains "$proposal_reference" "Pegasus Memory"
 assert_file_contains "$persistence_reference" "pegasus-memory.instructions.md"
 assert_file_contains "$prd_reference" "PRD/product discoveries"
 assert_file_contains "$proposal_reference" "proposal status, assumptions, scope decisions, risks"
 assert_file_contains "$spec_reference" "requirement decisions, scenario coverage, open questions"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "architecture decisions, tradeoffs, alternatives, risks"
+assert_file_contains "$design_reference" "alternatives, tradeoffs, coupling/impact"
+assert_file_contains "$design_reference" "Proposal Risk Coverage"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "task progress, blockers, review budget assessment"
 assert_file_contains "$apply_reference" "current/completed work, changed files, preliminary commands/results"
 assert_file_contains "$persistence_reference" "Merge durable observations, task progress, artifact references, blockers, evidence, and handoff state"
@@ -941,7 +976,7 @@ if "$PYTHON_BIN" "$CLI" --new-change missing-manifest --target-path "$TMP/not-in
   exit 1
 fi
 
-for agent in sdd-design sdd-tasks; do
+for agent in sdd-tasks; do
   agent_file="$target/.github/agents/$agent.agent.md"
   assert_file_contains "$agent_file" "## Input contract"
   assert_file_contains "$agent_file" "## Required reads"
@@ -949,6 +984,9 @@ for agent in sdd-design sdd-tasks; do
   assert_file_contains "$agent_file" "## Stopping point"
   assert_file_contains "$agent_file" "## Forbidden scope"
   assert_file_contains "$agent_file" "## Phase-specific checklist"
+done
+for heading in "## Sources And Isolation" "## Technical Design" "## Material Gaps And Deferred Choices" "## Risk And Readiness Coverage" "## Artifact And Language Validation" "## Atomic Persistence And Closure"; do
+  assert_file_contains "$design_reference" "$heading"
 done
 for heading in "## Input Contract" "## Required Reads" "## Duplicate And Execution Rules" "## Progress Updates" "## Stop And Return"; do
   assert_file_contains "$apply_reference" "$heading"
@@ -1109,59 +1147,36 @@ PY
 for mcp_status in ensure_project ensure_change record_artifact record_observation record_task_progress record_handoff; do
   assert_file_contains "$spec_reference" "$mcp_status: <succeeded|not needed|failed: reason>"
 done
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Decisions traceable to spec requirements or explicit technical evidence"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Do not implement code"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'current change'"'"'s `prd.md`, `proposal.md`, and `spec.md` exist and are approved in their files'
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Conversational approval never overrides"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Do not search, read, inspect, or reuse neighboring or unrelated change artifacts by default"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "existing system with implementation evidence"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Greenfield / no implementation evidence"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Greenfield / sin evidencia de implementación"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "both spaced and unspaced English variants"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "A blocking technical gap requires one concise question and a stop before writing or finalizing the design artifact"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "A non-blocking gap may remain stack-agnostic"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'In Greenfield context without concrete implementation stack, framework, or runtime evidence, `None` / `Ninguna` is invalid'
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "logical components, responsibilities, boundaries, interfaces, and control flow independently"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Never ask a required close-out question after completed-path persistence or finalization"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Trace decisions to a spec requirement or explicit evidence"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/design.md ownership=full-file -->"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Before completed-path Pegasus Memory artifact persistence, reread the artifact"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'reject untranslated structural vocabulary including `Inputs`, `Rationale`, `Tradeoffs`, `Unit`, and `Integration`'
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Pegasus Memory persistence summary:"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Artifact language: <selected language>"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Language gate: <passed|blocked: exact unresolved issues>"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Deferred technical choices: <structured summary of every choice and next gate|None / Ninguna>"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Explicit language override evidence: <exact user instruction/reference|None — English default enforced>"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Marker validation: <passed|blocked: exact marker issues>"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Traceability validation: <passed|blocked: exact per-entry traceability issues>"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Proposal risk coverage validation: <passed|blocked: exact missing risk/design/test coverage>"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Initial recovery result:"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Recovery/ensure transitions:"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Specialist agent: sdd-design"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Fresh-context delegation: confirmed by orchestrator invocation"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Artifact writer/validator/persistence owner: sdd-design"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Spanish chat, Spanish approved sources"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "every flow step, alternative, affected area, testing row, rollout/rollback row, and risk row"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Narrative prose does not satisfy the final-response contract"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'record_task_progress` for phase `design` before `record_handoff`'
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'Use `completed` only when the design is ready for review with no blocking gaps'
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Do not create tasks, work units, PR slices, implementation code"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "**Blocking path (approval/source or material technical blocker):** do not write/refine the design artifact"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "record_artifact: not needed — design artifact was not written because of blocking gap"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'status `blocked`, blockers/gaps, and next action `user answer`'
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "**Completed path:** only after marker, language, and gap validation"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "**Language-gate failure path:** the artifact may exist only as an unpersisted local draft"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "record_artifact: not needed — language validation failed before artifact persistence"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Never claim full durable success"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Treat completed-path closure as one atomic sequence"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'record_artifact` → `record_observation` → `record_task_progress` → `record_handoff`'
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "No artifact mutation is permitted after the first persistence operation begins"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "all earlier completion and persistence evidence is stale"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Final artifact revision:"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Persistence artifact revision:"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Post-persistence edits:"
+for behavior in \
+  "existing system with implementation evidence" "Greenfield / no implementation evidence" \
+  "Greenfield / sin evidencia de implementación" "both spaced and unspaced English variants" \
+  "A blocking technical gap requires one concise question" "A non-blocking gap may remain stack-agnostic" \
+  'In Greenfield context without concrete implementation stack, framework, or runtime evidence, `None` / `Ninguna` is invalid' \
+  "logical components, responsibilities, boundaries, interfaces, and control flow independently" \
+  "Never ask a required close-out question after completed-path persistence or finalization" \
+  "Trace every decision to a spec requirement or explicit technical evidence" \
+  "Do not search, read, inspect, or reuse neighboring or unrelated change artifacts by default" \
+  "every flow step, alternative, affected area, testing row, rollout/rollback row, and risk row" \
+  "No artifact mutation is permitted after the first persistence operation begins" \
+  "all earlier completion and persistence evidence is stale"; do
+  assert_file_contains "$design_reference" "$behavior"
+done
+assert_file_contains "$design_reference" "<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/design.md ownership=full-file -->"
+assert_file_contains "$design_reference" 'reject untranslated structural vocabulary including `Inputs`, `Rationale`, `Tradeoffs`, `Unit`, and `Integration`'
+assert_file_contains "$design_reference" 'record_artifact` → `record_observation` → `record_task_progress` → `record_handoff`'
+assert_file_contains "$design_reference" "record_artifact: not needed — design artifact was not written because of blocking gap"
+assert_file_contains "$design_reference" "record_artifact: not needed — language validation failed before artifact persistence"
+assert_file_contains "$design_result_reference" "Narrative prose does not satisfy the final-response contract"
+for field in "Artifact language:" "Explicit language override evidence:" "Language gate:" "Marker validation:" \
+  "Traceability validation:" "Proposal risk coverage validation:" "Deferred technical choices:" \
+  "Initial recovery result:" "Recovery/ensure transitions:" "Final artifact revision:" \
+  "Persistence artifact revision:" "Post-persistence edits:" "Specialist agent: sdd-design" \
+  "Fresh-context delegation: confirmed by orchestrator invocation" \
+  "Artifact writer/validator/persistence owner: sdd-design"; do
+  assert_file_contains "$design_result_reference" "$field"
+done
 for design_status in ensure_project ensure_change record_artifact record_observation record_task_progress record_handoff; do
-  assert_file_contains "$target/.github/agents/sdd-design.agent.md" "$design_status: <succeeded|not needed|failed: reason>"
+  assert_file_contains "$design_result_reference" "$design_status: <succeeded|not needed|failed: reason>"
 done
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Decision needed before apply: Yes|No"
 assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Chained PRs recommended: Yes|No"
@@ -1335,29 +1350,28 @@ assert_file_contains "$target/docs/pegasus/design.md" "Choice / topic | Status |
 assert_file_contains "$target/docs/pegasus/design.md" "| None | N/A |"
 assert_file_contains "$target/docs/pegasus/design.md" 'in Greenfield context without concrete implementation stack, framework, or runtime evidence, `None` (or its selected-language translation) is invalid'
 assert_file_contains "$target/docs/pegasus/design.md" "Decisiones y compensaciones"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "canonical status \`deferred-non-blocking\`"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "A missing deferred field is blocking"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" 'The final response uses the exact `Deferred technical choices:` label'
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "every deferred choice (or \`None\` / \`Ninguna\`), its needed-by gate"
+assert_file_contains "$design_reference" "canonical status \`deferred-non-blocking\`"
+assert_file_contains "$design_reference" "A missing deferred field is blocking"
+assert_file_contains "$design_result_reference" 'Deferred technical choices:'
+assert_file_contains "$design_reference" "all deferred choices and needed-by gates"
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Reconcile deferred technical choices before marker, language, and persistence gates"
 assert_file_contains "$target/docs/pegasus/design.md" "Pegasus Memory product naming"
 assert_file_contains "$target/docs/pegasus/design.md" "Validate every \`MCP\` occurrence independently"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "Allow \`MCP\` only in an explicit protocol discussion"
-assert_file_contains "$target/.github/agents/sdd-design.agent.md" "does not permit a separate standalone \`MCP\` occurrence"
+assert_file_contains "$design_reference" "Allow \`MCP\` only in an explicit protocol discussion"
+assert_file_contains "$design_reference" "does not permit another"
 assert_file_contains "$ROOT/templates/harness/docs/pegasus/design.md" '<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/design.md ownership=full-file -->'
 assert_file_contains "$ROOT/templates/harness/docs/pegasus/design.md" '<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/design.md -->'
-"$PYTHON_BIN" - "$target/.github/agents/sdd-design.agent.md" "$target/docs/pegasus/design.md" <<'PY'
+"$PYTHON_BIN" - "$design_reference" "$design_result_reference" "$target/docs/pegasus/design.md" <<'PY'
 import sys
 from pathlib import Path
 
 guidance = Path(sys.argv[1]).read_text()
-template = Path(sys.argv[2]).read_text()
-assert guidance.index("A blocking technical gap") < guidance.index("## Managed artifact")
-assert guidance.index("Before completed-path Pegasus Memory artifact persistence, reread") < guidance.index("## Pegasus Memory closure contract")
-assert guidance.index("record_task_progress` for phase `design` occurs before `record_handoff`") < guidance.index("Do not return until all six operations")
-assert guidance.index("**Blocking path (approval/source or material technical blocker):**") < guidance.index("**Completed path:**")
+result = Path(sys.argv[2]).read_text()
+template = Path(sys.argv[3]).read_text()
+assert guidance.index("A blocking technical gap") < guidance.index("## Artifact And Language Validation")
+assert guidance.index("Finish every edit") < guidance.index("## Atomic Persistence And Closure")
 assert guidance.index("record_observation") < guidance.index("record_task_progress") < guidance.index("record_handoff")
-assert guidance.index("Repair affected blocks, reread the whole artifact, revalidate markers, and rerun the gate") < guidance.index("An unresolved language gate failure blocks artifact persistence and success")
+assert guidance.index("Repair affected blocks, reread the whole artifact") < guidance.index("If markers still fail")
 assert "Use generic MCP terminology" not in guidance
 for field in (
     "Status:", "Specialist agent:", "Fresh-context delegation:", "Artifact path:",
@@ -1368,7 +1382,7 @@ for field in (
     "Final artifact revision:", "Persistence artifact revision:", "Post-persistence edits:",
     "Risks/blockers:", "Next action:",
 ):
-    assert field in guidance
+    assert field in result
 for section in ("flow step", "alternative", "affected area", "testing row", "rollout/rollback row", "risk row"):
     assert section in guidance.lower()
 assert "<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/design.md ownership=full-file -->" in template
@@ -1946,12 +1960,13 @@ assert missing_test == [mobile_risk]
 assert "## Proposal Risk Coverage" in template
 assert "Mobile rendering performance" in template
 PY
-"$PYTHON_BIN" - "$target/.github/agents/sdd-design.agent.md" "$target/docs/pegasus/design.md" <<'PY'
+"$PYTHON_BIN" - "$design_reference" "$design_result_reference" "$target/docs/pegasus/design.md" <<'PY'
 import sys
 from pathlib import Path
 
 guidance = Path(sys.argv[1]).read_text()
-template = Path(sys.argv[2]).read_text()
+result = Path(sys.argv[2]).read_text()
+template = Path(sys.argv[3]).read_text()
 required = {
     "Choice / topic", "Status", "Owner", "Impact", "Next step", "Needed-by gate",
     "Invariant architecture", "Why non-blocking", "Evidence / source",
@@ -1959,9 +1974,9 @@ required = {
 header = next(line for line in template.splitlines() if line.startswith("| Choice / topic |"))
 assert required <= set(cell.strip() for cell in header.strip("|").split("|"))
 assert "| None | N/A |" in template
-assert guidance.index("Before marker validation, language validation, or persistence") < guidance.index("## Managed artifact")
-assert guidance.index("Before marker validation, language validation, or persistence") < guidance.index("Before completed-path Pegasus Memory artifact persistence")
-assert "The final response uses the exact `Deferred technical choices:` label" in guidance
+assert guidance.index("Before marker, language, persistence, or return validation") < guidance.index("## Risk And Readiness Coverage")
+assert guidance.index("Before marker, language, persistence, or return validation") < guidance.index("## Atomic Persistence And Closure")
+assert "Deferred technical choices:" in result
 
 def spanish_gate_issues(text: str) -> set[str]:
     import re
