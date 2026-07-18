@@ -64,6 +64,7 @@ expected_files=(
   ".github/references/phases/prd.md"
   ".github/references/phases/proposal.md"
   ".github/references/phases/spec.md"
+  ".github/references/phases/tasks.md"
   ".github/references/phases/verify.md"
   ".github/references/results/apply-result-v1.md"
   ".github/references/results/design-result-v1.md"
@@ -71,6 +72,8 @@ expected_files=(
   ".github/references/results/prd-result-v1.md"
   ".github/references/results/proposal-result-v1.md"
   ".github/references/results/spec-result-v1.md"
+  ".github/references/results/tasks-result-v2.md"
+  ".github/references/results/tasks-transport-v2.md"
   ".github/references/results/verify-result-v1.md"
   ".github/agents/sdd-verify.agent.md"
   ".github/agents/session-handoff.agent.md"
@@ -112,6 +115,7 @@ expected = {
     prefix + "phases/prd.md",
     prefix + "phases/proposal.md",
     prefix + "phases/spec.md",
+    prefix + "phases/tasks.md",
     prefix + "phases/verify.md",
     prefix + "orchestration/routing.md",
     prefix + "results/apply-result-v1.md",
@@ -120,12 +124,15 @@ expected = {
     prefix + "results/prd-result-v1.md",
     prefix + "results/proposal-result-v1.md",
     prefix + "results/spec-result-v1.md",
+    prefix + "results/tasks-result-v2.md",
+    prefix + "results/tasks-transport-v2.md",
     prefix + "results/verify-result-v1.md",
 }
 with ZipFile(wheel) as archive:
     actual = {name for name in archive.namelist() if name.startswith(prefix)}
 assert actual == expected, (actual, expected)
 PY
+  rm -rf "$ROOT/build" "$ROOT/pegasus_ia_bootstrap.egg-info"
 }
 
 assert_wheel_reference_paths
@@ -422,6 +429,10 @@ spec_reference="$references/phases/spec.md"
 design_agent="$target/.github/agents/sdd-design.agent.md"
 design_reference="$references/phases/design.md"
 design_result_reference="$references/results/design-result-v1.md"
+tasks_agent="$target/.github/agents/sdd-tasks.agent.md"
+tasks_reference="$references/phases/tasks.md"
+tasks_result_reference="$references/results/tasks-result-v2.md"
+tasks_transport_reference="$references/results/tasks-transport-v2.md"
 verify_agent="$target/.github/agents/sdd-verify.agent.md"
 verify_reference="$references/phases/verify.md"
 orchestrator_agent="$target/.github/agents/pegasus-orchestrator.agent.md"
@@ -484,6 +495,13 @@ assert_file_contains "$design_agent" '.github/references/phases/design.md'
 assert_file_contains "$design_agent" '.github/references/results/design-result-v1.md'
 assert_file_contains "$design_agent" 'immediately return `blocked-missing-reference`'
 assert_file_contains "$design_agent" 'PEGASUS_DESIGN_RESULT_V1'
+assert_file_contains "$tasks_agent" 'exactly one active change identity'
+assert_file_contains "$tasks_agent" 'Conversational approval cannot override artifact state.'
+assert_file_contains "$tasks_agent" '.github/references/phases/tasks.md'
+assert_file_contains "$tasks_agent" '.github/references/results/tasks-result-v2.md'
+assert_file_contains "$tasks_agent" '.github/references/results/tasks-transport-v2.md'
+assert_file_contains "$tasks_agent" 'immediately return `blocked-missing-reference`'
+assert_file_contains "$tasks_agent" 'PEGASUS_TASKS_RESULT_V2'
 if grep -R -Eq '^applyTo:' "$target/.github/references"; then
   printf 'references must remain manually loaded\n' >&2
   exit 1
@@ -500,6 +518,8 @@ spec_body_lines=$(awk 'BEGIN { frontmatter=0; body=0 } /^---$/ { frontmatter++; 
 [ "$spec_body_lines" -le 30 ] || { printf 'sdd-spec macro exceeds 30 body lines\n' >&2; exit 1; }
 design_body_lines=$(awk 'BEGIN { frontmatter=0; body=0 } /^---$/ { frontmatter++; next } frontmatter >= 2 { body++ } END { print body }' "$design_agent")
 [ "$design_body_lines" -le 30 ] || { printf 'sdd-design macro exceeds 30 body lines\n' >&2; exit 1; }
+tasks_body_lines=$(awk 'BEGIN { frontmatter=0; body=0 } /^---$/ { frontmatter++; next } frontmatter >= 2 { body++ } END { print body }' "$tasks_agent")
+[ "$tasks_body_lines" -le 30 ] || { printf 'sdd-tasks macro exceeds 30 body lines\n' >&2; exit 1; }
 orchestrator_body_lines=$(awk 'BEGIN { frontmatter=0; body=0 } /^---$/ { frontmatter++; next } frontmatter >= 2 { body++ } END { print body }' "$orchestrator_agent")
 [ "$orchestrator_body_lines" -le 35 ] || { printf 'orchestrator macro exceeds 35 body lines\n' >&2; exit 1; }
 assert_file_contains "$orchestrator_agent" 'You are the user-facing coordinator, never a phase executor.'
@@ -528,6 +548,10 @@ if grep -Eq '^## (Input contract|Required reads|Technical context and material g
   printf 'sdd-design macro retains duplicated normative workflow body\n' >&2
   exit 1
 fi
+if grep -Eq '^## (Input contract|Required reads|Output contract|Stopping point|Atomic closure and result envelope|Forbidden scope|Merge/update rules|Phase-specific checklist)$' "$tasks_agent"; then
+  printf 'sdd-tasks macro retains duplicated normative workflow body\n' >&2
+  exit 1
+fi
 "$PYTHON_BIN" - "$ROOT" <<'PY'
 from pathlib import Path
 import sys
@@ -540,9 +564,10 @@ expected = {
     "shared/authority.md", "shared/phase-common.md", "shared/delegation-ownership.md",
     "shared/persistence.md", "shared/result-envelope.md", "shared/status-readiness.md",
     "shared/skill-resolution.md", "orchestration/routing.md", "phases/apply.md", "phases/design.md", "phases/prd.md",
-    "phases/proposal.md", "phases/spec.md", "phases/verify.md", "results/apply-result-v1.md",
+    "phases/proposal.md", "phases/spec.md", "phases/tasks.md", "phases/verify.md", "results/apply-result-v1.md",
     "results/orchestrator-result-v1.md", "results/prd-result-v1.md", "results/proposal-result-v1.md",
-    "results/design-result-v1.md", "results/spec-result-v1.md", "results/verify-result-v1.md",
+    "results/design-result-v1.md", "results/spec-result-v1.md", "results/tasks-result-v2.md",
+    "results/tasks-transport-v2.md", "results/verify-result-v1.md",
 }
 base = root / "templates/harness/.github/references"
 actual = set()
@@ -563,7 +588,7 @@ import sys
 
 canonical, generated = map(Path, sys.argv[1:])
 references = sorted((canonical / ".github/references").rglob("*.md"))
-for source_path in [canonical / ".github/agents/pegasus-orchestrator.agent.md", canonical / ".github/agents/doc-designer.agent.md", canonical / ".github/agents/sdd-proposal.agent.md", canonical / ".github/agents/sdd-spec.agent.md", canonical / ".github/agents/sdd-design.agent.md", canonical / ".github/agents/sdd-apply.agent.md", canonical / ".github/agents/sdd-verify.agent.md", canonical / ".github/prompts/sdd-phases.prompt.md", *references]:
+for source_path in [canonical / ".github/agents/pegasus-orchestrator.agent.md", canonical / ".github/agents/doc-designer.agent.md", canonical / ".github/agents/sdd-proposal.agent.md", canonical / ".github/agents/sdd-spec.agent.md", canonical / ".github/agents/sdd-design.agent.md", canonical / ".github/agents/sdd-tasks.agent.md", canonical / ".github/agents/sdd-apply.agent.md", canonical / ".github/agents/sdd-verify.agent.md", canonical / ".github/prompts/sdd-phases.prompt.md", *references]:
     relative = source_path.relative_to(canonical)
     source = source_path.read_text(encoding="utf-8").rstrip("\n")
     installed = (generated / relative).read_text(encoding="utf-8").splitlines()
@@ -580,14 +605,16 @@ prd_agent = (root / ".github/agents/doc-designer.agent.md").read_text(encoding="
 proposal_agent = (root / ".github/agents/sdd-proposal.agent.md").read_text(encoding="utf-8")
 spec_agent = (root / ".github/agents/sdd-spec.agent.md").read_text(encoding="utf-8")
 design_agent = (root / ".github/agents/sdd-design.agent.md").read_text(encoding="utf-8")
+tasks_agent = (root / ".github/agents/sdd-tasks.agent.md").read_text(encoding="utf-8")
 verify_agent = (root / ".github/agents/sdd-verify.agent.md").read_text(encoding="utf-8")
 reference_root = root / ".github/references"
 expected = [
     "shared/authority.md", "shared/phase-common.md", "shared/delegation-ownership.md",
     "shared/skill-resolution.md", "shared/persistence.md", "orchestration/routing.md", "phases/apply.md", "phases/design.md",
-    "phases/prd.md", "phases/proposal.md", "phases/spec.md", "phases/verify.md", "shared/status-readiness.md",
+    "phases/prd.md", "phases/proposal.md", "phases/spec.md", "phases/tasks.md", "phases/verify.md", "shared/status-readiness.md",
     "shared/result-envelope.md", "results/apply-result-v1.md", "results/orchestrator-result-v1.md",
-    "results/design-result-v1.md", "results/prd-result-v1.md", "results/proposal-result-v1.md", "results/spec-result-v1.md", "results/verify-result-v1.md",
+    "results/design-result-v1.md", "results/prd-result-v1.md", "results/proposal-result-v1.md", "results/spec-result-v1.md",
+    "results/tasks-result-v2.md", "results/tasks-transport-v2.md", "results/verify-result-v1.md",
 ]
 actual_files = {path.relative_to(reference_root).as_posix() for path in reference_root.rglob("*.md")}
 assert actual_files == set(expected), (actual_files, set(expected))
@@ -601,9 +628,15 @@ prd_expected = [path for path in expected if path.startswith("shared/") or path 
 proposal_expected = [path for path in expected if path.startswith("shared/") or path in {"phases/proposal.md", "results/proposal-result-v1.md"}]
 spec_expected = [path for path in expected if path.startswith("shared/") or path in {"phases/spec.md", "results/spec-result-v1.md"}]
 design_expected = [path for path in expected if path.startswith("shared/") or path in {"phases/design.md", "results/design-result-v1.md"}]
+tasks_expected = [
+    "shared/authority.md", "shared/phase-common.md", "shared/delegation-ownership.md",
+    "shared/skill-resolution.md", "shared/persistence.md", "phases/tasks.md",
+    "shared/status-readiness.md", "shared/result-envelope.md", "results/tasks-result-v2.md",
+    "results/tasks-transport-v2.md",
+]
 apply_expected = [path for path in apply_expected if path.startswith("shared/") or path in {"phases/apply.md", "results/apply-result-v1.md"}]
 verify_expected = [path for path in verify_expected if path.startswith("shared/") or path in {"phases/verify.md", "results/verify-result-v1.md"}]
-for agent, paths in ((prd_agent, prd_expected), (proposal_agent, proposal_expected), (spec_agent, spec_expected), (design_agent, design_expected), (apply_agent, apply_expected), (verify_agent, verify_expected)):
+for agent, paths in ((prd_agent, prd_expected), (proposal_agent, proposal_expected), (spec_agent, spec_expected), (design_agent, design_expected), (tasks_agent, tasks_expected), (apply_agent, apply_expected), (verify_agent, verify_expected)):
     positions = [agent.index(f".github/references/{path}") for path in paths]
     assert positions == sorted(positions), positions
 for literal in (
@@ -680,6 +713,7 @@ owners = {
     "phases/proposal.md": "detailed `sdd-proposal` workflow",
     "phases/spec.md": "only the detailed `sdd-spec` workflow",
     "phases/design.md": "only the detailed `sdd-design` workflow",
+    "phases/tasks.md": "only the detailed `sdd-tasks` planning, validation, and persistence workflow",
     "phases/verify.md": "only the detailed `sdd-verify` workflow",
     "results/apply-result-v1.md": "Apply v1 result schema",
     "results/orchestrator-result-v1.md": "only the coordinator result schema",
@@ -687,6 +721,8 @@ owners = {
     "results/proposal-result-v1.md": "only the Proposal v1 phase-specific fields and schema",
     "results/spec-result-v1.md": "only the Spec v1 phase-specific fields and schema",
     "results/design-result-v1.md": "only the Design v1 phase-specific fields, canonical labels, and schema",
+    "results/tasks-result-v2.md": "only the exact Tasks v2 canonical returned block, immutable key order, wire labels, and allowed field values",
+    "results/tasks-transport-v2.md": "exclusively owns Tasks v2 canonical JSON serialization bytes",
     "results/verify-result-v1.md": "only the Verify v1 result schema",
 }
 texts = {path: (reference_root / path).read_text(encoding="utf-8") for path in owners}
@@ -699,6 +735,7 @@ PY
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 
 root = Path(sys.argv[1])
 protected = [
@@ -724,6 +761,38 @@ for relative in protected:
         ["git", "show", f"71a9f0a:{relative}"], cwd=root, check=True, capture_output=True
     ).stdout
     assert (root / relative).read_bytes() == base, f"protected file changed: {relative}"
+
+allowed = {
+    "pyproject.toml",
+    "templates/harness/.github/agents/sdd-tasks.agent.md",
+    "templates/harness/.github/references/phases/tasks.md",
+    "templates/harness/.github/references/results/tasks-result-v2.md",
+    "templates/harness/.github/references/results/tasks-transport-v2.md",
+    "tests/smoke.sh",
+}
+def changed_paths():
+    tracked = subprocess.run(
+        ["git", "diff", "--name-only", "e6f5c7a", "--", ".", ":(exclude)install_and_usage.txt"],
+        cwd=root, check=True, capture_output=True, text=True,
+    ).stdout.splitlines()
+    untracked = subprocess.run(
+        ["git", "ls-files", "--others", "--exclude-standard", "--", ".", ":(exclude)install_and_usage.txt"],
+        cwd=root, check=True, capture_output=True, text=True,
+    ).stdout.splitlines()
+    return set(tracked) | set(untracked)
+
+changed = changed_paths()
+assert changed <= allowed, f"protected paths changed from e6f5c7a: {sorted(changed - allowed)}"
+
+with tempfile.NamedTemporaryFile(prefix=".smoke-unauthorized-untracked-", dir=root, delete=False) as fixture:
+    fixture_path = Path(fixture.name)
+try:
+    fixture_relative = fixture_path.relative_to(root).as_posix()
+    fixture_changed = changed_paths()
+    assert fixture_relative in fixture_changed, "protected-path guard missed unauthorized untracked fixture"
+    assert not fixture_changed <= allowed, "unauthorized untracked fixture passed protected-path guard"
+finally:
+    fixture_path.unlink()
 PY
 assert_file_contains "$prd_reference" "PRD/product discoveries, decisions, open questions, approval status"
 assert_file_contains "$proposal_reference" "Stop before Spec, Design, Tasks, and implementation"
@@ -867,9 +936,10 @@ assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'The only allowed database mutation is an explicit Pegasus Memory schema migration performed by Pegasus Memory itself'
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'must not reset, delete, recreate, or overwrite the Pegasus Memory database'
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'Clean test memory must be created as explicit test setup, never as a sync side effect.'
-for memory_guided_agent in sdd-tasks session-handoff memory-maintainer; do
+for memory_guided_agent in session-handoff memory-maintainer; do
   assert_file_contains "$target/.github/agents/$memory_guided_agent.agent.md" "pegasus-memory.instructions.md"
 done
+assert_file_contains "$tasks_reference" "pegasus-memory.instructions.md"
 assert_file_contains "$design_reference" "pegasus-memory.instructions.md"
 assert_file_contains "$prd_reference" 'Call Pegasus Memory `health` before recovery.'
 assert_file_contains "$proposal_reference" "Pegasus Memory"
@@ -879,7 +949,7 @@ assert_file_contains "$proposal_reference" "proposal status, assumptions, scope 
 assert_file_contains "$spec_reference" "requirement decisions, scenario coverage, open questions"
 assert_file_contains "$design_reference" "alternatives, tradeoffs, coupling/impact"
 assert_file_contains "$design_reference" "Proposal Risk Coverage"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "task progress, blockers, review budget assessment"
+assert_file_contains "$tasks_reference" "task progress, decisions, blockers, and handoff"
 assert_file_contains "$apply_reference" "current/completed work, changed files, preliminary commands/results"
 assert_file_contains "$persistence_reference" "Merge durable observations, task progress, artifact references, blockers, evidence, and handoff state"
 assert_file_contains "$verify_reference" "persist verification evidence, deviations, verdict, remediation needs"
@@ -976,14 +1046,8 @@ if "$PYTHON_BIN" "$CLI" --new-change missing-manifest --target-path "$TMP/not-in
   exit 1
 fi
 
-for agent in sdd-tasks; do
-  agent_file="$target/.github/agents/$agent.agent.md"
-  assert_file_contains "$agent_file" "## Input contract"
-  assert_file_contains "$agent_file" "## Required reads"
-  assert_file_contains "$agent_file" "## Output contract"
-  assert_file_contains "$agent_file" "## Stopping point"
-  assert_file_contains "$agent_file" "## Forbidden scope"
-  assert_file_contains "$agent_file" "## Phase-specific checklist"
+for heading in "## Sources And Isolation" "## Reviewable Work Units" "## Review Workload Forecast" "## Artifact And Validation" "## Atomic Persistence And Apply Readiness"; do
+  assert_file_contains "$tasks_reference" "$heading"
 done
 for heading in "## Sources And Isolation" "## Technical Design" "## Material Gaps And Deferred Choices" "## Risk And Readiness Coverage" "## Artifact And Language Validation" "## Atomic Persistence And Closure"; do
   assert_file_contains "$design_reference" "$heading"
@@ -1178,36 +1242,32 @@ done
 for design_status in ensure_project ensure_change record_artifact record_observation record_task_progress record_handoff; do
   assert_file_contains "$design_result_reference" "$design_status: <succeeded|not needed|failed: reason>"
 done
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Decision needed before apply: Yes|No"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Chained PRs recommended: Yes|No"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "400-line budget risk: Low|Medium|High"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Chain strategy: stacked-to-main|feature-branch-chain|size-exception|pending"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Estimated authored changed lines: <range>"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Estimated generated changed lines: <range|none>"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Tests included in estimate: Yes"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "sole tasks artifact writer, validator, and persistence owner"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" 'Construct the envelope `Artifact path` directly'
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" 'never copy, shorten, or derive it from a tool result'
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" 'exact equality between the constructed `Artifact path` and the supplied canonical output path'
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "fully reread the artifact"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "exactly seven forecast lines and values"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" 'persist `record_task_progress` for phase `tasks`, then `record_handoff`'
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "completion is blocked"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" '"final_tasks_revision"'
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" '"persistence_tasks_revision"'
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" '"post_persistence_edits"'
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Strategy decision evidence:"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Size-exception approval evidence:"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "design recommendation, memory, cached preference, architecture, previous conversation/session, default, inference, or fabricated/generic text"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "user selection alone is insufficient"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Calling or attempting \`record_task_progress\` or \`record_handoff\` before the SHA-256 revision is frozen is prohibited"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "no artifact edits and no hash recomputation"
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" '"work_unit_count"'
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" '"assigned_scope"'
-for work_unit_field in "Implementation scope:" "Test scope:" "Focused test command:" "Runtime validation:" "Rollback boundary:" "Estimated authored changed lines:"; do
-  assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "$work_unit_field"
+for forecast_line in "Decision needed before apply: Yes|No" "Chained PRs recommended: Yes|No" "Chain strategy: stacked-to-main|feature-branch-chain|size-exception|pending" "400-line budget risk: Low|Medium|High" "Estimated authored changed lines: <range>" "Estimated generated changed lines: <range|none>" "Tests included in estimate: Yes"; do
+  assert_file_contains "$tasks_reference" "$forecast_line"
 done
-assert_file_contains "$target/.github/agents/sdd-tasks.agent.md" "Do not implement code"
+assert_file_contains "$tasks_agent" "sole Tasks artifact writer, validator, and persistence owner"
+assert_file_contains "$tasks_reference" 'Construct the result artifact path directly'
+assert_file_contains "$tasks_reference" 'never copy, shorten, or derive it from a tool result'
+assert_file_contains "$tasks_reference" 'MUST equal the separately supplied canonical output path'
+assert_file_contains "$tasks_reference" "completely reread the artifact"
+assert_file_contains "$tasks_reference" "exactly seven forecast lines"
+assert_file_contains "$tasks_reference" '`record_task_progress` for phase `tasks` → exactly one `record_handoff`'
+assert_file_contains "$tasks_reference" "block this closure"
+assert_file_contains "$tasks_result_reference" '"final_tasks_revision"'
+assert_file_contains "$tasks_result_reference" '"persistence_tasks_revision"'
+assert_file_contains "$tasks_result_reference" '"post_persistence_edits"'
+assert_file_contains "$tasks_reference" "Strategy decision evidence: none"
+assert_file_contains "$tasks_reference" "Size-exception approval evidence: none"
+assert_file_contains "$tasks_reference" "Design recommendations, memory, cached preferences, architecture, earlier sessions, defaults, inference, and fabricated or generic text are invalid"
+assert_file_contains "$tasks_reference" "selection alone is insufficient"
+assert_file_contains "$tasks_reference" "Calling or attempting either completion persistence operation before freeze is prohibited"
+assert_file_contains "$tasks_reference" "no artifact edits, formatting changes, hash recomputation"
+assert_file_contains "$tasks_result_reference" '"work_unit_count"'
+assert_file_contains "$tasks_result_reference" '"assigned_scope"'
+for work_unit_field in "Implementation scope:" "Test scope:" "Focused test command:" "Runtime validation:" "Rollback boundary:" "Estimated authored changed lines:"; do
+  assert_file_contains "$tasks_reference" "$work_unit_field"
+done
+assert_file_contains "$tasks_reference" "Do not implement code"
 assert_file_contains "$apply_reference" "approved next slice"
 assert_file_contains "$apply_reference" "duplicate-check result"
 assert_file_contains "$apply_reference" 'preliminary apply evidence does not replace verification'
@@ -1490,12 +1550,13 @@ assert "Next action: review/approval" in complete
 assert "Reproduce the valid envelope field-for-field" in guidance
 assert "Do not reread Design or rerun its checks" in guidance
 PY
-"$PYTHON_BIN" - "$target/.github/agents/sdd-tasks.agent.md" "$orchestrator_reference" "$ROOT/templates/harness/docs/pegasus/tasks.md" <<'PY'
+"$PYTHON_BIN" - "$tasks_reference" "$tasks_result_reference" "$orchestrator_reference" "$ROOT/templates/harness/docs/pegasus/tasks.md" <<'PY'
 import re
 import sys
 from pathlib import Path
 
-specialist_guidance, orchestrator_guidance, template = (Path(path).read_text() for path in sys.argv[1:])
+phase_guidance, result_guidance, orchestrator_guidance, template = (Path(path).read_text() for path in sys.argv[1:])
+specialist_guidance = phase_guidance + result_guidance
 forecast_fields = (
     "Decision needed before apply", "Chained PRs recommended", "Chain strategy",
     "400-line budget risk", "Estimated authored changed lines",
@@ -1815,13 +1876,14 @@ assert lines[-1] == "<!-- pegasus-harness:end path=docs/pegasus/changes/<change-
 for exact_pending_line in ("Strategy decision evidence: <exact current-session user quote/message reference|none>", "Size-exception approval evidence: <distinct current maintainer approval quote/message reference|none>"):
     assert exact_pending_line in template
 PY
-"$PYTHON_BIN" - "$target/.github/agents/sdd-tasks.agent.md" "$orchestrator_reference" <<'PY'
+"$PYTHON_BIN" - "$tasks_result_reference" "$tasks_transport_reference" "$orchestrator_reference" <<'PY'
 import hashlib
 import json
 import sys
 from pathlib import Path
 
-specialist, orchestrator = (Path(path).read_text() for path in sys.argv[1:])
+result, transport, orchestrator = (Path(path).read_text() for path in sys.argv[1:])
+specialist = result + transport
 begin = "=== PEGASUS SPECIALIST RESULT BEGIN v2 ==="
 end = "=== PEGASUS SPECIALIST RESULT END v2 ==="
 legacy_begin = "=== PEGASUS SPECIALIST RESULT BEGIN v1 ==="
