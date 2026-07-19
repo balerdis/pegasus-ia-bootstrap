@@ -37,7 +37,7 @@ Every exact path is required. If any read fails, immediately return `blocked-mis
 
 Precedence is `current macro > orchestration reference > shared reference > workspace default > global fallback`; lower levels cannot weaken this macro. A same-level conflict blocks before dispatch.
 
-Before ANY `agent` dispatch, derive the exact launch identity and establish from canonical allowed state that it is not in progress, not completed, and authorized exactly once. Missing, unreadable, ambiguous, stale, or contradictory duplicate state blocks before delegation. Never infer clear state, rely on user wording, or dispatch then report the gate state afterward.
+Before ANY `agent` dispatch, establish the canonical project key, exact launch identity, and duplicate state under the routing contract. Missing, unreadable, ambiguous, stale, contradictory, or unestablished identity/state blocks before delegation. Never infer clear state, rely on user wording, or dispatch then report an unestablished gate.
 
 The routing reference owns phase selection, duplicate-state derivation/recovery semantics, approval gates, authorization boundaries, dispatch payloads, strategy resolution before Apply, and specialist-result validation. Validate only routing inputs and returned envelopes. Missing delegation capability, an unavailable specialist, a failed launch, or an absent/invalid result MUST block with no edit, execute, test, install, verification, or persistence fallback.
 

@@ -6,9 +6,13 @@ This manually loaded phase reference owns only the detailed `doc-designer` PRD d
 
 ## Input And Source Rules
 
+Validate the payload's canonical project key against `.pegasus-bootstrap-ia/manifest.json` `workspace.project_name` and require the payload launch identity to match the authorized root or change-scoped PRD. Use that exact key for all recovery and persistence. A mismatch or missing field blocks with no edit or write; never derive identity from the product name, title, request prose, PRD heading, directory name, or target path.
+
 Use the authorized product request and current PRD as default product sources. The root PRD is the intentional natural-entry canonical template before a change exists; active change work uses `docs/pegasus/changes/<change-id>/prd.md`. Do not inspect unrelated changes unless the request or direct user instruction explicitly identifies a dependency. Do not silently decide product scope.
 
-Call Pegasus Memory `health` before recovery. When healthy, recover relevant project/change context. If product or business decisions remain open, ask one concise round of key questions before editing or finalizing. A missing answer that can change scope, user-visible behavior, business rules, success, or approval readiness is a material gap; keep it visible with owner and needed-by gate or stop when it blocks a coherent PRD.
+Call Pegasus Memory `health` before recovery. When healthy, recover only context under the exact canonical project key and authorized change, if any. Before any artifact edit or persistence, evaluate whether unresolved inputs can materially change scope, target users, user-visible behavior/defaults, business rules, content policy, constraints, success criteria, or approval readiness. Assumptions do not resolve those decisions.
+
+When material gaps exist, ask one concise grouped round of product questions and return a blocked awaiting-input result. Report the questions and `artifact_edit: not run` plus every persistence operation as `not needed: awaiting product input`; do not edit, ensure, record, or advance. A later answer authorizes drafting only through a fresh launch that re-establishes identity, duplicate state, authorization, and material completeness. When authoritative inputs genuinely resolve every material decision, do not invent questions and proceed.
 
 ## Discovery Content
 
@@ -24,6 +28,6 @@ After writing, reread the complete artifact and validate its identity, structure
 
 ## Persistence And Return
 
-After `health` succeeds, satisfy project/change preconditions. For a new change, call `ensure_change` before change-scoped writes using `project_id` and `change_id` by default; add only supported flat optional fields when needed, use `kind` as the sole classification alias, and never send `type`, nested metadata, decisions, questions, or artifact summaries through `ensure_change`.
+After `health` succeeds and the material-gap gate passes, satisfy project/change preconditions using the exact payload project key. Call `ensure_project` only for that key. For a new change, call `ensure_change` before change-scoped writes using that `project_id` and the authorized `change_id`; root PRD persistence does not require `ensure_change`. Add only supported flat optional fields when needed, use `kind` as the sole classification alias, and never send `type`, nested metadata, decisions, questions, or artifact summaries through `ensure_change`.
 
 After readback validation, merge PRD/product discoveries, decisions, open questions, approval status, and artifact references into Pegasus Memory through `record_observation` and `record_artifact`; do not replace useful history. Report `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation` as `succeeded`, `not needed`, or `failed: <reason>`. If required artifact or observation persistence fails, report the PRD as file-only with the reason. Tell the user the exact PRD path, summarize material ambiguities and approval state, and request review/explicit approval without advancing the workflow.
