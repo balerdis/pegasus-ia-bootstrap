@@ -9,6 +9,13 @@ trap 'rm -rf "$TMP"' EXIT
 export PEGASUS_MEMORY_MCP_ROOT="$TMP/pegasus-memory-mcp"
 export PEGASUS_MEMORY_MCP_SKIP_INSTALL=1
 
+if [ "${1:-}" = "audit-instructions" ]; then
+  exec "$PYTHON_BIN" "$ROOT/tests/audit_instruction_architecture.py" --self-test
+fi
+if [ -z "${1:-}" ]; then
+  "$PYTHON_BIN" "$ROOT/tests/audit_instruction_architecture.py"
+fi
+
 VENV="$TMP/editable-venv"
 "$PYTHON_BIN" -m venv "$VENV"
 "$VENV/bin/python" -m pip install -e "$ROOT" >/dev/null
@@ -845,6 +852,7 @@ allowed = {
     "templates/harness/.cursor/rules/pegasus-memory.mdc",
     "templates/harness/.cursor/rules/pegasus-workflow.mdc",
     "tests/smoke.sh",
+    "tests/audit_instruction_architecture.py",
 }
 def changed_paths():
     tracked = subprocess.run(
