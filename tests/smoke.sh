@@ -61,6 +61,8 @@ expected_files=(
   ".github/references/orchestration/routing.md"
   ".github/references/phases/apply.md"
   ".github/references/phases/design.md"
+  ".github/references/phases/session-handoff.md"
+  ".github/references/phases/memory-maintenance.md"
   ".github/references/phases/prd.md"
   ".github/references/phases/proposal.md"
   ".github/references/phases/spec.md"
@@ -68,6 +70,8 @@ expected_files=(
   ".github/references/phases/verify.md"
   ".github/references/results/apply-result-v1.md"
   ".github/references/results/design-result-v1.md"
+  ".github/references/results/handoff-result-v1.md"
+  ".github/references/results/memory-maintenance-result-v1.md"
   ".github/references/results/orchestrator-result-v1.md"
   ".github/references/results/prd-result-v1.md"
   ".github/references/results/proposal-result-v1.md"
@@ -112,6 +116,8 @@ expected = {
     prefix + "shared/skill-resolution.md",
     prefix + "phases/apply.md",
     prefix + "phases/design.md",
+    prefix + "phases/session-handoff.md",
+    prefix + "phases/memory-maintenance.md",
     prefix + "phases/prd.md",
     prefix + "phases/proposal.md",
     prefix + "phases/spec.md",
@@ -120,6 +126,8 @@ expected = {
     prefix + "orchestration/routing.md",
     prefix + "results/apply-result-v1.md",
     prefix + "results/design-result-v1.md",
+    prefix + "results/handoff-result-v1.md",
+    prefix + "results/memory-maintenance-result-v1.md",
     prefix + "results/orchestrator-result-v1.md",
     prefix + "results/prd-result-v1.md",
     prefix + "results/proposal-result-v1.md",
@@ -439,6 +447,14 @@ orchestrator_agent="$target/.github/agents/pegasus-orchestrator.agent.md"
 orchestrator_reference="$references/orchestration/routing.md"
 sdd_router="$target/.github/prompts/sdd-phases.prompt.md"
 persistence_reference="$references/shared/persistence.md"
+handoff_agent="$target/.github/agents/session-handoff.agent.md"
+handoff_reference="$references/phases/session-handoff.md"
+handoff_result_reference="$references/results/handoff-result-v1.md"
+handoff_router="$target/.github/prompts/handoff.prompt.md"
+memory_agent="$target/.github/agents/memory-maintainer.agent.md"
+memory_reference="$references/phases/memory-maintenance.md"
+memory_result_reference="$references/results/memory-maintenance-result-v1.md"
+memory_router="$target/.github/prompts/memory-update.prompt.md"
 assert_file_contains "$apply_agent" 'exactly one authorized task-slice identity'
 assert_file_contains "$apply_agent" 'If the workload forecast requires a decision'
 assert_file_contains "$apply_agent" '.github/references/shared/authority.md'
@@ -502,6 +518,23 @@ assert_file_contains "$tasks_agent" '.github/references/results/tasks-result-v2.
 assert_file_contains "$tasks_agent" '.github/references/results/tasks-transport-v2.md'
 assert_file_contains "$tasks_agent" 'immediately return `blocked-missing-reference`'
 assert_file_contains "$tasks_agent" 'PEGASUS_TASKS_RESULT_V2'
+for auxiliary_agent in "$handoff_agent" "$memory_agent"; do
+  assert_file_contains "$auxiliary_agent" 'immediately return `blocked-missing-reference`'
+  assert_file_contains "$auxiliary_agent" 'Do not search for, inspect, or use alternate, renamed, backup, neighboring, or similarly named copies.'
+  assert_file_contains "$auxiliary_agent" 'current macro > phase reference > shared reference > workspace default > global fallback'
+done
+assert_file_contains "$handoff_agent" 'PEGASUS_HANDOFF_RESULT_V1'
+assert_file_contains "$memory_agent" 'PEGASUS_MEMORY_MAINTENANCE_RESULT_V1'
+assert_file_contains "$handoff_router" 'Launch exactly one fresh `session-handoff`'
+assert_file_contains "$memory_router" 'Launch exactly one fresh `memory-maintainer`'
+for router in "$handoff_router" "$memory_router"; do
+  assert_file_contains "$router" 'This prompt is launch-only.'
+  assert_file_contains "$router" '  - agent'
+  if grep -Eq '^  - (edit|execute)$' "$router"; then
+    printf 'auxiliary router combines agent with edit/execute\n' >&2
+    exit 1
+  fi
+done
 if grep -R -Eq '^applyTo:' "$target/.github/references"; then
   printf 'references must remain manually loaded\n' >&2
   exit 1
@@ -520,6 +553,10 @@ design_body_lines=$(awk 'BEGIN { frontmatter=0; body=0 } /^---$/ { frontmatter++
 [ "$design_body_lines" -le 30 ] || { printf 'sdd-design macro exceeds 30 body lines\n' >&2; exit 1; }
 tasks_body_lines=$(awk 'BEGIN { frontmatter=0; body=0 } /^---$/ { frontmatter++; next } frontmatter >= 2 { body++ } END { print body }' "$tasks_agent")
 [ "$tasks_body_lines" -le 30 ] || { printf 'sdd-tasks macro exceeds 30 body lines\n' >&2; exit 1; }
+handoff_body_lines=$(awk 'BEGIN { frontmatter=0; body=0 } /^---$/ { frontmatter++; next } frontmatter >= 2 { body++ } END { print body }' "$handoff_agent")
+[ "$handoff_body_lines" -le 30 ] || { printf 'session-handoff macro exceeds 30 body lines\n' >&2; exit 1; }
+memory_body_lines=$(awk 'BEGIN { frontmatter=0; body=0 } /^---$/ { frontmatter++; next } frontmatter >= 2 { body++ } END { print body }' "$memory_agent")
+[ "$memory_body_lines" -le 30 ] || { printf 'memory-maintainer macro exceeds 30 body lines\n' >&2; exit 1; }
 orchestrator_body_lines=$(awk 'BEGIN { frontmatter=0; body=0 } /^---$/ { frontmatter++; next } frontmatter >= 2 { body++ } END { print body }' "$orchestrator_agent")
 [ "$orchestrator_body_lines" -le 35 ] || { printf 'orchestrator macro exceeds 35 body lines\n' >&2; exit 1; }
 assert_file_contains "$orchestrator_agent" 'You are the user-facing coordinator, never a phase executor.'
@@ -563,9 +600,10 @@ data_files = config["tool"]["setuptools"]["data-files"]
 expected = {
     "shared/authority.md", "shared/phase-common.md", "shared/delegation-ownership.md",
     "shared/persistence.md", "shared/result-envelope.md", "shared/status-readiness.md",
-    "shared/skill-resolution.md", "orchestration/routing.md", "phases/apply.md", "phases/design.md", "phases/prd.md",
+    "shared/skill-resolution.md", "orchestration/routing.md", "phases/apply.md", "phases/design.md", "phases/session-handoff.md",
+    "phases/memory-maintenance.md", "phases/prd.md",
     "phases/proposal.md", "phases/spec.md", "phases/tasks.md", "phases/verify.md", "results/apply-result-v1.md",
-    "results/orchestrator-result-v1.md", "results/prd-result-v1.md", "results/proposal-result-v1.md",
+    "results/handoff-result-v1.md", "results/memory-maintenance-result-v1.md", "results/orchestrator-result-v1.md", "results/prd-result-v1.md", "results/proposal-result-v1.md",
     "results/design-result-v1.md", "results/spec-result-v1.md", "results/tasks-result-v2.md",
     "results/tasks-transport-v2.md", "results/verify-result-v1.md",
 }
@@ -588,7 +626,7 @@ import sys
 
 canonical, generated = map(Path, sys.argv[1:])
 references = sorted((canonical / ".github/references").rglob("*.md"))
-for source_path in [canonical / ".github/agents/pegasus-orchestrator.agent.md", canonical / ".github/agents/doc-designer.agent.md", canonical / ".github/agents/sdd-proposal.agent.md", canonical / ".github/agents/sdd-spec.agent.md", canonical / ".github/agents/sdd-design.agent.md", canonical / ".github/agents/sdd-tasks.agent.md", canonical / ".github/agents/sdd-apply.agent.md", canonical / ".github/agents/sdd-verify.agent.md", canonical / ".github/prompts/sdd-phases.prompt.md", *references]:
+for source_path in [canonical / ".github/agents/pegasus-orchestrator.agent.md", canonical / ".github/agents/doc-designer.agent.md", canonical / ".github/agents/sdd-proposal.agent.md", canonical / ".github/agents/sdd-spec.agent.md", canonical / ".github/agents/sdd-design.agent.md", canonical / ".github/agents/sdd-tasks.agent.md", canonical / ".github/agents/sdd-apply.agent.md", canonical / ".github/agents/sdd-verify.agent.md", canonical / ".github/agents/session-handoff.agent.md", canonical / ".github/agents/memory-maintainer.agent.md", canonical / ".github/prompts/sdd-phases.prompt.md", canonical / ".github/prompts/handoff.prompt.md", canonical / ".github/prompts/memory-update.prompt.md", *references]:
     relative = source_path.relative_to(canonical)
     source = source_path.read_text(encoding="utf-8").rstrip("\n")
     installed = (generated / relative).read_text(encoding="utf-8").splitlines()
@@ -607,13 +645,15 @@ spec_agent = (root / ".github/agents/sdd-spec.agent.md").read_text(encoding="utf
 design_agent = (root / ".github/agents/sdd-design.agent.md").read_text(encoding="utf-8")
 tasks_agent = (root / ".github/agents/sdd-tasks.agent.md").read_text(encoding="utf-8")
 verify_agent = (root / ".github/agents/sdd-verify.agent.md").read_text(encoding="utf-8")
+handoff_agent = (root / ".github/agents/session-handoff.agent.md").read_text(encoding="utf-8")
+memory_agent = (root / ".github/agents/memory-maintainer.agent.md").read_text(encoding="utf-8")
 reference_root = root / ".github/references"
 expected = [
     "shared/authority.md", "shared/phase-common.md", "shared/delegation-ownership.md",
     "shared/skill-resolution.md", "shared/persistence.md", "orchestration/routing.md", "phases/apply.md", "phases/design.md",
-    "phases/prd.md", "phases/proposal.md", "phases/spec.md", "phases/tasks.md", "phases/verify.md", "shared/status-readiness.md",
+    "phases/memory-maintenance.md", "phases/prd.md", "phases/proposal.md", "phases/session-handoff.md", "phases/spec.md", "phases/tasks.md", "phases/verify.md", "shared/status-readiness.md",
     "shared/result-envelope.md", "results/apply-result-v1.md", "results/orchestrator-result-v1.md",
-    "results/design-result-v1.md", "results/prd-result-v1.md", "results/proposal-result-v1.md", "results/spec-result-v1.md",
+    "results/design-result-v1.md", "results/handoff-result-v1.md", "results/memory-maintenance-result-v1.md", "results/prd-result-v1.md", "results/proposal-result-v1.md", "results/spec-result-v1.md",
     "results/tasks-result-v2.md", "results/tasks-transport-v2.md", "results/verify-result-v1.md",
 ]
 actual_files = {path.relative_to(reference_root).as_posix() for path in reference_root.rglob("*.md")}
@@ -634,9 +674,19 @@ tasks_expected = [
     "shared/status-readiness.md", "shared/result-envelope.md", "results/tasks-result-v2.md",
     "results/tasks-transport-v2.md",
 ]
+handoff_expected = [
+    "shared/authority.md", "shared/phase-common.md", "shared/delegation-ownership.md",
+    "shared/skill-resolution.md", "shared/persistence.md", "phases/session-handoff.md",
+    "shared/status-readiness.md", "shared/result-envelope.md", "results/handoff-result-v1.md",
+]
+memory_expected = [
+    "shared/authority.md", "shared/phase-common.md", "shared/delegation-ownership.md",
+    "shared/skill-resolution.md", "shared/persistence.md", "phases/memory-maintenance.md",
+    "shared/status-readiness.md", "shared/result-envelope.md", "results/memory-maintenance-result-v1.md",
+]
 apply_expected = [path for path in apply_expected if path.startswith("shared/") or path in {"phases/apply.md", "results/apply-result-v1.md"}]
 verify_expected = [path for path in verify_expected if path.startswith("shared/") or path in {"phases/verify.md", "results/verify-result-v1.md"}]
-for agent, paths in ((prd_agent, prd_expected), (proposal_agent, proposal_expected), (spec_agent, spec_expected), (design_agent, design_expected), (tasks_agent, tasks_expected), (apply_agent, apply_expected), (verify_agent, verify_expected)):
+for agent, paths in ((prd_agent, prd_expected), (proposal_agent, proposal_expected), (spec_agent, spec_expected), (design_agent, design_expected), (tasks_agent, tasks_expected), (apply_agent, apply_expected), (verify_agent, verify_expected), (handoff_agent, handoff_expected), (memory_agent, memory_expected)):
     positions = [agent.index(f".github/references/{path}") for path in paths]
     assert positions == sorted(positions), positions
 for literal in (
@@ -676,6 +726,10 @@ assert "tools: ['read', 'search', 'edit']" in spec_agent
 assert "agent" not in spec_agent.split("tools:", 1)[1].split("---", 1)[0]
 assert "tools: ['read', 'search', 'edit']" in design_agent
 assert "agent" not in design_agent.split("tools:", 1)[1].split("---", 1)[0]
+assert "tools: ['read', 'search', 'edit']" in handoff_agent
+assert "agent" not in handoff_agent.split("tools:", 1)[1].split("---", 1)[0]
+assert "tools: ['read', 'search']" in memory_agent
+assert "agent" not in memory_agent.split("tools:", 1)[1].split("---", 1)[0]
 
 edges = {path: set() for path in expected}
 for relative in expected:
@@ -713,6 +767,8 @@ owners = {
     "phases/proposal.md": "detailed `sdd-proposal` workflow",
     "phases/spec.md": "only the detailed `sdd-spec` workflow",
     "phases/design.md": "only the detailed `sdd-design` workflow",
+    "phases/session-handoff.md": "only the detailed `session-handoff` workflow",
+    "phases/memory-maintenance.md": "only the detailed `memory-maintainer` explicit maintenance workflow",
     "phases/tasks.md": "only the detailed `sdd-tasks` planning, validation, and persistence workflow",
     "phases/verify.md": "only the detailed `sdd-verify` workflow",
     "results/apply-result-v1.md": "Apply v1 result schema",
@@ -721,6 +777,8 @@ owners = {
     "results/proposal-result-v1.md": "only the Proposal v1 phase-specific fields and schema",
     "results/spec-result-v1.md": "only the Spec v1 phase-specific fields and schema",
     "results/design-result-v1.md": "only the Design v1 phase-specific fields, canonical labels, and schema",
+    "results/handoff-result-v1.md": "only the Handoff v1 phase-specific fields and schema",
+    "results/memory-maintenance-result-v1.md": "only the Memory Maintenance v1 phase-specific fields and schema",
     "results/tasks-result-v2.md": "only the exact Tasks v2 canonical returned block, immutable key order, wire labels, and allowed field values",
     "results/tasks-transport-v2.md": "exclusively owns Tasks v2 canonical JSON serialization bytes",
     "results/verify-result-v1.md": "only the Verify v1 result schema",
@@ -744,35 +802,49 @@ protected = [
     "templates/harness/.github/agents/sdd-proposal.agent.md",
     "templates/harness/.github/agents/sdd-apply.agent.md",
     "templates/harness/.github/agents/sdd-verify.agent.md",
+    "templates/harness/.github/agents/sdd-design.agent.md",
+    "templates/harness/.github/agents/sdd-spec.agent.md",
+    "templates/harness/.github/agents/sdd-tasks.agent.md",
     "templates/harness/.github/references/orchestration/routing.md",
     "templates/harness/.github/references/phases/apply.md",
     "templates/harness/.github/references/phases/prd.md",
     "templates/harness/.github/references/phases/proposal.md",
     "templates/harness/.github/references/phases/verify.md",
+    "templates/harness/.github/references/phases/design.md",
+    "templates/harness/.github/references/phases/spec.md",
+    "templates/harness/.github/references/phases/tasks.md",
     "templates/harness/.github/references/results/apply-result-v1.md",
     "templates/harness/.github/references/results/orchestrator-result-v1.md",
     "templates/harness/.github/references/results/prd-result-v1.md",
     "templates/harness/.github/references/results/proposal-result-v1.md",
     "templates/harness/.github/references/results/verify-result-v1.md",
+    "templates/harness/.github/references/results/design-result-v1.md",
+    "templates/harness/.github/references/results/spec-result-v1.md",
+    "templates/harness/.github/references/results/tasks-result-v2.md",
+    "templates/harness/.github/references/results/tasks-transport-v2.md",
 ]
 protected.extend(str(path.relative_to(root)) for path in sorted((root / "templates/harness/.github/references/shared").glob("*.md")))
 for relative in protected:
     base = subprocess.run(
-        ["git", "show", f"71a9f0a:{relative}"], cwd=root, check=True, capture_output=True
+        ["git", "show", f"875f32a:{relative}"], cwd=root, check=True, capture_output=True
     ).stdout
     assert (root / relative).read_bytes() == base, f"protected file changed: {relative}"
 
 allowed = {
     "pyproject.toml",
-    "templates/harness/.github/agents/sdd-tasks.agent.md",
-    "templates/harness/.github/references/phases/tasks.md",
-    "templates/harness/.github/references/results/tasks-result-v2.md",
-    "templates/harness/.github/references/results/tasks-transport-v2.md",
+    "templates/harness/.github/agents/session-handoff.agent.md",
+    "templates/harness/.github/agents/memory-maintainer.agent.md",
+    "templates/harness/.github/prompts/handoff.prompt.md",
+    "templates/harness/.github/prompts/memory-update.prompt.md",
+    "templates/harness/.github/references/phases/session-handoff.md",
+    "templates/harness/.github/references/phases/memory-maintenance.md",
+    "templates/harness/.github/references/results/handoff-result-v1.md",
+    "templates/harness/.github/references/results/memory-maintenance-result-v1.md",
     "tests/smoke.sh",
 }
 def changed_paths():
     tracked = subprocess.run(
-        ["git", "diff", "--name-only", "e6f5c7a", "--", ".", ":(exclude)install_and_usage.txt"],
+        ["git", "diff", "--name-only", "875f32a", "--", ".", ":(exclude)install_and_usage.txt"],
         cwd=root, check=True, capture_output=True, text=True,
     ).stdout.splitlines()
     untracked = subprocess.run(
@@ -782,7 +854,7 @@ def changed_paths():
     return set(tracked) | set(untracked)
 
 changed = changed_paths()
-assert changed <= allowed, f"protected paths changed from e6f5c7a: {sorted(changed - allowed)}"
+assert changed <= allowed, f"protected paths changed from 875f32a: {sorted(changed - allowed)}"
 
 with tempfile.NamedTemporaryFile(prefix=".smoke-unauthorized-untracked-", dir=root, delete=False) as fixture:
     fixture_path = Path(fixture.name)
@@ -828,21 +900,11 @@ fi
 assert_file_contains "$target/docs/pegasus/apply-progress.md" "Current In-Progress Work"
 assert_file_contains "$target/docs/pegasus/apply-progress.md" "Merge updates into the existing useful history"
 assert_file_contains "$target/.github/references/phases/verify.md" "Treat fresh context as an operational rule, not a runtime guarantee."
-assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" 'Record operational memory through `pegasus-memory-mcp`'
-assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "Before the first recovery or save attempt, call the MCP \`health\` tool"
-assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "do not claim persistent memory was saved"
-assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "not_found"
-assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "ambiguous"
-assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "read_error"
-assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "persistence_error"
-assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "ensure_project"
-assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "ensure_change"
-assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "project_not_found"
-assert_file_contains "$target/.github/prompts/memory-update.prompt.md" "Do not write retrospective Markdown memory"
-assert_file_contains "$target/.github/prompts/memory-update.prompt.md" "call the \`pegasus-memory-mcp\` \`health\` tool before the first recovery or save attempt"
-assert_file_contains "$target/.github/prompts/memory-update.prompt.md" "Preserve MCP consumer states: \`not_found\`, \`ambiguous\`, \`read_error\`, and \`persistence_error\`"
-assert_file_contains "$target/.github/prompts/memory-update.prompt.md" "ensure_project"
-assert_file_contains "$target/.github/prompts/memory-update.prompt.md" "ensure_change"
+assert_file_contains "$memory_reference" 'Before the first recovery or save attempt, call Pegasus Memory MCP `health`.'
+assert_file_contains "$memory_reference" "Do not write retrospective Markdown memory"
+for behavior in not_found ambiguous read_error persistence_error ensure_project ensure_change project_not_found; do
+  assert_file_contains "$memory_reference" "$behavior"
+done
 assert_file_contains "$target/.cursor/rules/pegasus-memory.mdc" "Recover active project/change context through MCP"
 assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "secondary legacy Cursor compatibility guidance"
 assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "do not fall back to Markdown memory"
@@ -936,9 +998,8 @@ assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions
 assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'The only allowed database mutation is an explicit Pegasus Memory schema migration performed by Pegasus Memory itself'
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'must not reset, delete, recreate, or overwrite the Pegasus Memory database'
 assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'Clean test memory must be created as explicit test setup, never as a sync side effect.'
-for memory_guided_agent in session-handoff memory-maintainer; do
-  assert_file_contains "$target/.github/agents/$memory_guided_agent.agent.md" "pegasus-memory.instructions.md"
-done
+assert_file_contains "$handoff_reference" "pegasus-memory.instructions.md"
+assert_file_contains "$memory_reference" "pegasus-memory.instructions.md"
 assert_file_contains "$tasks_reference" "pegasus-memory.instructions.md"
 assert_file_contains "$design_reference" "pegasus-memory.instructions.md"
 assert_file_contains "$prd_reference" 'Call Pegasus Memory `health` before recovery.'
@@ -954,10 +1015,9 @@ assert_file_contains "$apply_reference" "current/completed work, changed files, 
 assert_file_contains "$persistence_reference" "Merge durable observations, task progress, artifact references, blockers, evidence, and handoff state"
 assert_file_contains "$verify_reference" "persist verification evidence, deviations, verdict, remediation needs"
 assert_file_contains "$verify_reference" "Merge the verification entry"
-assert_file_contains "$target/.github/agents/session-handoff.agent.md" "handoff/session summary"
-assert_file_contains "$target/.github/agents/memory-maintainer.agent.md" "Proactively save decisions, bugfixes, discoveries/gotchas"
-assert_file_contains "$target/.github/prompts/handoff.prompt.md" "handoff/session summary"
-assert_file_contains "$target/.github/prompts/memory-update.prompt.md" "Before ending or pausing, save a concise handoff/session summary after MCP \`health\` succeeds"
+assert_file_contains "$handoff_reference" "handoff/session summary"
+assert_file_contains "$handoff_reference" "exactly one next action"
+assert_file_contains "$memory_reference" "decisions, bugfixes, discoveries, conventions, configuration, constraints, and learnings"
 "$PYTHON_BIN" - "$target/.github" <<'PY'
 import sys
 from pathlib import Path
@@ -1195,7 +1255,7 @@ from pathlib import Path
 
 target = Path(sys.argv[1])
 guidance = (
-    target / ".github/agents/memory-maintainer.agent.md",
+    target / ".github/references/phases/memory-maintenance.md",
     target / ".github/instructions/pegasus-memory.instructions.md",
     target / ".github/instructions/pegasus-workflow.instructions.md",
     target / ".github/copilot-instructions.md",
@@ -1274,6 +1334,23 @@ assert_file_contains "$apply_reference" 'preliminary apply evidence does not rep
 assert_file_contains "$verify_reference" "Record a compliance matrix"
 assert_file_contains "$verify_reference" "Do not make unrelated changes"
 assert_file_contains "$verify_reference" "edit implementation unless the user separately authorizes a later remediation run"
+unavailable_warning='El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente'
+assert_file_contains "$handoff_reference" "$unavailable_warning"
+assert_file_contains "$memory_reference" "$unavailable_warning"
+assert_file_contains "$handoff_reference" 'Merge the new handoff into existing useful history instead of replacing prior decisions, progress, evidence, blockers, incidents, or handoffs.'
+assert_file_contains "$handoff_reference" 'Treat the supplied current live-session snapshot as authority'
+assert_file_contains "$handoff_reference" 'Repo-clean is not session-clean.'
+assert_file_contains "$handoff_reference" 'docs/pegasus/changes/<change-id>/verify.md'
+assert_file_contains "$memory_reference" 'use `kind` only; never send `type` or both aliases'
+assert_file_contains "$memory_reference" 'Merge with useful history; do not overwrite prior progress, evidence, blockers, decisions, observations, artifacts, tasks, or handoffs'
+assert_file_contains "$memory_reference" '`not_found` is empty memory'
+assert_file_contains "$memory_reference" '`persistence_error` is a failed write'
+for field in "Specialist agent: session-handoff" "Current-state authority:" "History merge:" "Exact next action:" "record_handoff:" "Persistence result:"; do
+  assert_file_contains "$handoff_result_reference" "$field"
+done
+for field in "Specialist agent: memory-maintainer" "Maintenance operation:" "Source record identities:" "Recovery result:" "Record operations:" "History merge:" "Persistence result:"; do
+  assert_file_contains "$memory_result_reference" "$field"
+done
 
 orchestrator="$target/.github/agents/pegasus-orchestrator.agent.md"
 assert_file_contains "$orchestrator" "user-facing coordinator, never a phase executor"
@@ -1316,6 +1393,7 @@ fi
 for phase_agent in doc-designer sdd-proposal sdd-spec sdd-design sdd-tasks sdd-apply session-handoff; do
   assert_file_contains "$target/.github/agents/$phase_agent.agent.md" "Do not delegate or launch another agent for this phase."
 done
+assert_file_contains "$memory_agent" "Do not delegate or launch another agent."
 assert_file_contains "$target/.github/agents/sdd-verify.agent.md" "Do not delegate, launch another agent, recursively invoke verify, or invoke apply."
 assert_file_contains "$target/.github/agents/sdd-apply.agent.md" "return blocked before writing"
 assert_file_contains "$target/.github/agents/sdd-apply.agent.md" 'distinct fresh-context `sdd-verify`'
@@ -2140,7 +2218,7 @@ for name in (
     ".github/references/phases/prd.md",
     ".github/references/phases/proposal.md",
     ".github/references/phases/verify.md",
-    ".github/prompts/handoff.prompt.md",
+    ".github/references/phases/session-handoff.md",
     ".cursor/rules/pegasus-workflow.mdc",
     ".cursor/rules/pegasus-memory.mdc",
 ):
