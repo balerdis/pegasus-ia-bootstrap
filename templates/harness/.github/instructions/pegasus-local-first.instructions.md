@@ -1,19 +1,8 @@
 ---
-description: Local-first and no-app-code guardrails
+description: Universal local-first Pegasus guardrail
 applyTo: "**"
 ---
 
-# Local-first guardrails
+# Local-first guardrail
 
-This harness is a workflow scaffold, not an application scaffold.
-
-Do not create any of the following unless the local SDD docs explicitly request them:
-
-- business/domain application code
-- framework scaffolding
-- database schema or migrations
-- GitHub remotes, commits, issues, pull requests, or CI configuration
-- deployment files or cloud resources
-- MCP servers or network service dependencies
-
-Default to local Markdown files, explicit user approval for destructive actions, and reversible changes.
+This harness is a workflow scaffold, not an application scaffold. Unless active approved artifacts explicitly require it, do not create product code, framework or database scaffolding, remotes, commits, issues, pull requests, CI, deployment, cloud resources, MCP servers, or network dependencies. Prefer local, reversible changes and explicit approval for destructive actions.

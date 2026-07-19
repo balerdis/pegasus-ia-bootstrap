@@ -1,20 +1,12 @@
 ---
-description: Conservative Pegasus IA global guidance for VS Code/Copilot
+description: Conservative Pegasus IA global fallback for VS Code/Copilot
 applyTo: "**"
 ---
 
-# Pegasus IA global guidance
+# Pegasus global fallback
 
-When a workspace contains Pegasus IA assets, use the workspace-local files as the source of truth before this global guidance:
+This is fallback guidance, never phase authorization. When present, workspace-local assets override it in this order: `.github/copilot-instructions.md`, `.github/agents/pegasus-orchestrator.agent.md`, `.github/instructions/`, `AGENTS.md`, then the exact manual references selected by those assets.
 
-1. `.github/copilot-instructions.md`
-2. `.github/instructions/`
-3. `.github/agents/pegasus-orchestrator.agent.md`
-4. `AGENTS.md`
-5. `docs/pegasus/`
+Do not execute a Pegasus phase, edit artifacts, or persist workflow state from this global file. If the local coordinator or its exact required references are absent, stop and ask for the workspace workflow instead of reconstructing a contract.
 
-Keep work local-first. Do not create app scaffolds, GitHub remotes, CI, deployment, database, or network resources unless the workspace docs explicitly require them.
-
-Use English for operational instructions, internal communication, and generated agent-consumed artifacts. Only an explicit user instruction naming an artifact language overrides English; chat, persona, source language, and prior artifacts do not. User-facing conversation and localized public warnings may remain localized. Pegasus Memory descriptive prose is always English; preserve exact source data and record each source artifact's language.
-
-This file is intentionally conservative and does not claim one-to-one behavior with OpenCode, Cursor, or any other agent runtime.
+Until local authority is loaded, keep work local and reversible; do not create product scaffolding, infrastructure, remotes, CI, deployment, databases, or network resources. Agent-consumed artifacts default to English unless the user explicitly names another artifact language.

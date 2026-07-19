@@ -422,7 +422,7 @@ done
 assert_file_contains "$target/AGENTS.md" "sample-project"
 assert_file_contains "$target/AGENTS.md" "$target"
 assert_file_contains "$target/AGENTS.md" ".github/agents/pegasus-orchestrator.agent.md"
-assert_file_contains "$target/.github/copilot-instructions.md" "Primary entry point"
+assert_file_contains "$target/.github/copilot-instructions.md" "Start with \`.github/agents/pegasus-orchestrator.agent.md\`"
 assert_file_contains "$target/.github/agents/pegasus-orchestrator.agent.md" "name: pegasus-orchestrator"
 assert_file_contains "$target/.github/agents/sdd-apply.agent.md" "user-invocable: false"
 apply_agent="$target/.github/agents/sdd-apply.agent.md"
@@ -826,25 +826,29 @@ protected = [
 protected.extend(str(path.relative_to(root)) for path in sorted((root / "templates/harness/.github/references/shared").glob("*.md")))
 for relative in protected:
     base = subprocess.run(
-        ["git", "show", f"875f32a:{relative}"], cwd=root, check=True, capture_output=True
+        ["git", "show", f"123612d:{relative}"], cwd=root, check=True, capture_output=True
     ).stdout
     assert (root / relative).read_bytes() == base, f"protected file changed: {relative}"
 
 allowed = {
-    "pyproject.toml",
-    "templates/harness/.github/agents/session-handoff.agent.md",
-    "templates/harness/.github/agents/memory-maintainer.agent.md",
-    "templates/harness/.github/prompts/handoff.prompt.md",
-    "templates/harness/.github/prompts/memory-update.prompt.md",
-    "templates/harness/.github/references/phases/session-handoff.md",
-    "templates/harness/.github/references/phases/memory-maintenance.md",
-    "templates/harness/.github/references/results/handoff-result-v1.md",
-    "templates/harness/.github/references/results/memory-maintenance-result-v1.md",
+    "templates/harness/AGENTS.md",
+    "templates/harness/.github/copilot-instructions.md",
+    "templates/harness/.github/instructions/pegasus-sdd-boundaries.instructions.md",
+    "templates/harness/.github/instructions/pegasus-memory.instructions.md",
+    "templates/harness/.github/instructions/pegasus-workflow.instructions.md",
+    "templates/harness/.github/instructions/pegasus-local-first.instructions.md",
+    "templates/harness/.github/instructions/pegasus-legacy-compatibility.instructions.md",
+    "templates/copilot-global/instructions/pegasus-global.instructions.md",
+    "templates/copilot-global/agents/pegasus-global-orchestrator.agent.md",
+    "templates/copilot-global/prompts/pegasus-start.prompt.md",
+    "templates/cursor-global/pegasus-global.mdc",
+    "templates/harness/.cursor/rules/pegasus-memory.mdc",
+    "templates/harness/.cursor/rules/pegasus-workflow.mdc",
     "tests/smoke.sh",
 }
 def changed_paths():
     tracked = subprocess.run(
-        ["git", "diff", "--name-only", "875f32a", "--", ".", ":(exclude)install_and_usage.txt"],
+        ["git", "diff", "--name-only", "123612d", "--", ".", ":(exclude)install_and_usage.txt"],
         cwd=root, check=True, capture_output=True, text=True,
     ).stdout.splitlines()
     untracked = subprocess.run(
@@ -854,7 +858,7 @@ def changed_paths():
     return set(tracked) | set(untracked)
 
 changed = changed_paths()
-assert changed <= allowed, f"protected paths changed from 875f32a: {sorted(changed - allowed)}"
+assert changed <= allowed, f"protected paths changed from 123612d: {sorted(changed - allowed)}"
 
 with tempfile.NamedTemporaryFile(prefix=".smoke-unauthorized-untracked-", dir=root, delete=False) as fixture:
     fixture_path = Path(fixture.name)
@@ -905,18 +909,13 @@ assert_file_contains "$memory_reference" "Do not write retrospective Markdown me
 for behavior in not_found ambiguous read_error persistence_error ensure_project ensure_change project_not_found; do
   assert_file_contains "$memory_reference" "$behavior"
 done
-assert_file_contains "$target/.cursor/rules/pegasus-memory.mdc" "Recover active project/change context through MCP"
-assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "secondary legacy Cursor compatibility guidance"
-assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "do not fall back to Markdown memory"
-assert_file_contains "$target/AGENTS.md" 'El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente'
-assert_file_contains "$target/AGENTS.md" "Pegasus Memory operational persistence"
-assert_file_contains "$target/AGENTS.md" "Agent-consumed artifacts default to English unless the user explicitly names another language for the artifact"
-assert_file_contains "$target/.github/instructions/pegasus-sdd-boundaries.instructions.md" "Generate every agent-consumed artifact in English by default"
-assert_file_contains "$target/.github/instructions/pegasus-sdd-boundaries.instructions.md" "Never infer artifact language from chat, persona, dominant source language, or prior artifacts"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Write all durable Pegasus Memory descriptive prose in English"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Artifact-language overrides never override memory prose language"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'record `Artifact language: <language>`'
-assert_file_contains "$target/.github/copilot-instructions.md" "Chat, persona, dominant source language, and prior artifacts do not select artifact language"
+assert_file_contains "$target/.cursor/rules/pegasus-memory.mdc" "compatibility pointer only"
+assert_file_contains "$target/.cursor/rules/pegasus-workflow.mdc" "secondary compatibility guidance"
+assert_file_contains "$target/AGENTS.md" "current macro > phase reference > shared reference > workspace default > global fallback"
+assert_file_contains "$target/AGENTS.md" ".github/references/results/tasks-transport-v2.md"
+assert_file_contains "$target/.github/instructions/pegasus-sdd-boundaries.instructions.md" "Generate agent-consumed artifacts in English"
+assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Durable Pegasus Memory descriptive prose is English"
+assert_file_contains "$target/.github/copilot-instructions.md" "Never infer artifact language from chat, persona, source language, or prior artifacts"
 assert_file_contains "$ROOT/openspec/config.yaml" "Artifact language: English by default"
 assert_file_contains "$ROOT/openspec/config.yaml" "Memory language: durable Pegasus Memory descriptive prose is always English"
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "Agent artifact and durable memory language"
@@ -935,69 +934,60 @@ spec = (root / "openspec/specs/pegasus-harness-bootstrap/spec.md").read_text()
 for text in (sdd, copilot, spec):
     assert "dominant approved PRD/proposal language applies" not in text
     assert "otherwise use the dominant approved PRD/proposal language" not in text
-assert "regardless of chat, persona, source, or artifact language" in memory
-assert "Artifact-language overrides never override memory prose language" in memory
-assert "Artifact language: <language>" in memory
-assert "required public warnings" in memory
+assert "Durable Pegasus Memory descriptive prose is English" in memory
+assert "required public warnings" in sdd
 PY
 assert_file_contains "$target/AGENTS.md" "pegasus-harness:start path=AGENTS.md ownership=marker-managed"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "# Pegasus Memory operational persistence"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Call its \`health\` tool before the first recovery or save attempt"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Save proactively after important changes"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "bugfixes, root causes, and remediation notes"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "verification commands, evidence, deviations, verdicts, and remediation needs"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "handoffs and session summaries before ending or pausing work"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "After context compaction, context loss, or a long pause"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "save a concise handoff/session summary through MCP when healthy"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "do not fall back to Markdown memory"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "health.capabilities.parent_bootstrap"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "ensure_project"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "ensure_change"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'Use minimal compatible ensure payloads.'
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'By default, call `ensure_change({ project_id: <project-id>, change_id: <change-id> })`'
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'Never send `type`, and never send both `kind` and `type`, even with equal values'
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'Do not send nested `metadata`, arrays, product decisions, questions/answers, artifact summaries, or arbitrary extra fields to `ensure_change`'
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "project_not_found"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "foreign-key failures"
-assert_file_contains "$target/.github/copilot-instructions.md" "call the \`pegasus-memory-mcp\` \`health\` tool before the first recovery attempt"
-assert_file_contains "$target/.github/copilot-instructions.md" "call \`health\` before the first MCP save attempt"
-assert_file_contains "$target/.github/copilot-instructions.md" "proactively save durable decisions, bugfixes, discoveries/gotchas"
-assert_file_contains "$target/.github/copilot-instructions.md" "Keep consumer states distinct: \`not_found\`"
-assert_file_contains "$target/.github/copilot-instructions.md" "Natural-language PRD intent is enough to start PRD discovery."
-assert_file_contains "$target/.github/copilot-instructions.md" "never silently decide product scope"
-assert_file_contains "$target/.github/copilot-instructions.md" 'include a small MCP persistence summary marking `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation` as `succeeded`, `not needed`, or `failed: <reason>`'
-assert_file_contains "$target/.github/copilot-instructions.md" 'using only `project_id` and `change_id` by default; add `key`, `title`, `status`, or `description` only when needed, and use `kind` only if classification is needed'
-assert_file_contains "$target/.github/copilot-instructions.md" 'Never send `type` or both `kind` and `type`, even if equal'
-assert_file_contains "$target/.github/copilot-instructions.md" 'before any git command first check for `.git` and never run `git diff`, `git status`, or other git validation in non-git workspaces; do not try git first and fall back'
-assert_file_contains "$target/.github/copilot-instructions.md" 'must not reset, delete, recreate, or overwrite the Pegasus Memory database'
-assert_file_contains "$target/.github/copilot-instructions.md" "wait for explicit PRD approval before proposal/spec/design/tasks/apply, and do not implement code during PRD flow"
-assert_file_contains "$target/.github/copilot-instructions.md" "Before proposal, inspect the referenced PRD file rather than relying on conversational approval."
-assert_file_contains "$target/.github/copilot-instructions.md" "do not turn unstated details into preserved PRD assumptions"
-assert_file_contains "$target/.github/copilot-instructions.md" "Proposal persistence: file-only"
-assert_file_contains "$target/.github/copilot-instructions.md" "ensure_project"
-assert_file_contains "$target/.github/copilot-instructions.md" "ensure_change"
-assert_file_contains "$target/.github/copilot-instructions.md" "project_not_found"
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Natural-language product intent should trigger PRD discovery automatically."
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Before proposal drafting, inspect the referenced PRD artifact's Approval table/status."
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "never call an unstated detail a preserved PRD assumption"
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "MCP persistence summary:"
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "The current change PRD is the only default product-content source"
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Do not search, read, inspect, or reuse neighboring or unrelated change artifacts"
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Consult another change only when the current PRD, active MCP context, or direct user instruction explicitly declares a dependency/relation"
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "that it was not used as an implicit scope source"
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Reconcile every material gap before finalization"
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "An ambiguous MCP response never resolves a material gap"
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "for a blocking gap, ask one concise question and stop before writing/finalizing"
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "The final response must summarize resolved and unresolved gaps"
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "tell the user the PRD file path and ask them to review it"
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "product decisions are open"
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'record_artifact`, and `record_observation` as `succeeded`, `not needed`, or `failed: <reason>`'
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'using only `project_id` and `change_id` by default; add `key`, `title`, `status`, or `description` only when needed, and use `kind` only if classification is needed'
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'Never send `type` or both `kind` and `type`, even if equal'
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'before any git command first check for `.git` and never run `git diff`, `git status`, or other git validation in non-git workspaces; do not try git first and fall back'
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'The only allowed database mutation is an explicit Pegasus Memory schema migration performed by Pegasus Memory itself'
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'must not reset, delete, recreate, or overwrite the Pegasus Memory database'
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'Clean test memory must be created as explicit test setup, never as a sync side effect.'
+"$PYTHON_BIN" - "$ROOT" <<'PY'
+from pathlib import Path
+import re
+import sys
+
+root = Path(sys.argv[1])
+workspace = root / "templates/harness"
+eager = [workspace / ".github/copilot-instructions.md", workspace / "AGENTS.md", *sorted((workspace / ".github/instructions").glob("*.instructions.md"))]
+limits = {workspace / ".github/copilot-instructions.md": (60, 600), workspace / "AGENTS.md": (80, 800)}
+for path in eager:
+    text = path.read_text()
+    lines, words = len(text.splitlines()), len(text.split())
+    line_limit, word_limit = limits.get(path, (40, 350))
+    assert lines <= line_limit, (path, lines)
+    assert words <= word_limit, (path, words)
+after_lines = sum(len(path.read_text().splitlines()) for path in eager)
+after_words = sum(len(path.read_text().split()) for path in eager)
+assert after_lines <= 116
+assert (333 - after_lines) / 333 >= 0.65
+assert (9198 - after_words) / 9198 >= 0.65
+
+owners = (workspace / ".github/copilot-instructions.md").read_text()
+owner_paths = (
+    "shared/authority.md", "shared/phase-common.md", "shared/delegation-ownership.md",
+    "shared/persistence.md", "shared/status-readiness.md", "shared/skill-resolution.md",
+    "shared/result-envelope.md", "orchestration/routing.md", "results/tasks-transport-v2.md",
+)
+for path in owner_paths:
+    assert f".github/references/{path}" in owners, path
+    assert (workspace / ".github/references" / path).is_file(), path
+for taxonomy in ("phases/<phase>.md", "results/<phase>-result-v<version>.md"):
+    assert f".github/references/{taxonomy}" in owners
+for path in sorted((workspace / ".github/references").rglob("*.md")):
+    assert not re.search(r"^applyTo:", path.read_text(), re.MULTILINE), path
+
+forbidden = ("canonical JSON", "SHA-256", "record_artifact →", "seven forecast", "Proposal persistence: file-only")
+surfaces = eager + [root / "templates/cursor-global/pegasus-global.mdc", *sorted((workspace / ".cursor/rules").glob("*.mdc"))]
+for path in surfaces:
+    for phrase in forbidden:
+        assert phrase not in path.read_text(), (path, phrase)
+
+fallbacks = [root / "templates/copilot-global/instructions/pegasus-global.instructions.md", root / "templates/copilot-global/agents/pegasus-global-orchestrator.agent.md", root / "templates/copilot-global/prompts/pegasus-start.prompt.md", root / "templates/cursor-global/pegasus-global.mdc", *sorted((workspace / ".cursor/rules").glob("*.mdc"))]
+for path in fallbacks:
+    text = path.read_text()
+    assert len(text.splitlines()) <= 35, (path, len(text.splitlines()))
+    assert len(text.split()) <= 300, (path, len(text.split()))
+global_agent = fallbacks[1].read_text()
+assert "tools: ['read', 'search', 'agent']" in global_agent
+assert "'edit'" not in global_agent.split("---", 2)[1]
+PY
 assert_file_contains "$handoff_reference" "pegasus-memory.instructions.md"
 assert_file_contains "$memory_reference" "pegasus-memory.instructions.md"
 assert_file_contains "$tasks_reference" "pegasus-memory.instructions.md"
@@ -1158,13 +1148,8 @@ for behavior in \
   "MUST prevent claiming full durable completion or Pegasus Memory success"; do
   assert_file_contains "$spec_reference" "$behavior"
 done
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Other MCP servers may coexist"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "not substitutes for Pegasus Memory persistence"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "For spec closure"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Pegasus Memory persistence summary:"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "complete task-progress payload records phase \`spec\`"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Pegasus Memory persistence incomplete/partial — <failed operation>: <reason>"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "prevents a full durable-completion or Pegasus Memory-success claim"
+assert_file_contains "$spec_reference" "Pegasus Memory persistence summary:"
+assert_file_contains "$spec_reference" "Pegasus Memory persistence incomplete/partial — <failed operation>: <reason>"
 "$PYTHON_BIN" - "$spec_reference" <<'PY'
 import sys
 from pathlib import Path
@@ -1238,9 +1223,6 @@ from pathlib import Path
 target = Path(sys.argv[1])
 payload_guidance = (
     target / ".github/references/phases/spec.md",
-    target / ".github/instructions/pegasus-memory.instructions.md",
-    target / ".github/instructions/pegasus-workflow.instructions.md",
-    target / ".github/copilot-instructions.md",
 )
 supported = "`pending`, `in_progress`, `blocked`, `completed`"
 for path in payload_guidance:
@@ -1256,9 +1238,6 @@ from pathlib import Path
 target = Path(sys.argv[1])
 guidance = (
     target / ".github/references/phases/memory-maintenance.md",
-    target / ".github/instructions/pegasus-memory.instructions.md",
-    target / ".github/instructions/pegasus-workflow.instructions.md",
-    target / ".github/copilot-instructions.md",
 )
 legacy_alias_guidance = ("`kind`/`type`", "`kind` or `type`")
 for path in guidance:
@@ -1360,9 +1339,8 @@ assert_file_contains "$orchestrator" "Validate only routing inputs and returned 
 assert_file_contains "$orchestrator_reference" "The coordinator may read only what is necessary to determine active change, current phase, in-file approval, launch identity, duplicate state, authorization, and strategy"
 assert_file_contains "$orchestrator_reference" "Reproduce the valid envelope field-for-field with unchanged canonical labels and values"
 assert_file_contains "$orchestrator_reference" '¿Aprobás el diseño para avanzar a la fase de tareas?'
-assert_file_contains "$target/.github/copilot-instructions.md" "MUST reproduce the complete canonical envelope verbatim or field-for-field"
+assert_file_contains "$target/.github/references/orchestration/routing.md" "Reproduce the valid envelope field-for-field"
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "MUST reproduce the complete canonical specialist envelope verbatim or field-for-field"
-assert_file_contains "$target/.github/copilot-instructions.md" "Lossy narrative summarization MUST NOT substitute for complete envelope reproduction"
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "Lossy narrative summarization MUST NOT substitute for complete envelope reproduction"
 assert_file_contains "$orchestrator_reference" "four or more files"
 assert_file_contains "$orchestrator_reference" "two or more non-trivial changed files"
@@ -1430,17 +1408,9 @@ lines = Path(sys.argv[1]).read_text().splitlines()
 assert lines[0] == "<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/spec.md ownership=full-file -->"
 assert lines[-1] == "<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/spec.md -->"
 PY
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "For spec work, select one artifact language before writing"
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Repair only affected language blocks, reread the entire artifact, revalidate markers, and rerun the gate"
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Spec persistence: file-only — language validation failed: <exact issues>"
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "require \`Creado:\` and \`Destino:\`; reject \`Created:\`, \`Target:\`"
-assert_file_contains "$target/.github/copilot-instructions.md" "For spec work, select one artifact language before writing"
-assert_file_contains "$target/.github/copilot-instructions.md" 'State `Artifact language: <selected language>` and `Language gate: <passed|blocked: exact unresolved issues>`'
-assert_file_contains "$target/.github/copilot-instructions.md" "Language gate: passed\` is forbidden while any prohibited English structural label remains"
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Before spec drafting, inspect the current change PRD and proposal artifacts"
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" "Spec stays acceptance-only"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "For spec closure"
-assert_file_contains "$target/.github/copilot-instructions.md" "Before spec, inspect the current change's PRD and proposal"
+assert_file_contains "$spec_reference" "Before writing, select exactly one artifact language"
+assert_file_contains "$spec_reference" "Spec persistence: file-only — language validation failed: <exact issues>"
+assert_file_contains "$target/.github/references/phases/spec.md" "Never report \`Language gate: passed\` while a prohibited structural label or language issue remains"
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" 'scenarios in `docs/pegasus/changes/<change-id>/spec.md`'
 if grep -Fq 'scenarios in `docs/pegasus/spec.md`' "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md"; then
   printf 'stable spec contains contradictory root spec path for change-scoped flow\n' >&2
@@ -1492,7 +1462,7 @@ assert_file_contains "$design_reference" "canonical status \`deferred-non-blocki
 assert_file_contains "$design_reference" "A missing deferred field is blocking"
 assert_file_contains "$design_result_reference" 'Deferred technical choices:'
 assert_file_contains "$design_reference" "all deferred choices and needed-by gates"
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" "Reconcile deferred technical choices before marker, language, and persistence gates"
+assert_file_contains "$design_reference" "Deferred Technical Choices"
 assert_file_contains "$target/docs/pegasus/design.md" "Pegasus Memory product naming"
 assert_file_contains "$target/docs/pegasus/design.md" "Validate every \`MCP\` occurrence independently"
 assert_file_contains "$design_reference" "Allow \`MCP\` only in an explicit protocol discussion"
@@ -2225,9 +2195,8 @@ for name in (
     assert required in (root / name).read_text(), name
 
 copilot = (root / ".github/copilot-instructions.md").read_text()
-for phase in ("prd", "proposal", "spec", "design", "tasks", "apply-progress", "verify"):
-    assert f"docs/pegasus/changes/<change-id>/{phase}.md" in copilot, phase
-assert "Root phase files are canonical templates only" in copilot
+assert "docs/pegasus/changes/<change-id>/" in copilot
+assert "Root `docs/pegasus/*.md` files are canonical templates" in copilot
 assert "Then read `docs/pegasus/prd.md`, `proposal.md`" not in copilot
 PY
 "$PYTHON_BIN" - "$ROOT/templates/cursor-global/pegasus-global.mdc" "$ROOT/templates/copilot-global/agents/pegasus-global-orchestrator.agent.md" <<'PY'
@@ -2235,17 +2204,13 @@ import sys
 from pathlib import Path
 
 cursor, copilot = (Path(raw).read_text() for raw in sys.argv[1:])
-assert "docs/pegasus/changes/<change-id>/" in cursor
+assert ".github/agents/pegasus-orchestrator.agent.md" in cursor
 assert "Update local Markdown memory" not in cursor
-assert "docs/pegasus/changes/<change-id>/" in copilot
+assert ".github/agents/pegasus-orchestrator.agent.md" in copilot
 PY
-for global_language_file in \
-  "$copilot_install_xdg/pegasus-ia/copilot/agents/pegasus-global-orchestrator.agent.md" \
-  "$copilot_install_xdg/pegasus-ia/copilot/instructions/pegasus-global.instructions.md" \
-  "$copilot_install_xdg/pegasus-ia/copilot/prompts/pegasus-start.prompt.md"; do
-  assert_file_contains "$global_language_file" "English"
-done
-assert_file_contains "$copilot_install_xdg/pegasus-ia/copilot/agents/pegasus-global-orchestrator.agent.md" 'Artifact language: <language>'
+assert_file_contains "$copilot_install_xdg/pegasus-ia/copilot/instructions/pegasus-global.instructions.md" "Agent-consumed artifacts default to English"
+assert_file_contains "$copilot_install_xdg/pegasus-ia/copilot/agents/pegasus-global-orchestrator.agent.md" "tools: ['read', 'search', 'agent']"
+assert_file_contains "$copilot_install_xdg/pegasus-ia/copilot/prompts/pegasus-start.prompt.md" "Do not infer missing contracts"
 if grep -R -E "otherwise use the dominant language|dominant approved source language|dominant approved PRD/proposal language" \
   "$target/.github" >/dev/null; then
   printf 'rendered operational guidance retains legacy artifact-language inference\n' >&2
@@ -2259,9 +2224,9 @@ lines = Path(sys.argv[1]).read_text().splitlines()
 assert lines[0] == "<!-- pegasus-harness:start path=docs/pegasus/changes/<change-id>/design.md ownership=full-file -->"
 assert lines[-1] == "<!-- pegasus-harness:end path=docs/pegasus/changes/<change-id>/design.md -->"
 PY
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'Before design, read the current change'"'"'s approved in-file PRD, proposal, and spec'
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'For design closure, use Pegasus Memory/`pegasus-memory-mcp` terminology'
-assert_file_contains "$target/.github/copilot-instructions.md" "Before design, require current-change in-file approval for PRD, proposal, and spec"
+assert_file_contains "$target/.github/references/phases/design.md" "current-change approved artifacts as the only default product and acceptance sources"
+assert_file_contains "$target/.github/references/phases/design.md" 'Pegasus Memory` or exact `pegasus-memory-mcp` annotation'
+assert_file_contains "$target/.github/references/orchestration/routing.md" "Confirm required predecessor artifacts and their in-file approvals"
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "Design requires approved isolated evidence and technical context"
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" "Design reconciles technical gaps and closes truthfully"
 assert_file_contains "$ROOT/openspec/specs/pegasus-harness-bootstrap/spec.md" '`None` / `Ninguna` MUST be invalid'
@@ -2304,11 +2269,8 @@ assert_file_contains "$target/docs/pegasus/verify.md" "## Changed Files Reviewed
 assert_file_contains "$target/docs/pegasus/verify.md" "## Test Coverage / Manual Checks"
 assert_file_contains "$target/docs/pegasus/verify.md" "## Final Verdict"
 assert_file_contains "$target/docs/pegasus/verify.md" "Merge-not-overwrite instructions"
-assert_file_contains "$target/.github/copilot-instructions.md" 'before any git command first check for `.git` and never run `git diff`, `git status`, or other git validation in non-git workspaces'
-assert_file_contains "$target/.github/copilot-instructions.md" 'include a small MCP persistence summary marking `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation` as `succeeded`, `not needed`, or `failed: <reason>`'
-assert_file_contains "$target/.github/instructions/pegasus-workflow.instructions.md" 'before any git command first check for `.git` and never run `git diff`, `git status`, or other git validation in non-git workspaces'
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'For PRD closure, include a small MCP persistence summary with one line each for `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation`'
-assert_file_contains "$target/.github/instructions/pegasus-memory.instructions.md" 'For proposal closure, the final response MUST contain this exact block even when MCP is unavailable'
+assert_file_contains "$prd_reference" 'ensure_project`, `ensure_change`, `record_artifact`, and `record_observation`'
+assert_file_contains "$proposal_reference" 'MCP persistence summary:'
 
 if grep -R -E 'review-risk|review-readability' "$target/.github" >/dev/null; then
   printf 'generated Copilot assets include excluded reviewer agents\n' >&2
@@ -2812,12 +2774,11 @@ esac
 
 global_target="$TMP/global-target"
 global_output="$(printf 'yes\n' | HOME="$global_home" XDG_CONFIG_HOME="$global_xdg" "$PYTHON_BIN" "$CLI" --project-name global-project --target-path "$global_target" --install-cursor-global)"
-assert_file_contains "$global_xdg/Cursor/User/rules/pegasus-global.mdc" "never infer an override from chat, persona, source, or prior artifact language"
-assert_file_contains "$global_xdg/Cursor/User/rules/pegasus-global.mdc" 'record `Artifact language: <language>`'
+assert_file_contains "$global_xdg/Cursor/User/rules/pegasus-global.mdc" 'does not authorize phase execution, edits, or persistence'
 global_rule="$global_xdg/Cursor/User/rules/pegasus-global.mdc"
 [ -f "$global_rule" ] || { printf 'expected global Cursor rule to be written\n' >&2; exit 1; }
 assert_file_contains "$global_rule" "PEGASUS-CURSOR-GLOBAL"
-assert_file_contains "$global_rule" "Legacy Pegasus IA Global Cursor Guidance"
+assert_file_contains "$global_rule" "Legacy Pegasus Cursor Fallback"
 case "$global_output" in
   *"Updated legacy global Cursor rules: $global_xdg/Cursor/User/rules"*) ;;
   *) printf 'expected global install output to report updated global path\n' >&2; exit 1 ;;

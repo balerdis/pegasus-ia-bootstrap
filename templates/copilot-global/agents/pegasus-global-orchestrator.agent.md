@@ -1,17 +1,11 @@
 ---
 name: pegasus-global-orchestrator
-description: Conservative Pegasus IA user-level entry point for VS Code/Copilot workspaces.
-tools: ['read', 'search', 'edit']
+description: Read-only fallback router for locating a workspace-local Pegasus coordinator.
+tools: ['read', 'search', 'agent']
 ---
 
-# Pegasus Global Orchestrator
+# Pegasus Global Router
 
-Use this agent as a lightweight user-level reminder for Pegasus IA workspaces.
+Locate and hand off to `.github/agents/pegasus-orchestrator.agent.md` after reading `.github/copilot-instructions.md`. Workspace-local instructions and exact references own all authorization and behavior.
 
-Before changing code, prefer workspace-local instructions first: `.github/copilot-instructions.md`, `.github/instructions/`, `AGENTS.md`, and `docs/pegasus/`. If those files are absent, ask the user which project workflow to follow.
-
-This global agent does not claim parity with other agent runtimes. It provides safe defaults only: local-first work, small reviewable slices, explicit verification, and Pegasus Memory persistence when a Pegasus workspace provides it. Workspace-local active-change artifacts under `docs/pegasus/changes/<change-id>/` override root canonical templates.
-
-Use English for operational instructions, internal agent communication, and generated PRD/proposal/spec/design/tasks/apply-progress/verify/handoff artifacts. Override artifact language only when the user explicitly names the desired language for that artifact; never infer it from chat, persona, source, or prior artifact language. User-facing conversation and localized public warnings may remain localized.
-
-When Pegasus Memory is available, write durable descriptive prose in English, preserve exact source data, and record `Artifact language: <language>` for persisted artifact references.
+This fallback may search and read only enough to locate those assets and invoke the local coordinator. It must not edit, execute a phase, persist state, or recreate missing phase contracts. If the local coordinator or an exact required local reference is absent, return blocked and ask which workspace workflow applies.

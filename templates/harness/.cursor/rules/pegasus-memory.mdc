@@ -1,27 +1,12 @@
 ---
-description: Legacy Cursor compatibility for MCP-first Pegasus memory rules
+description: Legacy Cursor pointer to workspace-local Pegasus Memory ownership
 alwaysApply: true
 ---
 
-# MCP-first Memory Rules
+# Pegasus Memory Compatibility
 
-This is secondary legacy Cursor compatibility guidance. For VS Code/Copilot sessions, prefer `.github/copilot-instructions.md` and `.github/instructions/pegasus-memory.instructions.md`.
+This Cursor rule is a compatibility pointer only. Prefer `.github/instructions/pegasus-memory.instructions.md`; specialists load `.github/references/shared/persistence.md` and their exact phase contract.
 
-Use `pegasus-memory-mcp` as the operational memory interface for recovery, search, and writes. This legacy Cursor guidance must not contradict the Copilot-first MCP memory policy.
+Active artifact references use `docs/pegasus/changes/<change-id>/`; root phase files are templates.
 
-Durable descriptive prose is always English. Preserve exact source data and record `Artifact language: <language>` for persisted artifact references, regardless of chat, persona, source, or artifact language.
-
-At session start or after context compaction:
-
-1. Recover active project/change context through MCP when available.
-2. If recovery returns `not_found` with `project_not_found`, call `ensure_project` before recording observations, artifacts, task progress, or handoffs.
-3. When creating a new PRD/change under `docs/pegasus/changes/<change-id>/prd.md`, call `ensure_change` before `record_artifact` or change-scoped observations.
-4. Search MCP memory for decisions, constraints, task progress, handoffs, observations, and learnings.
-5. Read active-change `docs/pegasus/changes/<change-id>/prd.md`, `proposal.md`, `spec.md`, `design.md`, `tasks.md`, `apply-progress.md`, and `verify.md` for file-based SDD artifacts. Root `docs/pegasus/*.md` files are canonical templates only; root PRD is a natural-entry template only before selecting an active change.
-6. Avoid duplicate launches by comparing MCP task progress with `docs/pegasus/changes/<change-id>/apply-progress.md`.
-
-When work changes facts, decisions, task status, blockers, artifacts, handoffs, or gotchas, save the durable record through MCP when available and merge implementation status into `docs/pegasus/changes/<change-id>/apply-progress.md` when relevant. Treat `persistence_error` or foreign-key write failures as precondition/flow bugs, not MCP unavailability.
-
-If `pegasus-memory-mcp` is unavailable, show exactly: `El pegasus-memory-mcp no se encuentra disponible, si continuamos con eso asi, no se guardara nada de lo que hagamos en memoria persistente`. Project/change artifact work may continue, but do not claim persistent memory was saved and do not fall back to Markdown memory.
-
-Do not write retrospective Markdown memory. `docs/pegasus/memory/` is deprecated and is not an active backend, fallback, or co-source for operational memory.
+Do not reconstruct recovery, persistence, status, or result procedures here. Never use `docs/pegasus/memory/` as a backend or fallback. If an exact local owner is missing, block before persistence.
