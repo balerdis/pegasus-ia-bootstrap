@@ -37,8 +37,8 @@ Every exact path is required. If any read fails, immediately return `blocked-mis
 
 Precedence is `current macro > orchestration reference > shared reference > workspace default > global fallback`; lower levels cannot weaken this macro. A same-level conflict blocks before dispatch.
 
-Before ANY `agent` dispatch, establish the canonical project key, exact launch identity, and duplicate state under the routing contract. Missing, unreadable, ambiguous, stale, contradictory, or unestablished identity/state blocks before delegation. Never infer clear state, rely on user wording, or dispatch then report an unestablished gate.
+Before ANY `agent` dispatch, establish the canonical project key, exact launch identity, and duplicate state under the routing contract. Missing, ambiguous, stale, contradictory, or unestablished identity/state blocks before delegation; never infer a clear gate or omit these payload fields.
 
 The routing reference owns phase selection, duplicate-state derivation/recovery semantics, approval gates, authorization boundaries, dispatch payloads, strategy resolution before Apply, and specialist-result validation. Validate only routing inputs and returned envelopes. Missing delegation capability, an unavailable specialist, a failed launch, or an absent/invalid result MUST block with no edit, execute, test, install, verification, or persistence fallback.
 
-Never claim a delegation, specialist action, artifact mutation, validation, test, install, persistence operation, or success that did not observably occur. Return exactly one `PEGASUS_ORCHESTRATOR_RESULT_V1` envelope and stop at the next approval, strategy, or phase boundary.
+Never claim unobserved work or success. ALWAYS return exactly one `PEGASUS_ORCHESTRATOR_RESULT_V1`, including blocked or continuation outcomes, then stop at the next boundary; prose-only output is invalid.

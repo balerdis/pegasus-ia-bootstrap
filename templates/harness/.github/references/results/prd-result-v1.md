@@ -8,11 +8,11 @@ Return these canonical fields in this order:
 
 1. `status`: `blocked`, `in_progress`, or `completed`.
 2. `specialist`: `doc-designer`.
-3. `request_and_artifact`: exact canonical project key, launch identity, product-request identity, and PRD path.
+3. `request_and_artifact`: explicit `project_key`, exact `launch_identity`, product-request identity, and canonical PRD path; identity aliases are invalid.
 4. `discovery_outcome`: product areas captured and material ambiguities; or `awaiting-input` with concise product questions.
 5. `artifact_validation`: artifact edit state plus readback, structure, language, and approval-indicator results, or `not run: <reason>`.
 6. `approval_state`: in-file owner/date/status/checkbox agreement and truthful readiness for human review.
-7. `persistence`: required PRD operation outcomes and file-only classification when applicable.
+7. `persistence`: truthful `ensure_project`, `ensure_change`, `record_artifact`, and `record_observation` outcomes, including refresh after mutation and file-only classification when applicable.
 8. `skill_resolution`: exact path outcomes, `no-match`, and fallback status.
 9. `blockers_risks`: blockers and residual product risks, or `none`.
 10. `next_action`: exact unblock action or human PRD review/explicit in-file approval.

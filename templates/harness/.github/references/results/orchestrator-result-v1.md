@@ -14,7 +14,7 @@ Launch identity: <project:prd:root|change:phase[:slice]|not established>
 Specialist agent: <agent|not launched>
 Fresh-context delegation: <observable evidence|not launched|unavailable>
 Authorization: <approved|blocked: reason|not applicable>
-Duplicate launch gate: <passed|blocked: reason|not established>
+Duplicate launch gate: <passed: exact state and evidence|blocked: reason|not established>
 Strategy gate: <resolved: strategy|blocked: unresolved|not applicable>
 Specialist result validation: <passed|blocked: reason|not returned>
 Delegated work claimed: <observable work only|none>
@@ -23,4 +23,4 @@ Risks/blockers: <value|none>
 Next action: <single boundary action>
 ```
 
-`routed` requires established canonical project identity, launch identity, passed duplicate gate, and one observable matching launch. Any unavailable delegation or invalid/missing specialist result is `blocked`, with `Coordinator fallback work: none`. A valid PRD awaiting-input result is surfaced as `blocked` with its questions and no Proposal authorization. Never use `completed-boundary` to claim specialist completion unless its valid returned envelope proves it.
+`routed` requires established canonical project identity, exact launch identity, passed duplicate state/evidence, and one observable matching launch. Alias/mismatched identity, mutation-inconsistent persistence, or unavailable/invalid/missing specialist result is `blocked`, with `Coordinator fallback work: none`. A valid PRD awaiting-input result is surfaced as `blocked` with its questions and no Proposal authorization. Every continuation and block returns exactly this one envelope; prose-only output is invalid. Never claim specialist completion without its valid envelope.

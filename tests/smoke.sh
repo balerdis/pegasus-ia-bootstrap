@@ -490,9 +490,9 @@ assert_file_contains "$verify_agent" 'PEGASUS_VERIFY_RESULT_V1'
 assert_file_contains "$verify_reference" 'fresh context as an operational rule, not a runtime guarantee'
 assert_file_contains "$verify_reference" 'Compare implementation against PRD, proposal, spec requirements/scenarios, design constraints, tasks, and apply-progress'
 assert_file_contains "$verify_reference" 'Do not make unrelated changes or edit implementation unless the user separately authorizes a later remediation run.'
-assert_file_contains "$prd_agent" 'exactly one product request, and exactly one PRD artifact'
-assert_file_contains "$prd_agent" "dispatch payload's exact canonical project key and launch identity"
-assert_file_contains "$prd_agent" 'never derive project identity from product prose, title, or path'
+assert_file_contains "$prd_agent" 'explicit payload fields `project_key` and `launch_identity`'
+assert_file_contains "$prd_agent" "one product request, one PRD artifact"
+assert_file_contains "$prd_agent" 'never derive identity from prose, title, or path'
 assert_file_contains "$prd_agent" '.github/references/phases/prd.md'
 assert_file_contains "$prd_agent" '.github/references/results/prd-result-v1.md'
 assert_file_contains "$prd_agent" 'immediately return `blocked-missing-reference`'
@@ -500,7 +500,7 @@ assert_file_contains "$prd_agent" 'PEGASUS_PRD_RESULT_V1'
 assert_file_contains "$prd_reference" 'user/business problem, affected users and situations'
 assert_file_contains "$prd_reference" 'Approval readiness means the PRD is coherent enough for human review; it is not approval.'
 assert_file_contains "$prd_reference" 'return a blocked awaiting-input result'
-assert_file_contains "$prd_reference" 'root PRD persistence does not require `ensure_change`'
+assert_file_contains "$prd_reference" 'NEVER call `ensure_change` for root PRD'
 assert_file_contains "$proposal_agent" 'exactly one change identity'
 assert_file_contains "$proposal_agent" 'Conversational approval cannot override the artifact.'
 assert_file_contains "$proposal_agent" '.github/references/phases/proposal.md'
@@ -580,13 +580,13 @@ assert_file_contains "$orchestrator_agent" 'Missing delegation capability, an un
 assert_file_contains "$orchestrator_agent" 'Before ANY `agent` dispatch, establish the canonical project key'
 assert_file_contains "$orchestrator_agent" 'establish the canonical project key, exact launch identity, and duplicate state'
 assert_file_contains "$orchestrator_agent" 'unestablished identity/state blocks before delegation'
-assert_file_contains "$orchestrator_agent" 'Never infer clear state, rely on user wording, or dispatch then report an unestablished gate.'
-assert_file_contains "$orchestrator_agent" 'Never claim a delegation, specialist action, artifact mutation, validation, test, install, persistence operation, or success that did not observably occur.'
+assert_file_contains "$orchestrator_agent" 'never infer a clear gate or omit these payload fields.'
+assert_file_contains "$orchestrator_agent" 'Never claim unobserved work or success.'
 assert_file_contains "$orchestrator_reference" 'Unresolved strategy blocks Apply launch.'
 assert_file_contains "$orchestrator_reference" 'Never launch a duplicate.'
 assert_file_contains "$orchestrator_reference" '`workspace.project_name` as the canonical project key'
 assert_file_contains "$orchestrator_reference" '`<canonical-project-key>:prd:root`'
-assert_file_contains "$orchestrator_reference" 'exact canonical project key and launch identity as explicit payload fields'
+assert_file_contains "$orchestrator_reference" 'explicit `project_key` and `launch_identity` payload fields'
 assert_file_contains "$orchestrator_reference" 'do not authorize Proposal'
 assert_file_contains "$sdd_router" 'This prompt is launch-only.'
 assert_file_contains "$sdd_router" 'Launch exactly one fresh `pegasus-orchestrator`'
@@ -845,6 +845,7 @@ corrected = {
     "templates/harness/.github/agents/pegasus-orchestrator.agent.md",
     "templates/harness/.github/agents/doc-designer.agent.md",
     "templates/harness/.github/references/orchestration/routing.md",
+    "templates/harness/.github/references/shared/persistence.md",
     "templates/harness/.github/references/phases/prd.md",
     "templates/harness/.github/references/results/orchestrator-result-v1.md",
     "templates/harness/.github/references/results/prd-result-v1.md",
@@ -1382,7 +1383,7 @@ assert_file_contains "$orchestrator_reference" "Copy a valid four-line block byt
 assert_file_contains "$orchestrator_reference" 'La previsión requiere definir la estrategia antes de apply.'
 assert_file_contains "$orchestrator_reference" 'No se iniciará apply hasta que respondas.'
 assert_file_contains "$orchestrator_reference" "Unresolved strategy blocks Apply launch"
-assert_file_contains "$orchestrator_reference" 'change-scoped identities are `<change-id>:<phase>` plus `:<task-slice-id>` for Apply'
+assert_file_contains "$orchestrator_reference" 'Change-scoped identities are `<change-id>:<phase>` plus `:<task-slice-id>` for Apply'
 "$PYTHON_BIN" - "$orchestrator" <<'PY'
 from pathlib import Path
 import sys
@@ -1391,8 +1392,8 @@ macro = Path(sys.argv[1]).read_text(encoding="utf-8")
 gate = macro.index("Before ANY `agent` dispatch")
 dispatch = macro.index("Missing delegation capability")
 assert gate < dispatch, "duplicate gate must precede dispatch handling"
-assert "Missing, unreadable, ambiguous, stale, contradictory, or unestablished identity/state blocks before delegation." in macro
-assert "Never infer clear state, rely on user wording, or dispatch then report an unestablished gate." in macro
+assert "Missing, ambiguous, stale, contradictory, or unestablished identity/state blocks before delegation" in macro
+assert "never infer a clear gate or omit these payload fields." in macro
 PY
 if grep -Eq '^  - (edit|execute)$' "$orchestrator"; then
   printf 'orchestrator must not expose phase execution tools\n' >&2
