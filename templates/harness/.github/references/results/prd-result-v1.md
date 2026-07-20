@@ -18,3 +18,5 @@ Return these canonical fields in this order:
 10. `next_action`: exact unblock action or human PRD review/explicit in-file approval.
 
 For `blocked`, identify the first unmet gate and do not imply discovery, edits, validation, persistence, approval, or completion occurred when they did not. Awaiting product input uses `status: blocked`, `discovery_outcome: awaiting-input: <questions>`, `artifact_validation: artifact edit not run: awaiting product input`, and persistence operations `not needed: awaiting product input`; this is a compatible blocked-state specialization, not a new envelope version.
+
+Cross-field invariant: any unresolved material decision reported anywhere in the envelope requires that awaiting-input specialization, non-empty questions, and `next_action` requesting product input. It is incompatible with `in_progress` or `completed`, any success/completion or approval-readiness claim, any artifact edit, or any persistence write. An envelope containing either side of that contradiction is invalid regardless of field presence.

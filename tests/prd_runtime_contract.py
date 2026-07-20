@@ -93,6 +93,40 @@ def valid_orchestrator_output(output: str) -> bool:
     )
 
 
+def contains_material_decision(value: object, key: str = "") -> bool:
+    if "material" in key.lower() and bool(value):
+        return True
+    if isinstance(value, dict):
+        return any(contains_material_decision(item, str(name)) for name, item in value.items())
+    if isinstance(value, list):
+        return any(contains_material_decision(item) for item in value)
+    return isinstance(value, str) and "material decision" in value.lower()
+
+
+def semantically_valid_prd_envelope(result: dict[str, object]) -> bool:
+    discovery = result["discovery_outcome"]
+    assert isinstance(discovery, dict)
+    if not contains_material_decision(result):
+        return True
+    persistence = result["persistence"]
+    assert isinstance(persistence, dict)
+    return (
+        result["status"] == "blocked"
+        and discovery.get("state") == "awaiting-input"
+        and bool(discovery.get("questions"))
+        and result["artifact_validation"] == "artifact edit not run: awaiting product input"
+        and all(value == "not needed: awaiting product input" for value in persistence.values())
+        and "product input" in str(result["next_action"]).lower()
+        and "approval" not in str(result["next_action"]).lower()
+    )
+
+
+def orchestrator_prd_boundary(result: dict[str, object]) -> str:
+    if not semantically_valid_prd_envelope(result):
+        return "Status: blocked\nSpecialist result validation: blocked: contradictory PRD envelope\nNext action: correct or replace the invalid specialist result"
+    return "Status: completed-boundary\nSpecialist result validation: passed\nNext action: human PRD review"
+
+
 def main() -> None:
     root = Path(__file__).resolve().parents[1]
     token = secrets.token_hex(8)
@@ -141,8 +175,13 @@ def main() -> None:
         require(persistence, "durable mutation to a previously recorded artifact invalidates",
                 "Edit size and file-only scope do not make persistence unnecessary")
         require(prd_result, "compatible blocked-state specialization",
-                "artifact edit not run: awaiting product input",
-                "explicit `project_key`", "refresh after mutation")
+                 "artifact edit not run: awaiting product input",
+                 "explicit `project_key`", "refresh after mutation",
+                 "Cross-field invariant", "unresolved material decision",
+                 "envelope containing either side of that contradiction is invalid")
+        require(routing, "cross-field invariant, not field presence alone",
+                "Any invalid PRD result makes the orchestrator outcome `blocked`",
+                "never request approval")
         require(orchestrator_result, "Launch identity: <project:prd:root|change:phase[:slice]|not established>",
                 "valid PRD awaiting-input result is surfaced as `blocked`",
                 "prose-only output is invalid")
@@ -214,6 +253,86 @@ def main() -> None:
         assert valid_prd_result(canonical, launch, canonical, launch,
                                 "awaiting-input", "unresolved questions", False,
                                 "persistence:not-needed:zero-mutation")
+
+        unresolved = [
+            "Which celestial bodies are included in the first release?",
+            "Is the default experience guided or freely explorable?",
+            "What reading level should explanatory content target?",
+            "Which facts require citations or editorial review?",
+            "What measurable outcome determines launch success?",
+        ]
+        contradictory_result = {
+            "status": "completed",
+            "specialist": "doc-designer",
+            "request_and_artifact": {
+                "project_key": canonical,
+                "launch_identity": launch,
+                "path": "docs/pegasus/prd.md",
+            },
+            "discovery_outcome": {
+                "state": "drafted",
+                "material_ambiguities": unresolved,
+                "questions": [],
+            },
+            "artifact_validation": "artifact edited and readback passed",
+            "approval_state": "Draft; ready for human review",
+            "persistence": {
+                "ensure_project": "succeeded",
+                "ensure_change": "not needed: root PRD",
+                "record_artifact": "succeeded",
+                "record_observation": "succeeded",
+            },
+            "skill_resolution": "no-match",
+            "blockers_risks": unresolved,
+            "next_action": "Approve the Draft PRD",
+        }
+        assert not semantically_valid_prd_envelope(contradictory_result)
+        blocked_boundary = orchestrator_prd_boundary(contradictory_result)
+        assert "Status: blocked" in blocked_boundary
+        assert "Specialist result validation: blocked" in blocked_boundary
+        assert "approval" not in blocked_boundary.lower()
+
+        awaiting_input_result = contradictory_result | {
+            "status": "blocked",
+            "discovery_outcome": {
+                "state": "awaiting-input",
+                "material_ambiguities": unresolved,
+                "questions": unresolved,
+            },
+            "artifact_validation": "artifact edit not run: awaiting product input",
+            "approval_state": "not evaluated: awaiting product input",
+            "persistence": {
+                operation: "not needed: awaiting product input"
+                for operation in contradictory_result["persistence"]
+            },
+            "next_action": "Provide the requested product input",
+        }
+        assert semantically_valid_prd_envelope(awaiting_input_result)
+
+        completed_result = contradictory_result | {
+            "discovery_outcome": {
+                "state": "drafted",
+                "material_ambiguities": [],
+                "questions": [],
+            },
+            "blockers_risks": "none",
+        }
+        assert semantically_valid_prd_envelope(completed_result)
+
+        material_risk_result = completed_result | {
+            "blockers_risks": {
+                "material_decisions": ["Which launch outcome is required?"]
+            },
+        }
+        assert not semantically_valid_prd_envelope(material_risk_result)
+        assert "Status: blocked" in orchestrator_prd_boundary(material_risk_result)
+
+        non_material_blocked_result = completed_result | {
+            "status": "blocked",
+            "blockers_risks": ["Editorial review service is temporarily unavailable"],
+            "next_action": "Retry editorial validation",
+        }
+        assert semantically_valid_prd_envelope(non_material_blocked_result)
 
         prose_only = "The PRD was updated and remains Draft."
         assert not valid_orchestrator_output(prose_only)
