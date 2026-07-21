@@ -10,10 +10,12 @@ export PEGASUS_MEMORY_MCP_ROOT="$TMP/pegasus-memory-mcp"
 export PEGASUS_MEMORY_MCP_SKIP_INSTALL=1
 
 if [ "${1:-}" = "audit-instructions" ]; then
+  "$PYTHON_BIN" "$ROOT/tests/durable_agent_communication_contract.py" --phase prd
   "$PYTHON_BIN" "$ROOT/tests/prd_runtime_contract.py"
   exec "$PYTHON_BIN" "$ROOT/tests/audit_instruction_architecture.py" --self-test
 fi
 if [ -z "${1:-}" ]; then
+  "$PYTHON_BIN" "$ROOT/tests/durable_agent_communication_contract.py" --phase prd
   "$PYTHON_BIN" "$ROOT/tests/prd_runtime_contract.py"
   "$PYTHON_BIN" "$ROOT/tests/audit_instruction_architecture.py"
 fi
@@ -64,7 +66,9 @@ expected_files=(
   ".github/references/shared/phase-common.md"
   ".github/references/shared/delegation-ownership.md"
   ".github/references/shared/persistence.md"
+  ".github/references/shared/durable-state.md"
   ".github/references/shared/result-envelope.md"
+  ".github/references/shared/semantic-response.md"
   ".github/references/shared/status-readiness.md"
   ".github/references/shared/skill-resolution.md"
   ".github/references/orchestration/routing.md"
@@ -82,7 +86,6 @@ expected_files=(
   ".github/references/results/handoff-result-v1.md"
   ".github/references/results/memory-maintenance-result-v1.md"
   ".github/references/results/orchestrator-result-v1.md"
-  ".github/references/results/prd-result-v1.md"
   ".github/references/results/proposal-result-v1.md"
   ".github/references/results/spec-result-v1.md"
   ".github/references/results/tasks-result-v2.md"
@@ -120,7 +123,9 @@ expected = {
     prefix + "shared/phase-common.md",
     prefix + "shared/delegation-ownership.md",
     prefix + "shared/persistence.md",
+    prefix + "shared/durable-state.md",
     prefix + "shared/result-envelope.md",
+    prefix + "shared/semantic-response.md",
     prefix + "shared/status-readiness.md",
     prefix + "shared/skill-resolution.md",
     prefix + "phases/apply.md",
@@ -138,7 +143,6 @@ expected = {
     prefix + "results/handoff-result-v1.md",
     prefix + "results/memory-maintenance-result-v1.md",
     prefix + "results/orchestrator-result-v1.md",
-    prefix + "results/prd-result-v1.md",
     prefix + "results/proposal-result-v1.md",
     prefix + "results/spec-result-v1.md",
     prefix + "results/tasks-result-v2.md",
@@ -490,13 +494,14 @@ assert_file_contains "$verify_agent" 'PEGASUS_VERIFY_RESULT_V1'
 assert_file_contains "$verify_reference" 'fresh context as an operational rule, not a runtime guarantee'
 assert_file_contains "$verify_reference" 'Compare implementation against PRD, proposal, spec requirements/scenarios, design constraints, tasks, and apply-progress'
 assert_file_contains "$verify_reference" 'Do not make unrelated changes or edit implementation unless the user separately authorizes a later remediation run.'
-assert_file_contains "$prd_agent" 'explicit payload fields `project_key` and `launch_identity`'
-assert_file_contains "$prd_agent" "one product request, one PRD artifact"
-assert_file_contains "$prd_agent" 'never derive identity from prose, title, or path'
+assert_file_contains "$prd_agent" 'compact execution payload defined by routing'
+assert_file_contains "$prd_agent" 'relative context handles'
+assert_file_contains "$prd_agent" 'never derive identity or a workspace root from prose, title, or path'
 assert_file_contains "$prd_agent" '.github/references/phases/prd.md'
-assert_file_contains "$prd_agent" '.github/references/results/prd-result-v1.md'
+assert_file_contains "$prd_agent" '.github/references/shared/durable-state.md'
+assert_file_contains "$prd_agent" '.github/references/shared/semantic-response.md'
 assert_file_contains "$prd_agent" 'immediately return `blocked-missing-reference`'
-assert_file_contains "$prd_agent" 'PEGASUS_PRD_RESULT_V1'
+assert_file_contains "$prd_agent" 'Return exactly one semantic response'
 assert_file_contains "$prd_reference" 'user/business problem, affected users and situations'
 assert_file_contains "$prd_reference" 'Approval readiness means the PRD is coherent enough for human review; it is not approval.'
 assert_file_contains "$prd_reference" 'return a blocked awaiting-input result'
@@ -586,7 +591,7 @@ assert_file_contains "$orchestrator_reference" 'Unresolved strategy blocks Apply
 assert_file_contains "$orchestrator_reference" 'Never launch a duplicate.'
 assert_file_contains "$orchestrator_reference" '`workspace.project_name` as the canonical project key'
 assert_file_contains "$orchestrator_reference" '`<canonical-project-key>:prd:root`'
-assert_file_contains "$orchestrator_reference" 'explicit `project_key` and `launch_identity` payload fields'
+assert_file_contains "$orchestrator_reference" '`objective`, `current_intent`, `identity`, `artifact_store`, `context`'
 assert_file_contains "$orchestrator_reference" 'do not authorize Proposal'
 assert_file_contains "$sdd_router" 'This prompt is launch-only.'
 assert_file_contains "$sdd_router" 'Launch exactly one fresh `pegasus-orchestrator`'
@@ -616,11 +621,11 @@ config = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
 data_files = config["tool"]["setuptools"]["data-files"]
 expected = {
     "shared/authority.md", "shared/phase-common.md", "shared/delegation-ownership.md",
-    "shared/persistence.md", "shared/result-envelope.md", "shared/status-readiness.md",
+    "shared/persistence.md", "shared/durable-state.md", "shared/result-envelope.md", "shared/semantic-response.md", "shared/status-readiness.md",
     "shared/skill-resolution.md", "orchestration/routing.md", "phases/apply.md", "phases/design.md", "phases/session-handoff.md",
     "phases/memory-maintenance.md", "phases/prd.md",
     "phases/proposal.md", "phases/spec.md", "phases/tasks.md", "phases/verify.md", "results/apply-result-v1.md",
-    "results/handoff-result-v1.md", "results/memory-maintenance-result-v1.md", "results/orchestrator-result-v1.md", "results/prd-result-v1.md", "results/proposal-result-v1.md",
+    "results/handoff-result-v1.md", "results/memory-maintenance-result-v1.md", "results/orchestrator-result-v1.md", "results/proposal-result-v1.md",
     "results/design-result-v1.md", "results/spec-result-v1.md", "results/tasks-result-v2.md",
     "results/tasks-transport-v2.md", "results/verify-result-v1.md",
 }
@@ -667,10 +672,10 @@ memory_agent = (root / ".github/agents/memory-maintainer.agent.md").read_text(en
 reference_root = root / ".github/references"
 expected = [
     "shared/authority.md", "shared/phase-common.md", "shared/delegation-ownership.md",
-    "shared/skill-resolution.md", "shared/persistence.md", "orchestration/routing.md", "phases/apply.md", "phases/design.md",
+    "shared/skill-resolution.md", "shared/persistence.md", "shared/durable-state.md", "shared/semantic-response.md", "orchestration/routing.md", "phases/apply.md", "phases/design.md",
     "phases/memory-maintenance.md", "phases/prd.md", "phases/proposal.md", "phases/session-handoff.md", "phases/spec.md", "phases/tasks.md", "phases/verify.md", "shared/status-readiness.md",
     "shared/result-envelope.md", "results/apply-result-v1.md", "results/orchestrator-result-v1.md",
-    "results/design-result-v1.md", "results/handoff-result-v1.md", "results/memory-maintenance-result-v1.md", "results/prd-result-v1.md", "results/proposal-result-v1.md", "results/spec-result-v1.md",
+    "results/design-result-v1.md", "results/handoff-result-v1.md", "results/memory-maintenance-result-v1.md", "results/proposal-result-v1.md", "results/spec-result-v1.md",
     "results/tasks-result-v2.md", "results/tasks-transport-v2.md", "results/verify-result-v1.md",
 ]
 actual_files = {path.relative_to(reference_root).as_posix() for path in reference_root.rglob("*.md")}
@@ -681,10 +686,15 @@ assert not (reference_root / "sdd-apply-phase.md").exists()
 orchestrator_only = {"orchestration/routing.md", "results/orchestrator-result-v1.md"}
 apply_expected = [path for path in expected if path not in orchestrator_only | {"phases/verify.md", "results/verify-result-v1.md"}]
 verify_expected = [path for path in expected if path not in orchestrator_only | {"phases/apply.md", "results/apply-result-v1.md"}]
-prd_expected = [path for path in expected if path.startswith("shared/") or path in {"phases/prd.md", "results/prd-result-v1.md"}]
-proposal_expected = [path for path in expected if path.startswith("shared/") or path in {"phases/proposal.md", "results/proposal-result-v1.md"}]
-spec_expected = [path for path in expected if path.startswith("shared/") or path in {"phases/spec.md", "results/spec-result-v1.md"}]
-design_expected = [path for path in expected if path.startswith("shared/") or path in {"phases/design.md", "results/design-result-v1.md"}]
+prd_expected = [
+    "shared/authority.md", "shared/phase-common.md", "shared/delegation-ownership.md",
+    "shared/skill-resolution.md", "shared/persistence.md", "shared/durable-state.md",
+    "phases/prd.md", "shared/status-readiness.md", "shared/semantic-response.md",
+]
+legacy_shared = {"shared/authority.md", "shared/phase-common.md", "shared/delegation-ownership.md", "shared/skill-resolution.md", "shared/persistence.md", "shared/status-readiness.md", "shared/result-envelope.md"}
+proposal_expected = [path for path in expected if path in legacy_shared or path in {"phases/proposal.md", "results/proposal-result-v1.md"}]
+spec_expected = [path for path in expected if path in legacy_shared or path in {"phases/spec.md", "results/spec-result-v1.md"}]
+design_expected = [path for path in expected if path in legacy_shared or path in {"phases/design.md", "results/design-result-v1.md"}]
 tasks_expected = [
     "shared/authority.md", "shared/phase-common.md", "shared/delegation-ownership.md",
     "shared/skill-resolution.md", "shared/persistence.md", "phases/tasks.md",
@@ -701,8 +711,8 @@ memory_expected = [
     "shared/skill-resolution.md", "shared/persistence.md", "phases/memory-maintenance.md",
     "shared/status-readiness.md", "shared/result-envelope.md", "results/memory-maintenance-result-v1.md",
 ]
-apply_expected = [path for path in apply_expected if path.startswith("shared/") or path in {"phases/apply.md", "results/apply-result-v1.md"}]
-verify_expected = [path for path in verify_expected if path.startswith("shared/") or path in {"phases/verify.md", "results/verify-result-v1.md"}]
+apply_expected = [path for path in apply_expected if path in legacy_shared or path in {"phases/apply.md", "results/apply-result-v1.md"}]
+verify_expected = [path for path in verify_expected if path in legacy_shared or path in {"phases/verify.md", "results/verify-result-v1.md"}]
 for agent, paths in ((prd_agent, prd_expected), (proposal_agent, proposal_expected), (spec_agent, spec_expected), (design_agent, design_expected), (tasks_agent, tasks_expected), (apply_agent, apply_expected), (verify_agent, verify_expected), (handoff_agent, handoff_expected), (memory_agent, memory_expected)):
     positions = [agent.index(f".github/references/{path}") for path in paths]
     assert positions == sorted(positions), positions
@@ -775,7 +785,9 @@ owners = {
     "shared/phase-common.md": "behavior common to specialist phase execution",
     "shared/delegation-ownership.md": "specialist execution and ownership boundaries",
     "shared/persistence.md": "generic Pegasus Memory recovery and persistence behavior",
+    "shared/durable-state.md": "durable identity, artifact revision, observation lineage, persistence sequencing, and recovery",
     "shared/result-envelope.md": "invariant specialist result-envelope semantics only",
+    "shared/semantic-response.md": "disposable specialist response semantics for migrated phases",
     "shared/status-readiness.md": "generic status selection and readiness claims",
     "shared/skill-resolution.md": "exact skill paths supplied in its invocation context",
     "orchestration/routing.md": "orchestration routing, dispatch, authorization, and returned-result validation only",
@@ -790,7 +802,6 @@ owners = {
     "phases/verify.md": "only the detailed `sdd-verify` workflow",
     "results/apply-result-v1.md": "Apply v1 result schema",
     "results/orchestrator-result-v1.md": "only the coordinator result schema",
-    "results/prd-result-v1.md": "only the PRD v1 phase-specific fields and schema",
     "results/proposal-result-v1.md": "only the Proposal v1 phase-specific fields and schema",
     "results/spec-result-v1.md": "only the Spec v1 phase-specific fields and schema",
     "results/design-result-v1.md": "only the Design v1 phase-specific fields, canonical labels, and schema",
@@ -832,7 +843,6 @@ protected = [
     "templates/harness/.github/references/phases/tasks.md",
     "templates/harness/.github/references/results/apply-result-v1.md",
     "templates/harness/.github/references/results/orchestrator-result-v1.md",
-    "templates/harness/.github/references/results/prd-result-v1.md",
     "templates/harness/.github/references/results/proposal-result-v1.md",
     "templates/harness/.github/references/results/verify-result-v1.md",
     "templates/harness/.github/references/results/design-result-v1.md",
@@ -846,9 +856,10 @@ corrected = {
     "templates/harness/.github/agents/doc-designer.agent.md",
     "templates/harness/.github/references/orchestration/routing.md",
     "templates/harness/.github/references/shared/persistence.md",
+    "templates/harness/.github/references/shared/durable-state.md",
+    "templates/harness/.github/references/shared/semantic-response.md",
     "templates/harness/.github/references/phases/prd.md",
     "templates/harness/.github/references/results/orchestrator-result-v1.md",
-    "templates/harness/.github/references/results/prd-result-v1.md",
 }
 for relative in protected:
     if relative in corrected:
@@ -875,6 +886,19 @@ allowed = {
     "tests/smoke.sh",
     "tests/audit_instruction_architecture.py",
     "tests/prd_runtime_contract.py",
+    "tests/durable_agent_communication_contract.py",
+    "pyproject.toml",
+    "templates/harness/.github/references/results/prd-result-v1.md",
+    "templates/harness/docs/pegasus/tasks.md",
+    "templates/harness/docs/pegasus/apply-progress.md",
+    "templates/harness/docs/pegasus/verify.md",
+    "openspec/config.yaml",
+    "openspec/changes/durable-agent-communication/exploration.md",
+    "openspec/changes/durable-agent-communication/proposal.md",
+    "openspec/changes/durable-agent-communication/design.md",
+    "openspec/changes/durable-agent-communication/tasks.md",
+    "openspec/changes/durable-agent-communication/apply-progress.md",
+    "openspec/changes/durable-agent-communication/specs/pegasus-harness-bootstrap/spec.md",
     *corrected,
 }
 def changed_paths():
@@ -901,7 +925,7 @@ try:
 finally:
     fixture_path.unlink()
 PY
-assert_file_contains "$prd_reference" "PRD/product discoveries, decisions, open questions, approval status"
+assert_file_contains "$prd_reference" "material PRD/product discoveries, decisions, restrictions, and blockers"
 assert_file_contains "$proposal_reference" "Stop before Spec, Design, Tasks, and implementation"
 assert_file_contains "$proposal_reference" "Every product claim, scope item, user, rule"
 assert_file_contains "$proposal_reference" "MCP persistence summary:"
@@ -2300,7 +2324,7 @@ assert_file_contains "$target/docs/pegasus/verify.md" "## Changed Files Reviewed
 assert_file_contains "$target/docs/pegasus/verify.md" "## Test Coverage / Manual Checks"
 assert_file_contains "$target/docs/pegasus/verify.md" "## Final Verdict"
 assert_file_contains "$target/docs/pegasus/verify.md" "Merge-not-overwrite instructions"
-assert_file_contains "$prd_reference" 'ensure_project`, `ensure_change`, `record_artifact`, and `record_observation`'
+assert_file_contains "$prd_reference" 'closure-time artifact index, summary, phase status, next action, and handoff writes'
 assert_file_contains "$proposal_reference" 'MCP persistence summary:'
 
 if grep -R -E 'review-risk|review-readability' "$target/.github" >/dev/null; then
