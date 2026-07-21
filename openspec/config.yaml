@@ -1,5 +1,11 @@
 schema: spec-driven
 
+execution_mode: interactive
+artifact_store:
+  mode: hybrid
+chained_pr_strategy: ask-always
+review_budget_lines: 800
+
 context: |
   Project: Pegasus IA bootstrap
   Purpose: reusable bootstrap that configures a VS Code/Copilot-first Pegasus IA harness/workspace for exercises and demos
