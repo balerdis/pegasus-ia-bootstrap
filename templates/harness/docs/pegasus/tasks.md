@@ -2,7 +2,9 @@
 
 # Tasks: {{PROJECT_NAME}}
 
-Use this template inside `docs/pegasus/changes/<change-id>/tasks.md` for change-specific SDD work. This task file is the source of truth for implementation slices; MCP memory may store task status, blockers, summaries, and artifact references only.
+Use this template inside `docs/pegasus/changes/<change-id>/tasks.md` for change-specific SDD work. This controlled-mutable task file owns approved task text, order, scope, and checkbox state; MCP memory may index status, blockers, summaries, and artifact references but cannot override it.
+
+After approval, Apply and Verify may change checkbox state only. Changing task text, order, or scope while updating a checkbox is unauthorized replanning and MUST block. Genuinely new remediation work requires separate approval and linked Verify evidence.
 
 Default the generated artifact to English regardless of chat language, persona, dominant approved-source language, or prior artifact language. Use another language only when the user explicitly names it; then localize every human-readable heading, label, and scaffold consistently and run the existing language gate.
 

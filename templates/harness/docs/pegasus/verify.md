@@ -1,6 +1,6 @@
 # Verification: {{PROJECT_NAME}}
 
-Use this file to prove that implementation matches the PRD, proposal, spec, design, and tasks.
+Use this file to prove that implementation matches the PRD, proposal, spec, design, and tasks. This is the sole authority for readiness, advancement, archive, and delivery eligibility.
 
 Use this template inside `docs/pegasus/changes/<change-id>/verify.md` for change-specific SDD work. This verify file is the source of truth for validation evidence and verdicts; MCP memory may store summaries, status, and artifact references only.
 
@@ -9,6 +9,8 @@ Default the generated artifact to English regardless of chat language, persona, 
 Use `.github/prompts/sdd-phases.prompt.md` for Copilot-guided verification, but record the actual commands, observations, and outcomes here.
 
 Append new verification evidence to preserve useful history. Do not remove prior commands, failures, deviations, or caveats unless the user explicitly approves cleanup.
+
+When approved scope is incomplete, preserve Apply history and reopen the original task checkbox without changing its text. New remediation scope requires separate approval and evidence linked from this file.
 
 Verify from fresh context when possible. Before judging completion, re-read PRD, proposal, spec, design, tasks, `docs/pegasus/changes/<change-id>/apply-progress.md`, this verify log, and changed files. This is an operational rule, not a runtime guarantee.
 

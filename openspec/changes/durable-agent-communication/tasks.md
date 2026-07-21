@@ -45,7 +45,7 @@ Slice 0 → PRD → Proposal → Spec → Design → Tasks → Apply → Verify 
 - [x] 0.1 Review only `openspec/config.yaml`, `exploration.md`, `proposal.md`, `specs/pegasus-harness-bootstrap/spec.md`, `design.md`, and `tasks.md` for approved internal consistency; no production/runtime PRD work, `apply-progress.md`, or `verify-phase-1-prd.md` belongs to this slice.
 
 ## Phase 1: PRD
-- [ ] 1.1 RED `tests/prd_runtime_contract.py` and create `tests/durable_agent_communication_contract.py`: path-root, semantic-not-presentation response, no-envelope recovery, event/closure write failure, stale digest/relocation, and dedupe/superseding lineage; atomically migrate PRD and delete `results/prd-result-v1.md`.
+- [x] 1.1 RED `tests/prd_runtime_contract.py` and create `tests/durable_agent_communication_contract.py`: path-root, semantic-not-presentation response, no-envelope recovery, event/closure write failure, stale digest/relocation, and dedupe/superseding lineage; atomically migrate PRD and delete `results/prd-result-v1.md`.
 
 Planning state: the previous Phase 1 attempt and file-based evidence are historical/quarantined, not active completion authority, and MUST NOT advance routing. Task 1.1 remains pending restoration, smoke remediation, and fresh verification after Slice 0.
 
