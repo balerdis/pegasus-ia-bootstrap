@@ -1,11 +1,17 @@
 # Apply Progress: Durable Agent Communication
 
+## R5 Invalidation, Supersession, And Corrective Rework
+
+- The pre-R5 Phase 1 PRD success recorded below is retained as historical evidence only. R5 established that the integrated specialist identified six material product gaps, then edited `prd.md`, ensured/persisted Memory state, returned success, and was accepted for approval by routing. That behavior invalidates the former active-readiness conclusion.
+- This corrective record supersedes the former Phase 1 success for specialist behavior. It preserves the prior commands, revisions, restoration evidence, and external quarantine history without treating them as authority to advance.
+- Corrective tasks 1.1–1.3 are the active doc-designer-only rework. Tasks 1.4, R6, 1.5–1.6, R7, and Phases 2–10 remain pending; neither routing nor publication is changed by this slice.
+
 ## Current State
 
 - Mode: Standard (strict TDD disabled).
-- Completed tasks: 0.1, 1.1. Remaining tasks: 2.1–10.1.
-- Current slice: Phase 1 — PRD, stacked-to-main PR 1, based on Slice 0 merge `8a0616264bff09a46fc6dcc2cb91940e0d1ab38e`.
-- Advancement: implementation evidence is complete; only a distinct fresh Verify launch may determine delivery readiness. Phase 2 was not started.
+- Completed tasks: 0.1, 1.1, 1.2, 1.3. Remaining tasks: 1.4, R6, 1.5–1.6, R7, and 2.1–10.1.
+- Current slice: Phase 1 corrective doc-designer rework, stacked-to-main PR 1, based on merged Phase 1 `38ffb53a31ff50330b40e2e28f657f0498cb0935`.
+- Advancement: this specialist-only slice does not establish routing readiness. R6 remains the required direct operational gate; Phase 2 was not started.
 
 ## Restoration And Remediation
 
@@ -26,6 +32,26 @@
 | Package harness | `timeout 300s bash tests/smoke.sh wheel` — exit 0; wheel reference equivalence passed. |
 | Full regression | `timeout 600s bash tests/smoke.sh` — exit 0; source/generated/package equivalence and smoke suite passed after the path-guard remediation. |
 | Rollback boundary | Revert the complete PRD slice file set below, restore `results/prd-result-v1.md` and its package/test expectations, and reopen task 1.1. Do not revert artifacts or Memory records independently after a dependent slice starts. |
+
+## Corrective Doc-Designer Work Unit Evidence
+
+| Evidence | Result |
+|---|---|
+| RED contract | `timeout 120s python3 tests/doc_designer_contract.py` — exit 1 before the correction: the macro lacked `execution-specific compact launch brief`. |
+| GREEN specialist contracts | `timeout 180s python3 tests/doc_designer_contract.py && timeout 180s python3 tests/prd_runtime_contract.py` — exit 0; direct material-gap blocking, compact specialist boundary, relocated bootstrap, and generated PRD assets passed. |
+| Instruction architecture | `python3 tests/audit_instruction_architecture.py` — exit 0; 55 instruction files, 29 reachable references, 0 broken/orphan/cycle/package/generated mismatches. |
+| Runtime harness | `timeout 300s bash tests/smoke.sh audit-instructions` — exit 0; specialist contract probes and instruction self-audit passed. |
+| Package harness | `timeout 300s bash tests/smoke.sh wheel` — exit 0; wheel reference equivalence passed. |
+| Diff hygiene | `git diff --check` — exit 0. |
+| Rollback boundary | Revert only `doc-designer.agent.md`, `phases/prd.md`, `tests/doc_designer_contract.py`, and `tests/prd_runtime_contract.py`, then reopen 1.2–1.3. Keep R5 lineage and this cumulative progress record; do not revert routing, R6/R7, publication, or later-phase state because none belongs to this work unit. |
+
+## Corrective Artifact Revisions And Memory Outcomes
+
+- `templates/harness/.github/agents/doc-designer.agent.md`: SHA-256 `722977042b8319a3b6100798d7926cdcfb94ad248f23748372a82637a7fd7705`.
+- `templates/harness/.github/references/phases/prd.md`: SHA-256 `29e5cafc448c947d0613d83add05d99deb8a448289ae5534e76ae781265e2b4c`.
+- `tests/doc_designer_contract.py`: SHA-256 `ee8e0fc61ae6c362c9f4d544b65f066e7f43e84d919bfb4bb942371bb45419de`.
+- `tests/prd_runtime_contract.py`: SHA-256 `722063b909d8bd73ea73bdfb1f081ea0c21bd1a83bf35726b0b80674f91c1e66`.
+- Pegasus Memory preserves the R5 regression at `bugfix/prd-material-gap-runtime-gate`; `sdd/durable-agent-communication/tasks` and `sdd/durable-agent-communication/apply-progress` are refreshed with this corrective revision. The superseded pre-R5 conclusion remains historical, not active readiness.
 
 ## Changed Files
 

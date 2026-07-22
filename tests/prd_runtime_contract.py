@@ -33,19 +33,17 @@ def main() -> None:
 
         github = target / ".github"
         agent = (github / "agents/doc-designer.agent.md").read_text()
-        routing = (github / "references/orchestration/routing.md").read_text()
         phase = (github / "references/phases/prd.md").read_text()
         semantic = (github / "references/shared/semantic-response.md").read_text()
         durable = (github / "references/shared/durable-state.md").read_text()
 
-        require(agent, "semantic-response.md", "durable-state.md", "six-field semantic response")
+        require(agent, "execution-specific compact launch brief", "phases/prd.md", "Do not reconstruct architecture")
         assert "prd-result-v1.md" not in agent
         assert "PEGASUS_PRD_RESULT_V1" not in agent
         assert not (github / "references/results/prd-result-v1.md").exists()
 
-        require(routing, "`objective`, `current_intent`, `identity`, `artifact_store`, `context`",
-                "MUST NOT supply a prior response envelope", "meaning and evidence")
-        require(phase, "relative path", "SHA-256", "event-time", "closure-time")
+        require(phase, "relative path", "SHA-256", "event-time", "closure-time",
+                "one concise grouped round of product questions", "zero artifact edits")
         require(semantic, "`status`", "`executive_summary`", "`artifacts`",
                 "`durable_state_written`", "`next_recommended`", "`risks`")
         require(durable, "append-only lineage", "supersedes", "evidence digest",
