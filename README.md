@@ -1,5 +1,7 @@
 # Pegasus Harness Bootstrap 0.6.9
 
+> **Deprecated:** este proyecto queda en modo mantenimiento para fixes críticos y soporte de migración. El reemplazo es [Pegasus Harness](https://github.com/balerdis/pegasus-harness), desarrollado desde cero con la arquitectura v2.
+
 Herramienta local de inicialización para configurar un harness de Pegasus orientado a VS Code/Copilot en un workspace de destino. El workspace generado contiene guías, plantillas SDD, recursos de Copilot y archivos secundarios de compatibilidad heredada con Cursor; no genera código de aplicación, metadatos de Git, CI, despliegues ni recursos remotos.
 
 ## Inicio rápido
