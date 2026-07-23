@@ -191,3 +191,88 @@ The confirmed phase-by-phase vertical migration preserves artifact truth, gives 
 ## Ready for Proposal
 
 Yes. The original five-pillar decision set is ready for final user review. This remains discovery only; no proposal, specification, design, tasks, or implementation is authorized by this readiness state.
+
+## Additive Inventory — Copilot Agent Skill-Layer Migration (Step 1)
+
+**Scope:** Read-only inventory at stable `8294fef555ba75f5780b069fab68fa0d69bc29af`. This section is authoritative for the migration universe; it does not authorize migration, fixture creation, or interaction execution.
+
+### Registration Universe
+
+Eleven `*.agent.md` registrations exist in canonical Copilot templates: ten workspace-harness registrations and one global fallback. No `skills/<agent>/SKILL.md` exists anywhere in the repository. `pyproject.toml` packages both harness agent globs and the global agent glob, so a future skill layer needs explicit package inclusion and bootstrap/template-equivalence coverage.
+
+| Registration path | Name | Description / role | `user-invocable` | Tools | Allowed/delegated agents | Classification |
+| --- | --- | --- | --- | --- | --- | --- |
+| `templates/harness/.github/agents/pegasus-orchestrator.agent.md` | `pegasus-orchestrator` | Primary thin SDD coordinator | omitted (discoverable under current audit convention) | `read`, `search`, `agent` | `doc-designer`, `sdd-proposal`, `sdd-spec`, `sdd-design`, `sdd-tasks`, `sdd-apply`, `sdd-verify`, `session-handoff`, `memory-maintainer`; self-handoff | orchestrator |
+| `templates/harness/.github/agents/doc-designer.agent.md` | `doc-designer` | PRD discovery/documentation | `false` | `read`, `search`, `edit` | none | specialist |
+| `templates/harness/.github/agents/sdd-proposal.agent.md` | `sdd-proposal` | proposal | `false` | `read`, `search`, `edit` | none | specialist |
+| `templates/harness/.github/agents/sdd-spec.agent.md` | `sdd-spec` | requirements/scenarios | `false` | `read`, `search`, `edit` | none | specialist |
+| `templates/harness/.github/agents/sdd-design.agent.md` | `sdd-design` | technical design | `false` | `read`, `search`, `edit` | none | specialist |
+| `templates/harness/.github/agents/sdd-tasks.agent.md` | `sdd-tasks` | implementation work units | `false` | `read`, `search`, `edit` | none | specialist |
+| `templates/harness/.github/agents/sdd-apply.agent.md` | `sdd-apply` | approved task slice implementation | `false` | `read`, `search`, `edit`, `execute` | none | specialist |
+| `templates/harness/.github/agents/sdd-verify.agent.md` | `sdd-verify` | implementation verification | `false` | `read`, `search`, `edit`, `execute` | none | specialist |
+| `templates/harness/.github/agents/session-handoff.agent.md` | `session-handoff` | recovery handoff | `false` | `read`, `search`, `edit` | none | specialist |
+| `templates/harness/.github/agents/memory-maintainer.agent.md` | `memory-maintainer` | explicit Pegasus Memory maintenance | `false` | `read`, `search` | none | specialist / utility |
+| `templates/copilot-global/agents/pegasus-global-orchestrator.agent.md` | `pegasus-global-orchestrator` | read-only local-workspace locator | omitted | `read`, `search`, `agent` | local `pegasus-orchestrator` by prose; no frontmatter allow-list | delegation / utility fallback |
+
+The current deterministic audit (`tests/audit_instruction_architecture.py`) treats canonical roots with an omitted `user-invocable` field as discoverable and names only the workspace orchestrator plus three command prompts as canonical roots. Therefore the direct user-facing agent entry is `pegasus-orchestrator`; the global registration is a discoverable fallback locator, not a phase executor. All nine workspace specialists are explicitly non-invocable.
+
+### Other Declarations And References
+
+These are not agent registrations, but they invoke or constrain the graph:
+
+- `templates/harness/.github/prompts/sdd-phases.prompt.md` — launch-only router to `pegasus-orchestrator`.
+- `templates/harness/.github/prompts/handoff.prompt.md` — launch-only router to `session-handoff`.
+- `templates/harness/.github/prompts/memory-update.prompt.md` — launch-only router to `memory-maintainer`.
+- `templates/harness/.github/copilot-instructions.md`, `instructions/pegasus-workflow.instructions.md`, `instructions/pegasus-memory.instructions.md`, `instructions/pegasus-sdd-boundaries.instructions.md`, and `AGENTS.md` constrain authority, routing, ownership, and manual-reference loading; they are eager guidance, not registrations.
+- `templates/copilot-global/prompts/pegasus-start.prompt.md` and `instructions/pegasus-global.instructions.md` route/fall back to the workspace coordinator; they do not register an additional specialist.
+
+### Current Ownership And Eager-Load Hotspots
+
+All current macros mix adapter material with central-macro and focused-reference material. The migration boundary is: adapters retain only platform frontmatter and the exact central-skill load gate; each future `skills/<agent>/SKILL.md` owns role, compact-input/result, stop/persistence/recovery, delegation, and intentional reference gates; phase/result/persistence/routing mechanics remain focused references.
+
+| Agent set | Current macro ownership | Move to central skill | Retain/move to focused references | Hotspot |
+| --- | --- | --- | --- | --- |
+| `pegasus-orchestrator` | user-facing boundary, identity/duplicate gate, dispatch/result rules, five eager references | coordinator contract, delegation/result/stop semantics and conditional routing map | routing, authority, result schema | five unconditional loads; `result-envelope.md` conflicts with transport-only direction |
+| `doc-designer` | compact-launch gate and five unconditional loads | PRD role, blocked/material-gap response and durable-close boundary | PRD workflow; conditional persistence/durable-state/semantic-response refs | migration prototype already partly slimmed, but still no skill layer |
+| `sdd-{proposal,spec,design,tasks,apply,verify}` | phase approvals/identity, 9–10 ordered loads, output contract | shared specialist macro and each phase's role/input/output/stop contract | phase workflow, persistence, status, result/transport schemas | repeated eager fan-out; Tasks has ten loads and separate transport |
+| `session-handoff`, `memory-maintainer` | identity, operation boundary, nine ordered loads, output contract | utility role, explicit-operation/closure contract | handoff or memory-maintenance workflow, persistence, status, schema | repeated shared-reference fan-out despite narrow utility scope |
+| `pegasus-global-orchestrator` | local lookup and handoff | fallback-only role and stop rule | local entry selection only | must not become a second orchestration protocol |
+
+### Dependency Graph
+
+```text
+direct user entry: pegasus-orchestrator
+  -> doc-designer -> (returns to orchestrator)
+  -> sdd-proposal -> sdd-spec -> sdd-design -> sdd-tasks -> sdd-apply -> sdd-verify -> session-handoff
+  -> memory-maintainer (explicit maintenance only)
+
+command entries:
+  sdd-phases.prompt -> pegasus-orchestrator
+  handoff.prompt -> session-handoff
+  memory-update.prompt -> memory-maintainer
+global fallback:
+  pegasus-global-orchestrator / pegasus-start.prompt -> local pegasus-orchestrator
+```
+
+The only declared frontmatter delegation allow-list is the workspace orchestrator's nine targets. Specialists prohibit recursive delegation. The phase sequence is routing ownership, not an authorization to skip in-file approval gates.
+
+### Recommended Migration Order
+
+1. Establish the central-skill convention and packaging/audit equivalence rules without migrating behavior.
+2. Migrate `doc-designer` vertically; then create and accept its assigned R6 direct fixture. `R6.2` remains paused until this central skill exists.
+3. Migrate `pegasus-orchestrator`; then run the `orchestrator -> doc-designer` interaction gate followed by `orchestrator -> sdd-spec`.
+4. Migrate the remaining dependency chain in order: `sdd-proposal`, `sdd-spec`, `sdd-design`, `sdd-tasks`, `sdd-apply`, `sdd-verify`, `session-handoff`.
+5. Migrate `memory-maintainer` as the independent explicit-maintenance utility, then `pegasus-global-orchestrator` as the final fallback adapter after the local coordinator contract is stable.
+
+Each item is a separate vertical, rollbackable slice with adapter, central skill, focused references, package/generated equivalents, audit evidence, and an isolated `Rx` fixture.
+
+### Required Replan Of Existing OpenSpec Tasks
+
+`openspec/changes/durable-agent-communication/tasks.md` must be replanned before implementation. Its current plan is phase-envelope migration (`PRD`, routing return, R7, then phases 2–10), names R6.2 as paused only around the prior doc-designer correction, and contains no inventory-driven central-convention task, per-registration skill/adaptor checklist, global-fallback migration, or per-agent fixtures. Preserve completed corrective history; replace only future work with inventory-based vertical slices and the approved interaction-gate order.
+
+### Risks
+
+- The audit currently has canonical root and reference-graph assumptions; adding skills without updating packaging, root reachability, and source/generated/wheel checks can ship broken or orphaned paths.
+- Moving repeated gates wholesale can accidentally duplicate protocol ownership between adapter, skill, and focused references; retain only loading/authorization gates in macros.
+- `pegasus-global-orchestrator` and launch prompts are routing declarations, not specialists; treating them as phase owners would create a second protocol authority.
+- Existing result-envelope dependencies and the older task sequence conflict with the new central-skill-first migration plan and need explicit replanning rather than incremental patching.
