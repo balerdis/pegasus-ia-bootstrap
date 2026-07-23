@@ -4,74 +4,58 @@
 
 | Field | Value |
 |---|---|
-| Estimated authored changed lines | ~2,160 total; Slice 0 ~543; Phase slices 160–300 |
-| Generated copies/goldens | ~300, tracked separately |
-| 800-line review budget | Each slice fits; the feature does not fit one review |
-| Suggested split | Slice 0 baseline, then one PR/work unit per phase, each targeting `main` after its predecessor merges |
-| Delivery strategy / chain | chained PRs / stacked-to-main; no size exception |
+| Estimated changed lines | ~2,500; corrective slices 180–350 |
+| Suggested split | PRD PR → R6 → routing PR → R7 → phases |
+| Delivery strategy / chain | ask-always / stacked-to-main; no size exception |
 
 Decision needed before apply: No
 Chained PRs recommended: Yes
 Chain strategy: stacked-to-main
 400-line budget risk: High
 
-Incident rationale: planning artifacts must be reviewed separately so every delivered file counts toward its slice's authored-line total. Slice 0 must merge before Phase 1 can be committed or pushed; Phase 2 is prohibited.
+R5 is preserved: integrated PRD found six gaps but edited/persisted and emitted success/approval. Invalidated; Phase 2–10 wait for R7.
 
 ### Suggested Work Units
 
-| Unit | Goal; focused test / runtime probe | Rollback boundary |
-|---|---|---|
-| 0 Planning Baseline | artifact presence/internal-consistency review; N/A—no runtime work | exact six planning files |
-| 1 PRD | `python tests/prd_runtime_contract.py`; bootstrap fixture | PRD contract slice |
-| 2 Proposal | `python tests/durable_agent_communication_contract.py --phase proposal`; bootstrap fixture | Proposal slice |
-| 3 Spec | `python tests/durable_agent_communication_contract.py --phase spec`; bootstrap fixture | Spec slice |
-| 4 Design | `python tests/durable_agent_communication_contract.py --phase design`; bootstrap fixture | Design slice |
-| 5 Tasks | `python tests/durable_agent_communication_contract.py --phase tasks`; bootstrap fixture | Tasks slice |
-| 6 Apply | `python tests/durable_agent_communication_contract.py --phase apply`; bootstrap fixture | Apply slice |
-| 7 Verify | `python tests/durable_agent_communication_contract.py --phase verify`; bootstrap fixture | Verify slice |
-| 8 Handoff | `python tests/durable_agent_communication_contract.py --phase handoff`; bootstrap fixture | Handoff slice |
-| 9 Memory | `python tests/durable_agent_communication_contract.py --phase memory`; recovery fixture | Memory-maintenance slice |
-| 10 Cleanup | `tests/smoke.sh audit-instructions`; wheel/bootstrap | shared cleanup slice |
+| Unit | Goal | PR | Test/harness | Rollback |
+|---|---|---|---|---|
+| 0 | Planning complete | merged | review/N/A | planning files |
+| 1 | Doc-designer correction | PR 1 → `main` | PRD/bootstrap | doc-designer/PRD/tests |
+| R6 | Specialist gate | no PR | direct isolate | workspace/logs/DB |
+| 2 | Routing return | PR 2 → `main` | routing/bootstrap | orchestrator/routing/tests |
+| R7 | Interaction gate | no PR | isolated flow | workspace/logs/DB |
+| 3–11 | Remaining | stacked | phase/bootstrap | phase slice |
 
-Phase units append commands, artifact digests, Memory write outcomes, and runtime result to `apply-progress.md`; Slice 0 writes none and has no Phase 1 verify report. Verify preserves phase history, reopens an incomplete approved checkbox, and requires separately approved linked remediation. Revert the named whole slice before a dependent slice; never revert artifacts or Memory independently.
-
-## Migration Order
-
-Slice 0 → PRD → Proposal → Spec → Design → Tasks → Apply → Verify → Handoff → Memory maintenance → cleanup. Slice 0 establishes the review base; Handoff closes verified work, maintenance then migrates its standalone durable operation, and cleanup is safe only after no specialist needs legacy routing. Unmigrated phases stay unchanged; mixed operation, adapters, and dual authoritative contracts are forbidden.
-
-`Atomic migration` below means compact launch, agent/skills/phase reference, six-field semantic response, durable artifact+Memory state, routing, package/generated equivalence, RED contract test, runtime fixture, and old-contract deletion only after accepted durable evidence.
+Units record command/digests/Memory outcome in `apply-progress.md`. R6/R7 preserve revision, workspace, payload, logs, isolated DB/export. Never erase history.
 
 ## Slice 0: Planning Baseline
-- [x] 0.1 Review only `openspec/config.yaml`, `exploration.md`, `proposal.md`, `specs/pegasus-harness-bootstrap/spec.md`, `design.md`, and `tasks.md` for approved internal consistency; no production/runtime PRD work, `apply-progress.md`, or `verify-phase-1-prd.md` belongs to this slice.
+- [x] 0.1 Approved planning baseline merged; no runtime PRD work belonged to this slice.
 
-## Phase 1: PRD
-- [x] 1.1 RED `tests/prd_runtime_contract.py` and create `tests/durable_agent_communication_contract.py`: path-root, semantic-not-presentation response, no-envelope recovery, event/closure write failure, stale digest/relocation, and dedupe/superseding lineage; atomically migrate PRD and delete `results/prd-result-v1.md`.
+## Phase 1: PRD Corrective Migration
+- [x] 1.1 Link R5 invalidation/supersession/rework in `apply-progress.md`; retain history.
+- [x] 1.2 RED: gaps → questions/`blocked`; no edit/ensure/project/Memory/advance. Scope `templates/harness/.github/agents/doc-designer.agent.md`, `references/phases/prd.md`, specialist refs/tests.
+- [x] 1.3 GREEN doc-designer vertical migration: compact input, lazy refs, owned behavior/persistence/response, fail-closed gate; no routing change.
+- [ ] 1.4 Bootstrap, focused contract, evidence, PR 1 merge (≤800 lines).
 
-Planning state: the previous Phase 1 attempt and file-based evidence are historical/quarantined, not active completion authority, and MUST NOT advance routing. Task 1.1 remains pending restoration, smoke remediation, and fresh verification after Slice 0.
+## Operational Gate R6 (after PR 1 merges)
+- [ ] R6.1 Isolated generated workspace; direct doc-designer invocation with exact compact payload; preserve required evidence.
+- [ ] R6.2 Accept gaps → grouped questions/blocked/no edit/ensure/project/Memory/approval. Model evidence only; failure blocks Unit 2.
 
-## Phase 2: Proposal
-- [ ] 2.1 RED phase fixture, apply Atomic migration, and delete `results/proposal-result-v1.md` after durable acceptance.
+## Routing-Return Corrective Slice (after R6 passes)
+- [ ] 1.5 RED invalid-result reconciliation; scope `templates/harness/.github/agents/pegasus-orchestrator.agent.md`, `references/orchestration/routing.md`, routing tests.
+- [ ] 1.6 GREEN boundary validation only; bootstrap, routing contract, evidence, PR 2 merge (≤800 lines).
 
-## Phase 3: Spec
-- [ ] 3.1 RED phase fixture, apply Atomic migration, and delete `results/spec-result-v1.md` after durable acceptance.
+## Operational Gate R7 (after PR 2 merges)
+- [ ] R7.1 Isolated orchestrator → doc-designer → orchestrator gap/resolved paths; preserve required evidence.
+- [ ] R7.2 Accept gaps blocked/no edit/no persistence/no approval; resolved requires durable evidence/valid advance. Link R5/R6/R7; pass releases Phase 2.
 
-## Phase 4: Design
-- [ ] 4.1 RED phase fixture, apply Atomic migration, and delete `results/design-result-v1.md` after durable acceptance.
-
-## Phase 5: Tasks
-- [ ] 5.1 RED checkbox-only mutation/reconciliation fixture; apply Atomic migration and delete `results/tasks-result-v2.md` plus `tasks-transport-v2.md` after durable acceptance.
-
-## Phase 6: Apply
-- [ ] 6.1 RED cumulative-progress/recovery fixture; apply Atomic migration and delete `results/apply-result-v1.md` after durable acceptance.
-
-## Phase 7: Verify
-- [ ] 7.1 RED readiness/reopen-versus-approved-remediation fixture; apply Atomic migration and delete `results/verify-result-v1.md` after durable acceptance.
-
-## Phase 8: Handoff
-- [ ] 8.1 RED closure/handoff recovery fixture; apply Atomic migration and delete `results/handoff-result-v1.md` after durable acceptance.
-
-## Phase 9: Memory Maintenance
-- [ ] 9.1 RED observation/explicit-recovery fixture; apply Atomic migration and delete `results/memory-maintenance-result-v1.md` after durable acceptance.
-
-## Phase 10: Terminal Cleanup
-- [ ] 10.1 After phases 1–9 pass Verify, remove `shared/result-envelope.md`, `results/orchestrator-result-v1.md`, residual result contracts, and obsolete common routing; update AGENTS/Copilot/package expectations and prove source, bootstrap, and wheel equivalence.
+## Phases 2–10: Pending After R7
+- [ ] 2.1 Proposal: RED, Atomic migration, delete `results/proposal-result-v1.md`.
+- [ ] 3.1 Spec: RED, Atomic migration, delete `results/spec-result-v1.md`.
+- [ ] 4.1 Design: RED, Atomic migration, delete `results/design-result-v1.md`.
+- [ ] 5.1 Tasks: RED reconciliation, Atomic migration, delete legacy task contracts.
+- [ ] 6.1 Apply: RED progress/recovery, Atomic migration, delete legacy apply contract.
+- [ ] 7.1 Verify: RED readiness/remediation, Atomic migration, delete legacy verify contract.
+- [ ] 8.1 Handoff: RED closure/recovery, Atomic migration, delete legacy handoff contract.
+- [ ] 9.1 Memory: RED observation/recovery, Atomic migration, delete legacy Memory contract.
+- [ ] 10.1 After R7/phases 2–9, delete residual routing/contracts; prove source/bootstrap/wheel equivalence.
